@@ -3,7 +3,6 @@
 (setq inhibit-startup-message t)
 (tool-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
-(global-set-key (kbd "<f5>") 'revert-buffer)
 (global-visual-line-mode 1)
 
 (defun toggle-frame-split ()
@@ -112,11 +111,6 @@ Assumes that the frame is only split into two."
   (flycheck-select-checker 'phpstan))
 
 (add-hook 'php-mode-hook 'my-php-mode-hook)
-
-* things to try
-reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
-https://github.com/fniessen/org-html-themes
-https://github.com/joaotavora/yasnippet
 * babel
 #+BEGIN_SRC 
 (require 'php-mode)
@@ -143,6 +137,7 @@ https://github.com/joaotavora/yasnippet
 (global-set-key (kbd "M-<down>") 'move-line-down)
 
 (lorem-ipsum-use-default-bindings)
+(global-set-key (kbd "<f5>") 'revert-buffer)
 #+END_SRC
 * theme
 #+BEGIN_SRC emacs-lisp
@@ -162,3 +157,13 @@ https://github.com/joaotavora/yasnippet
  ;; Use versioned backups
  version-control t)
 #+END_SRC
+* Dictionary
+https://oremacs.com/2015/05/22/define-word/
+
+* Modes
+** Org-Mode
+** Enrich Mode?
+* things to try
+reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
+https://github.com/fniessen/org-html-themes
+https://github.com/joaotavora/yasnippet
