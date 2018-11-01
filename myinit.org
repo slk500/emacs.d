@@ -24,6 +24,51 @@ Assumes that the frame is only split into two."
 (windmove-default-keybindings)
 #+END_SRC
   
+* installs
+#+BEGIN_SRC emacs-lisp 
+(use-package try
+  :ensure t)
+
+(use-package counsel
+:ensure t)
+
+(use-package lorem-ipsum
+:ensure t)
+
+(use-package which-key
+  :ensure t
+  :config (which-key-mode))
+
+(use-package org-bullets
+  :ensure t
+  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(use-package company
+  :ensure t)
+(add-hook 'after-init-hook 'global-company-mode)
+
+(setq indo-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+
+(defalias 'list-buffers 'ibuffer)
+;;(defalias 'list-buffers 'ibuffer-other-window)
+
+(use-package tabbar
+  :ensure t
+  :config
+  (tabbar-mode 1))
+
+#+END_SRC
+
+  ;;* flycheck
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+       :ensure t
+       :init
+       (global-flycheck-mode t))
+#+END_SRC
+  
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
 (use-package swiper    
@@ -50,44 +95,6 @@ Assumes that the frame is only split into two."
   (setq projectile-completion-system 'ivy)    
   (setq magit-completing-read-function 'ivy-completing-read)
 )
-#+END_SRC
-  
-* installs
-#+BEGIN_SRC emacs-lisp 
-(use-package try
-  :ensure t)
-
-(use-package which-key
-  :ensure t
-  :config (which-key-mode))
-
-(use-package org-bullets
-  :ensure t
-  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-(use-package company
-  :ensure t)
-(add-hook 'after-init-hook 'global-company-mode)
-
-(setq indo-enable-flex-matching t)
-(setq ido-everywhere t)
-(ido-mode 1)
-
-(defalias 'list-buffers 'ibuffer)
-;;(defalias 'list-buffers 'ibuffer-other-window)
-
-(use-package tabbar
-  :ensure t
-  :config
-  (tabbar-mode 1))
-#+END_SRC
-
-  ;;* flycheck
-#+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-       :ensure t
-       :init
-       (global-flycheck-mode t))
 #+END_SRC
 * flycheck OFF
   (use-package flycheck
@@ -129,9 +136,10 @@ Assumes that the frame is only split into two."
 
 (global-set-key (kbd "M-<up>") 'move-line-up)
 (global-set-key (kbd "M-<down>") 'move-line-down)
+(global-set-key (kbd "<f5>") 'revert-buffer)
 
 (lorem-ipsum-use-default-bindings)
-(global-set-key (kbd "<f5>") 'revert-buffer)
+
 #+END_SRC
 * theme 
 #+BEGIN_SRC emacs-lisp
