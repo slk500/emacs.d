@@ -1,6 +1,7 @@
 * interface tweaks
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-startup-message t)
+(setq default-directory "/home/slk/Dropbox")
 (tool-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-visual-line-mode 1)
@@ -71,6 +72,15 @@ Assumes that the frame is only split into two."
   
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
+
+;; dont show hidden files
+(setq counsel-find-file-ignore-regexp
+        (concat
+         ;; File names beginning with # or .
+         "\\(?:\\`[#.]\\)"
+         ;; File names ending with # or ~
+         "\\|\\(?:\\`.+?[#~]\\'\\)"))
+
 (use-package swiper    
   :ensure t    
   :bind    
