@@ -106,6 +106,98 @@ Assumes that the frame is only split into two."
   (setq magit-completing-read-function 'ivy-completing-read)
 )
 #+END_SRC
+* PHP
+** PHP Mode
+ #+BEGIN_SRC emacs-lisp
+ (use-package php-mode :ensure t)
+ #+END_SRC
+
+** Babel
+ #+BEGIN_SRC emacs-lisp
+ (require 'org)
+ (require 'ob)
+
+ (defgroup ob-php nil
+   "org-mode blocks for PHP."
+   :group 'org)
+
+ (defcustom ob-php:inf-php-buffer "*php*"
+   "Default PHP inferior buffer."
+   :group 'ob-php
+   :type 'string)
+
+ ;;;###autoload
+ (defun org-babel-execute:php (body params)
+   "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+   (let* ((cmd "php")
+          (body (concat "<?php\n" body "\n?>")))
+     (org-babel-eval cmd body)
+     ))
+
+ ;;;###autoload
+ (eval-after-load "org"
+   '(add-to-list 'org-src-lang-modes '("php" . php)))
+
+ (defvar org-babel-default-header-args:php '())
+
+ (add-to-list 'org-babel-default-header-args:php
+              '(:results . "output"))
+
+ (provide 'ob-php)
+ #+END_SRC
+
+ https://www.philnewton.net/guides/emacs-as-a-php-editor/
+
+* Run Current File
+#+BEGIN_SRC emacs-lisp
+;;; THIS gist is from Xah Emacs Tutorial
+;;; http://ergoemacs.org/emacs/emacs.html
+
+
+(defun run-current-file ()
+  "Execute or compile the current file.
+For example, if the current buffer is the file x.pl,
+then it'll call “perl x.pl” in a shell.
+The file can be php, perl, python, ruby, javascript, bash, ocaml, vb, elisp.
+File suffix is used to determine what program to run.
+If the file is modified, ask if you want to save first. (This command always run the saved version.)
+If the file is emacs lisp, run the byte compiled version if exist."
+  (interactive)
+  (let (suffixMap fName fSuffix progName cmdStr)
+
+    ;; a keyed list of file suffix to comand-line program path/name
+    (setq suffixMap 
+          '(("php" . "php")
+            ;; ("coffee" . "coffee -p")
+            ("pl" . "perl")
+            ("py" . "python")
+            ("rb" . "ruby")
+            ("js" . "node")             ; node.js
+            ("sh" . "bash")
+            ("ml" . "ocaml")
+            ("vbs" . "cscript")))
+    (setq fName (buffer-file-name))
+    (setq fSuffix (file-name-extension fName))
+    (setq progName (cdr (assoc fSuffix suffixMap)))
+    (setq cmdStr (concat progName " \""   fName "\""))
+
+    (when (buffer-modified-p)
+      (progn 
+        (when (y-or-n-p "Buffer modified. Do you want to save first?")
+          (save-buffer) ) ) )
+
+    (if (string-equal fSuffix "el") ; special case for emacs lisp
+        (progn 
+          (load (file-name-sans-extension fName)))
+      (if progName
+          (progn
+            (message "Running…")
+            ;; (message progName)
+            (shell-command cmdStr "*run-current-file output*" ))
+        (message "No recognized program file suffix for this file.")))
+    ))
+
+#+END_SRC
 * flycheck OFF
   (use-package flycheck
     :ensure t
