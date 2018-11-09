@@ -26,49 +26,60 @@ Assumes that the frame is only split into two."
 #+END_SRC
   
 * installs
-#+BEGIN_SRC emacs-lisp 
-(use-package try
-  :ensure t)
-
-(use-package counsel
-:ensure t)
-
-(use-package lorem-ipsum
-:ensure t)
-
-(use-package which-key
-  :ensure t
-  :config (which-key-mode))
-
-(use-package org-bullets
-  :ensure t
-  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-(use-package company
-  :ensure t)
-(add-hook 'after-init-hook 'global-company-mode)
-
-(setq indo-enable-flex-matching t)
-(setq ido-everywhere t)
-(ido-mode 1)
-
-(defalias 'list-buffers 'ibuffer)
-;;(defalias 'list-buffers 'ibuffer-other-window)
-
-(use-package tabbar
+** Image drag & drop download
+#+BEGIN_SRC emacs-lisp
+(use-package org-download
   :ensure t
   :config
-  (tabbar-mode 1))
-
+  ;; add support to dired
+  (add-hook 'dired-mode-hook 'org-download-enable))
+  (setq-default org-download-image-dir "~/Dropbox/Pictures")
+     
 #+END_SRC
+** Others
+  #+BEGIN_SRC emacs-lisp 
+  (use-package try
+    :ensure t)
 
-  ;;* flycheck
-#+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-       :ensure t
-       :init
-       (global-flycheck-mode t))
-#+END_SRC
+  (use-package counsel
+  :ensure t)
+
+  (use-package lorem-ipsum
+  :ensure t)
+
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode))
+
+  (use-package org-bullets
+    :ensure t
+    :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+  (use-package company
+    :ensure t)
+  (add-hook 'after-init-hook 'global-company-mode)
+
+  (setq indo-enable-flex-matching t)
+  (setq ido-everywhere t)
+  (ido-mode 1)
+
+  (defalias 'list-buffers 'ibuffer)
+  ;;(defalias 'list-buffers 'ibuffer-other-window)
+
+  (use-package tabbar
+    :ensure t
+    :config
+    (tabbar-mode 1))
+
+  #+END_SRC
+
+    ;;* flycheck
+  #+BEGIN_SRC emacs-lisp
+    (use-package flycheck
+	 :ensure t
+	 :init
+	 (global-flycheck-mode t))
+  #+END_SRC
   
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
@@ -111,7 +122,10 @@ Assumes that the frame is only split into two."
  #+BEGIN_SRC emacs-lisp
  (use-package php-mode :ensure t)
  #+END_SRC
-
+** PHPUnit
+#+BEGIN_SRC emacs-lisp
+(use-package phpunit :ensure t)
+#+END_SRC
 ** Babel
  #+BEGIN_SRC emacs-lisp
  (require 'org)
@@ -280,3 +294,7 @@ https://oremacs.com/2015/05/22/define-word/
 reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
 https://github.com/fniessen/org-html-themes
 https://github.com/joaotavora/yasnippet
+
+
+
+
