@@ -182,13 +182,13 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 
   #+END_SRC
 
-    ;;* flycheck
-  #+BEGIN_SRC emacs-lisp
-    (use-package flycheck
-	 :ensure t
-	 :init
-	 (global-flycheck-mode t))
-  #+END_SRC
+** flycheck
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck
+	  :ensure t
+	  :init
+	  (global-flycheck-mode t))
+   #+END_SRC
   
 ** Treemacs
 #+BEGIN_SRC emacs-lisp
@@ -363,6 +363,21 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (lorem-ipsum-use-default-bindings)
 
 #+END_SRC
+* Lisp
+** Paredit
+#+BEGIN_SRC emacs-lisp
+(use-package paredit
+    :ensure t)
+
+ (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+    (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+    (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+    (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+    (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+    (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+    (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+#+END_SRC
+https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 * backup 
 #+BEGIN_SRC emacs-lisp
 (setq
