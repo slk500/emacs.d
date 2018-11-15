@@ -141,6 +141,10 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (setq org-download-method  'drestivo/org-download-method)
      
 #+END_SRC
+
+#+RESULTS:
+: drestivo/org-download-method
+
 ** Others
   #+BEGIN_SRC emacs-lisp 
   (use-package try
