@@ -33,73 +33,11 @@
  ;;shift + arrows -> change frames -> dosent work in org mode
  #+END_SRC
 ** tabbar 
-# #+BEGIN_SRC emacs-lisp
-# ;; Tabbar
-# (require 'tabbar)
-# ;; Tabbar settings
-# (set-face-attribute
-#  'tabbar-default nil
-#  :background "gray20"
-#  :foreground "gray20"
-#  :box '(:line-width 1 :color "gray20" :style nil))
-# (set-face-attribute
-#  'tabbar-unselected nil
-#  :background "gray30"
-#  :foreground "white"
-#  :box '(:line-width 5 :color "gray30" :style nil))
-# (set-face-attribute
-#  'tabbar-selected nil
-#  :background "gray75"
-#  :foreground "black"
-#  :box '(:line-width 5 :color "gray75" :style nil))
-# (set-face-attribute
-#  'tabbar-highlight nil
-#  :background "white"
-#  :foreground "black"
-#  :underline nil
-#  :box '(:line-width 5 :color "white" :style nil))
-# (set-face-attribute
-#  'tabbar-button nil
-#  :box '(:line-width 1 :color "gray20" :style nil))
-# (set-face-attribute
-#  'tabbar-separator nil
-#  :background "gray20"
-#  :height 0.6)
-
-# ;; Change padding of the tabs
-# ;; we also need to set separator to avoid overlapping tabs by highlighted tabs
-# (custom-set-variables
-#  '(tabbar-separator (quote (0.5))))
-# ;; adding spaces
-# (defun tabbar-buffer-tab-label (tab)
-#   "Return a label for TAB.
-# That is, a string used to represent it on the tab bar."
-#   (let ((label  (if tabbar--buffer-show-groups
-#                     (format "[%s]  " (tabbar-tab-tabset tab))
-#                   (format "%s  " (tabbar-tab-value tab)))))
-#     ;; Unless the tab bar auto scrolls to keep the selected tab
-#     ;; visible, shorten the tab label to keep as many tabs as possible
-#     ;; in the visible area of the tab bar.
-#     (if tabbar-auto-scroll-flag
-#         label
-#       (tabbar-shorten
-#        label (max 1 (/ (window-width)
-#                        (length (tabbar-view
-#                                 (tabbar-current-tabset)))))))))
-
-# (tabbar-mode 1)
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
 (use-package tabbar-ruler
   :ensure t)
 (setq tabbar-ruler-global-tabbar t)    ; get tabbar
-;;(setq tabbar-ruler-global-ruler t)     ; get global ruler
-;;(setq tabbar-ruler-popup-menu t)       ; get popup menu.
-;;(setq tabbar-ruler-popup-toolbar t)    ; get popup toolbar
-;;(setq tabbar-ruler-popup-scrollbar t)  ; show scroll-bar on mouse-move
 #+END_SRC
-
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
@@ -313,7 +251,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
    :group 'ob-php
    :type 'string)
 
- ;;;###autoload
  (defun org-babel-execute:php (body params)
    "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
    (let* ((cmd "php")
@@ -321,7 +258,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
      (org-babel-eval cmd body)
      ))
 
- ;;;###autoload
  (eval-after-load "org"
    '(add-to-list 'org-src-lang-modes '("php" . php)))
 
@@ -366,16 +302,16 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * Lisp
 ** Paredit
 #+BEGIN_SRC emacs-lisp
-(use-package paredit
-    :ensure t)
+  ;; (use-package paredit
+  ;;     :ensure t)
 
- (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-    (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-    (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-    (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-    (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-    (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 #+END_SRC
 https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 * backup 
@@ -404,5 +340,10 @@ https://github.com/fniessen/org-html-themes
 https://github.com/joaotavora/yasnippet
 
 
+* Python
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages 'org-babel-load-languages 
+                             '((emacs-lisp . t)
+                               (ipython . t)))
 
-
+#+END_SRC
