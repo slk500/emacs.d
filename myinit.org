@@ -38,6 +38,17 @@
   :ensure t)
 (setq tabbar-ruler-global-tabbar t)    ; get tabbar
 #+END_SRC
+** tinker highlight
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t)
+#+END_SRC
+** hungry-delete
+#+BEGIN_SRC emacs-lisp
+(use-package hungry-delete
+  :ensure t
+  :config
+  (global-hungry-delete-mode))
+#+END_SRC
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
