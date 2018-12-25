@@ -384,3 +384,13 @@ https://github.com/joaotavora/yasnippet
 (use-package yasnippet-snippets
   :ensure t)
 #+END_SRC
+* autocomplete
+#+BEGIN_SRC emacs-lisp
+(use-package auto-complete
+  :ensure t
+  :init
+  (progn
+    (ac-config-default)
+    (global-auto-complete-mode t)
+    ))
+#+END_SRC
