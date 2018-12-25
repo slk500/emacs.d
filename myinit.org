@@ -12,7 +12,7 @@
  (setq inhibit-startup-message t)
  (setq default-directory "/home/slk/Dropbox")
  (tool-bar-mode -1)
- (menu-bar-mode -1)
+ (menu-bar-mode 1)
  (scroll-bar-mode -1)
  (fset 'yes-or-no-p 'y-or-n-p)
  (global-visual-line-mode 1)
@@ -49,6 +49,16 @@
   :config
   (global-hungry-delete-mode))
 #+END_SRC
+** expand-region
+#+BEGIN_SRC emacs-lisp
+(use-package expand-region
+  :ensure t
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region)
+  )
+
+#+END_SRC
+
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
@@ -284,6 +294,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
  
 * shortcuts
 #+BEGIN_SRC emacs-lisp 
+
 (defun move-line-up (n)
   "Move the current line up by N lines."
   (interactive "p")
@@ -362,4 +373,14 @@ https://github.com/joaotavora/yasnippet
 (use-package undo-tree
   :ensure t
   :init(global-undo-tree-mode))
+#+END_SRC
+* snippets
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1))
+
+(use-package yasnippet-snippets
+  :ensure t)
 #+END_SRC
