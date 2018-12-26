@@ -62,6 +62,11 @@
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
 #+END_SRC
+** scroling
+#+BEGIN_SRC emacs-lisp
+(setq scroll-step 1)
+
+#+END_SRC
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
@@ -293,6 +298,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * shortcuts
 #+BEGIN_SRC emacs-lisp 
 
+
 (defun move-line-up (n)
   "Move the current line up by N lines."
   (interactive "p")
@@ -394,6 +400,20 @@ https://github.com/joaotavora/yasnippet
 #+END_SRC
 * C++
 #+BEGIN_SRC emacs-lisp
+;; Run C programs directly from within emacs
+(defun execute-c-program ()
+  (interactive)
+  (defvar foo)
+  (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+  (shell-command foo))
 
+(global-set-key [C-f1] 'execute-c-program)
+
+(defun ls ()
+  "Lists the contents of the current directory."
+  (interactive)
+  (shell-command "./run.sh"))
+
+(global-set-key (kbd "<f6>") 'ls);
 
 #+END_SRC
