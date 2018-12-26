@@ -34,9 +34,14 @@
  #+END_SRC
 ** tabbar 
 #+BEGIN_SRC emacs-lisp
-(use-package tabbar-ruler
-  :ensure t)
-(setq tabbar-ruler-global-tabbar t)    ; get tabbar
+;(use-package tabbar-ruler
+;  :ensure t)
+;(setq tabbar-ruler-global-tabbar t)    ; get tabbar
+  ;; (use-package tabbar
+  ;;   :ensure t
+  ;;   :config
+  ;;   (tabbar-mode 1)
+  ;;  )
 #+END_SRC
 ** tinker highlight
 #+BEGIN_SRC emacs-lisp
@@ -56,9 +61,7 @@
   :config
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
-
 #+END_SRC
-
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
@@ -132,13 +135,8 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   (ido-mode 1)
 
   (defalias 'list-buffers 'ibuffer)
-  ;;(defalias 'list-buffers 'ibuffer-other-window)
-
-  (use-package tabbar
-    :ensure t
-    :config
-    (tabbar-mode 1))
-
+  ;;(defalias 'list-buffers 'ibuffer-other-window
+  
   #+END_SRC
 
 ** flycheck
@@ -393,4 +391,9 @@ https://github.com/joaotavora/yasnippet
     (ac-config-default)
     (global-auto-complete-mode t)
     ))
+#+END_SRC
+* C++
+#+BEGIN_SRC emacs-lisp
+
+
 #+END_SRC
