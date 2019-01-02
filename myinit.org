@@ -43,9 +43,15 @@
   ;;   (tabbar-mode 1)
   ;;  )
 #+END_SRC
-** tinker highlight
+** tinker 
 #+BEGIN_SRC emacs-lisp
-(global-hl-line-mode t)
+(global-hl-line-mode t) ;;highlight
+(blink-cursor-mode 0)
+#+END_SRC
+** parentheses
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1) ;;highlight
+(electric-pair-mode 1) ;;()
 #+END_SRC
 ** hungry-delete
 #+BEGIN_SRC emacs-lisp
@@ -65,7 +71,15 @@
 ** scroling
 #+BEGIN_SRC emacs-lisp
 (setq scroll-step 1)
-
+#+END_SRC
+** copy/paste/cut
+#+BEGIN_SRC emacs-lisp
+;; (cua-mode 1)
+#+END_SRC
+** keybiding
+#+BEGIN_SRC emacs-lisp
+;; (use-package ergoemacs-mode
+;; :ensure t)
 #+END_SRC
 * installs
 ** Image drag & drop download
@@ -215,6 +229,14 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (use-package treemacs-projectile
   :after treemacs projectile
   :ensure t)
+#+END_SRC
+** multiple cursors
+#+BEGIN_SRC emacs-lisp
+(use-package multiple-cursors
+:ensure t)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 #+END_SRC
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
@@ -367,9 +389,9 @@ https://github.com/joaotavora/yasnippet
 
 * Python
 #+BEGIN_SRC emacs-lisp
-(org-babel-do-load-languages 'org-babel-load-languages 
-                             '((emacs-lisp . t)
-                               (ipython . t)))
+;;(org-babel-do-load-languages 'org-babel-load-languages 
+  ;;                           '((emacs-lisp . t)
+    ;;                           (ipython . t)))
 
 #+END_SRC
 * Undo Tree
@@ -383,8 +405,8 @@ https://github.com/joaotavora/yasnippet
 (use-package yasnippet
   :ensure t
   :init
-  (yas-global-mode 1))
-
+  :config
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
 (use-package yasnippet-snippets
   :ensure t)
 #+END_SRC
@@ -412,8 +434,37 @@ https://github.com/joaotavora/yasnippet
 (defun ls ()
   "Lists the contents of the current directory."
   (interactive)
+  (save-buffer)
   (shell-command "./run.sh"))
 
 (global-set-key (kbd "<f6>") 'ls);
 
+(semantic-mode 1)
+
+(use-package srefactor
+:ensure t)
+
+#+END_SRC
+* JS
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode
+:ensure t)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;; Better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+#+END_SRC
+* Autoinsert
+#+BEGIN_SRC emacs-lisp
+(use-package autoinsert
+  :init
+  ;; Don't want to be prompted before insertion:
+  (setq auto-insert-query nil)
+
+  (setq auto-insert-directory (locate-user-emacs-file "templates"))
+  (add-hook 'find-file-hook 'auto-insert)
+  (auto-insert-mode 1)
+
+  :config
+  (define-auto-insert "\\.html?$" "default-html.html"))
 #+END_SRC
