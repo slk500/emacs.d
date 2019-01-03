@@ -12,7 +12,7 @@
  (setq inhibit-startup-message t)
  (setq default-directory "/home/slk/Dropbox")
  (tool-bar-mode -1)
- (menu-bar-mode 1)
+ (menu-bar-mode -1)
  (scroll-bar-mode -1)
  (fset 'yes-or-no-p 'y-or-n-p)
  (global-visual-line-mode 1)
@@ -80,6 +80,26 @@
 #+BEGIN_SRC emacs-lisp
 ;; (use-package ergoemacs-mode
 ;; :ensure t)
+#+END_SRC
+** move-line up/down
+#+BEGIN_SRC emacs-lisp
+  (defun move-line-up ()
+    "Move up the current line."
+    (interactive)
+    (transpose-lines 1)
+    (forward-line -2)
+    (indent-according-to-mode))
+
+  (defun move-line-down ()
+    "Move down the current line."
+    (interactive)
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (indent-according-to-mode))
+
+  (global-set-key (kbd "C-S-<up>")  'move-line-up)
+  (global-set-key (kbd "C-S-<down>")  'move-line-down)
 #+END_SRC
 * installs
 ** Image drag & drop download
@@ -318,22 +338,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
  https://www.philnewton.net/guides/emacs-as-a-php-editor/
  
 * shortcuts
-#+BEGIN_SRC emacs-lisp 
-
-
-(defun move-line-up (n)
-  "Move the current line up by N lines."
-  (interactive "p")
-  (move-line (if (null n) -1 (- n))))
-
-
-(defun move-line-down (n)
-  "Move the current line down by N lines."
-  (interactive "p")
-  (move-line (if (null n) 1 n)))
-
-(global-set-key (kbd "M-<up>") 'move-line-up)
-(global-set-key (kbd "M-<down>") 'move-line-down)
+#+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<f5>") 'revert-buffer)
 (global-set-key (kbd "C-x 5") 'toggle-frame-split)
 
@@ -502,4 +507,8 @@ https://github.com/joaotavora/yasnippet
   :ensure t
   :config
   (super-save-mode +1))
+#+END_SRC
+* Terminal
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<M-f12>") 'shell);
 #+END_SRC
