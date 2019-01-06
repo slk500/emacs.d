@@ -2,107 +2,80 @@
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
 #+END_SRC
-* interface tweaks
-** theme 
- #+BEGIN_SRC emacs-lisp
- ;;(load-theme 'deeper-blue)
-(use-package idea-darkula-theme
+* autocomplete
+#+BEGIN_SRC emacs-lisp
+(use-package auto-complete
+  :ensure t
+  :init
+  (progn
+    (ac-config-default)
+    (global-auto-complete-mode t)
+    ))
+#+END_SRC
+* Autoinsert
+#+BEGIN_SRC emacs-lisp
+(use-package autoinsert
+  :init
+  ;; Don't want to be prompted before insertion:
+  (setq auto-insert-query nil)
+
+  (setq auto-insert-directory (locate-user-emacs-file "templates"))
+  (add-hook 'find-file-hook 'auto-insert)
+  (auto-insert-mode 1)
+
+  :config
+  (define-auto-insert "\\.html?$" "default-html.html"))
+#+END_SRC
+* backup 
+#+BEGIN_SRC emacs-lisp
+(setq
+ ;; Don't clobber symlinks
+ backup-by-copying t
+ backup-directory-alist
+ ;; Don't litter my fs tree
+ '(("." . "~/.backups"))
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ ;; Use versioned backups
+ version-control t)
+#+END_SRC
+* C++
+#+BEGIN_SRC emacs-lisp
+;; Run C programs directly from within emacs
+(defun execute-c-program ()
+  (interactive)
+  (defvar foo)
+  (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+  (shell-command foo))
+
+(global-set-key [C-f1] 'execute-c-program)
+
+(defun ls ()
+  "Lists the contents of the current directory."
+  (interactive)
+  (save-buffer)
+  (shell-command "./run.sh"))
+
+(global-set-key (kbd "<f6>") 'ls);
+
+(semantic-mode 1)
+
+(use-package srefactor
 :ensure t)
- (load-theme 'idea-darkula t)
- #+END_SRC
-** others
- #+BEGIN_SRC emacs-lisp
- (setq inhibit-startup-message t)
- (setq default-directory "/home/slk/Dropbox")
- (tool-bar-mode -1)
- (menu-bar-mode -1)
- (scroll-bar-mode -1)
- (fset 'yes-or-no-p 'y-or-n-p)
- (global-visual-line-mode 1)
- (setq frame-title-format "emacs")
 
- (defun toggle-frame-split ()
-   "If the frame is split vertically, split it horizontally or vice versa.
- Assumes that the frame is only split into two."
-   (interactive)
-   (unless (= (length (window-list)) 2) (error "Can only toggle a frame split in two"))
-   (let ((split-vertically-p (window-combined-p)))
-     (delete-window) ; closes current window
-     (if split-vertically-p
-         (split-window-horizontally)
-       (split-window-vertically)) ; gives us a split with the other window twice
-     (switch-to-buffer nil))) ; restore the original window in this part of the frame
+#+END_SRC
+* Dictionary
+https://oremacs.com/2015/05/22/define-word/
 
- ;;shift + arrows -> change frames -> dosent work in org mode
- #+END_SRC
-** tabbar 
+* Edit multiple regions
 #+BEGIN_SRC emacs-lisp
-;(use-package tabbar-ruler
-;  :ensure t)
-;(setq tabbar-ruler-global-tabbar t)    ; get tabbar
-  ;; (use-package tabbar
-  ;;   :ensure t
-  ;;   :config
-  ;;   (tabbar-mode 1)
-  ;;  )
+(use-package iedit
+:ensure t)
 #+END_SRC
-** tinker 
+* HTML
 #+BEGIN_SRC emacs-lisp
-(global-hl-line-mode t) ;;highlight
-(blink-cursor-mode 0)
-#+END_SRC
-** parentheses
-#+BEGIN_SRC emacs-lisp
-(show-paren-mode 1) ;;highlight
-(electric-pair-mode 1) ;;()
-#+END_SRC
-** hungry-delete
-#+BEGIN_SRC emacs-lisp
-(use-package hungry-delete
-  :ensure t
-  :config
-  (global-hungry-delete-mode))
-#+END_SRC
-** expand-region
-#+BEGIN_SRC emacs-lisp
-(use-package expand-region
-  :ensure t
-  :config
-  (global-set-key (kbd "C-=") 'er/expand-region)
-  )
-#+END_SRC
-** scroling
-#+BEGIN_SRC emacs-lisp
-(setq scroll-step 1)
-#+END_SRC
-** copy/paste/cut
-#+BEGIN_SRC emacs-lisp
-;; (cua-mode 1)
-#+END_SRC
-** keybiding
-#+BEGIN_SRC emacs-lisp
-;; (use-package ergoemacs-mode
-;; :ensure t)
-#+END_SRC
-** move-line up/down
-#+BEGIN_SRC emacs-lisp
-  (defun move-line-up ()
-    "Move up the current line."
-    (interactive)
-    (transpose-lines 1)
-    (forward-line -2)
-    (indent-according-to-mode))
-
-  (defun move-line-down ()
-    "Move down the current line."
-    (interactive)
-    (forward-line 1)
-    (transpose-lines 1)
-    (forward-line -1)
-    (indent-according-to-mode))
-
-  (global-set-key (kbd "C-S-<up>")  'move-line-up)
-  (global-set-key (kbd "C-S-<down>")  'move-line-down)
+(setq sgml-quick-keys 'close)
 #+END_SRC
 * installs
 ** Image drag & drop download
@@ -261,42 +234,170 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 #+END_SRC
-* swiper / consuel / ivy
+* interface tweaks
+** theme 
+ #+BEGIN_SRC emacs-lisp
+ ;;(load-theme 'deeper-blue)
+(use-package idea-darkula-theme
+:ensure t)
+ (load-theme 'idea-darkula t)
+ #+END_SRC
+** others
+ #+BEGIN_SRC emacs-lisp
+ (setq inhibit-startup-message t)
+ (setq default-directory "/home/slk/Dropbox")
+ (tool-bar-mode -1)
+ (menu-bar-mode -1)
+ (scroll-bar-mode -1)
+ (fset 'yes-or-no-p 'y-or-n-p)
+ (global-visual-line-mode 1)
+ (setq frame-title-format "emacs")
+
+ (defun toggle-frame-split ()
+   "If the frame is split vertically, split it horizontally or vice versa.
+ Assumes that the frame is only split into two."
+   (interactive)
+   (unless (= (length (window-list)) 2) (error "Can only toggle a frame split in two"))
+   (let ((split-vertically-p (window-combined-p)))
+     (delete-window) ; closes current window
+     (if split-vertically-p
+         (split-window-horizontally)
+       (split-window-vertically)) ; gives us a split with the other window twice
+     (switch-to-buffer nil))) ; restore the original window in this part of the frame
+
+ ;;shift + arrows -> change frames -> dosent work in org mode
+ #+END_SRC
+** tabbar 
 #+BEGIN_SRC emacs-lisp
-
-;; dont show hidden files
-(setq counsel-find-file-ignore-regexp
-        (concat
-         ;; File names beginning with # or .
-         "\\(?:\\`[#.]\\)"
-         ;; File names ending with # or ~
-         "\\|\\(?:\\`.+?[#~]\\'\\)"))
-
-(use-package swiper    
-  :ensure t    
-  :bind    
-  (("C-s" . swiper)    
-   ("M-x" . counsel-M-x)    
-   ("C-x C-f" . counsel-find-file)    
-   ("<f1> f" . counsel-describe-function)    
-   ("<f1> v" . counsel-describe-variable)    
-   ("<f1> l" . counsel-load-library)    
-   ("<f2> i" . counsel-info-lookup-symbol)    
-   ("<f2> u" . counsel-unicode-char)    
-   ("C-c g" . counsel-git)    
-   ("C-c j" . counsel-git-grep)    
-   ("C-c k" . counsel-ag)    
-   ("C-x l" . counsel-locate)    
-   ("C-S-o" . counsel-rhythmbox)    
-   ("C-c C-r" . ivy-resume))    
-  :config    
-  (ivy-mode 1)    
-  (setq ivy-use-virtual-buffers t)    
-  (setq ivy-count-format "(%d/%d) ")    
-  (setq projectile-completion-system 'ivy)    
-  (setq magit-completing-read-function 'ivy-completing-read)
-)
+;(use-package tabbar-ruler
+;  :ensure t)
+;(setq tabbar-ruler-global-tabbar t)    ; get tabbar
+  ;; (use-package tabbar
+  ;;   :ensure t
+  ;;   :config
+  ;;   (tabbar-mode 1)
+  ;;  )
 #+END_SRC
+** tinker 
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t) ;;highlight
+(blink-cursor-mode 0)
+#+END_SRC
+** parentheses
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1) ;;highlight
+(electric-pair-mode 1) ;;()
+#+END_SRC
+** hungry-delete
+#+BEGIN_SRC emacs-lisp
+(use-package hungry-delete
+  :ensure t
+  :config
+  (global-hungry-delete-mode))
+#+END_SRC
+** expand-region
+#+BEGIN_SRC emacs-lisp
+(use-package expand-region
+  :ensure t
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region)
+  )
+#+END_SRC
+** scroling
+#+BEGIN_SRC emacs-lisp
+(setq scroll-step 1)
+#+END_SRC
+** copy/paste/cut
+#+BEGIN_SRC emacs-lisp
+;; (cua-mode 1)
+#+END_SRC
+** keybiding
+#+BEGIN_SRC emacs-lisp
+;; (use-package ergoemacs-mode
+;; :ensure t)
+#+END_SRC
+** move-line up/down
+#+BEGIN_SRC emacs-lisp
+  (defun move-line-up ()
+    "Move up the current line."
+    (interactive)
+    (transpose-lines 1)
+    (forward-line -2)
+    (indent-according-to-mode))
+
+  (defun move-line-down ()
+    "Move down the current line."
+    (interactive)
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (indent-according-to-mode))
+
+  (global-set-key (kbd "C-S-<up>")  'move-line-up)
+  (global-set-key (kbd "C-S-<down>")  'move-line-down)
+#+END_SRC
+* JS
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;; Better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+
+(use-package js2-refactor)
+(use-package xref-js2)
+
+(add-hook 'js2-mode-hook #'js2-refactor-mode)
+(js2r-add-keybindings-with-prefix "C-c C-r")
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
+;; unbind it.
+(define-key js-mode-map (kbd "M-.") nil)
+
+(add-hook 'js2-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+#+END_SRC
+** Skewer
+#+BEGIN_SRC emacs-lisp
+;;(use-package skewer-mode
+;;:ensure t)
+;;(add-hook 'js2-mode-hook 'skewer-mode)
+;;(add-hook 'css-mode-hook 'skewer-css-mode)
+;;(add-hook 'html-mode-hook 'skewer-html-mode)
+;;(setq httpd-root "/home/slk500/Work/pong")
+#+END_SRC
+* Lisp
+** Paredit
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package paredit
+  ;;     :ensure t)
+
+  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+#+END_SRC
+https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
+* Live Editing
+#+BEGIN_SRC emacs-lisp
+(use-package impatient-mode
+:ensure t)
+(add-to-list 'load-path "~/.emacs.d/impatient-mode")
+(use-package htmlize
+:ensure t)
+(use-package simple-httpd
+:ensure t)
+#+END_SRC
+* Modes
+** Org-Mode
+** Enrich Mode?
 * PHP
 ** PHP Mode
  #+BEGIN_SRC emacs-lisp
@@ -340,6 +441,20 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 
  https://www.philnewton.net/guides/emacs-as-a-php-editor/
  
+* Python
+#+BEGIN_SRC emacs-lisp
+;;(org-babel-do-load-languages 'org-babel-load-languages 
+  ;;                           '((emacs-lisp . t)
+    ;;                           (ipython . t)))
+
+#+END_SRC
+* Save
+#+BEGIN_SRC emacs-lisp
+(use-package super-save
+  :ensure t
+  :config
+  (super-save-mode +1))
+#+END_SRC
 * shortcuts
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<f5>") 'revert-buffer)
@@ -355,59 +470,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (lorem-ipsum-use-default-bindings)
 
 #+END_SRC
-* Lisp
-** Paredit
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package paredit
-  ;;     :ensure t)
-
-  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-#+END_SRC
-https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
-* backup 
-#+BEGIN_SRC emacs-lisp
-(setq
- ;; Don't clobber symlinks
- backup-by-copying t
- backup-directory-alist
- ;; Don't litter my fs tree
- '(("." . "~/.backups"))
- delete-old-versions t
- kept-new-versions 6
- kept-old-versions 2
- ;; Use versioned backups
- version-control t)
-#+END_SRC
-* Dictionary
-https://oremacs.com/2015/05/22/define-word/
-
-* Modes
-** Org-Mode
-** Enrich Mode?
-* things to try
-reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
-https://github.com/fniessen/org-html-themes
-https://github.com/joaotavora/yasnippet
-
-* Python
-#+BEGIN_SRC emacs-lisp
-;;(org-babel-do-load-languages 'org-babel-load-languages 
-  ;;                           '((emacs-lisp . t)
-    ;;                           (ipython . t)))
-
-#+END_SRC
-* Undo Tree
-#+BEGIN_SRC emacs-lisp
-(use-package undo-tree
-  :ensure t
-  :init(global-undo-tree-mode))
-#+END_SRC
 * snippets
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
@@ -418,116 +480,54 @@ https://github.com/joaotavora/yasnippet
 (use-package yasnippet-snippets
   :ensure t)
 #+END_SRC
-* autocomplete
+* swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
-(use-package auto-complete
-  :ensure t
-  :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    ))
-#+END_SRC
-* C++
-#+BEGIN_SRC emacs-lisp
-;; Run C programs directly from within emacs
-(defun execute-c-program ()
-  (interactive)
-  (defvar foo)
-  (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
-  (shell-command foo))
 
-(global-set-key [C-f1] 'execute-c-program)
+;; dont show hidden files
+(setq counsel-find-file-ignore-regexp
+        (concat
+         ;; File names beginning with # or .
+         "\\(?:\\`[#.]\\)"
+         ;; File names ending with # or ~
+         "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
-(defun ls ()
-  "Lists the contents of the current directory."
-  (interactive)
-  (save-buffer)
-  (shell-command "./run.sh"))
-
-(global-set-key (kbd "<f6>") 'ls);
-
-(semantic-mode 1)
-
-(use-package srefactor
-:ensure t)
-
-#+END_SRC
-* JS
-#+BEGIN_SRC emacs-lisp
-(use-package js2-mode)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-
-;; Better imenu
-(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
-
-(use-package js2-refactor)
-(use-package xref-js2)
-
-(add-hook 'js2-mode-hook #'js2-refactor-mode)
-(js2r-add-keybindings-with-prefix "C-c C-r")
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
-;; unbind it.
-(define-key js-mode-map (kbd "M-.") nil)
-
-(add-hook 'js2-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-#+END_SRC
-** Skewer
-#+BEGIN_SRC emacs-lisp
-;;(use-package skewer-mode
-;;:ensure t)
-;;(add-hook 'js2-mode-hook 'skewer-mode)
-;;(add-hook 'css-mode-hook 'skewer-css-mode)
-;;(add-hook 'html-mode-hook 'skewer-html-mode)
-;;(setq httpd-root "/home/slk500/Work/pong")
-#+END_SRC
-* Autoinsert
-#+BEGIN_SRC emacs-lisp
-(use-package autoinsert
-  :init
-  ;; Don't want to be prompted before insertion:
-  (setq auto-insert-query nil)
-
-  (setq auto-insert-directory (locate-user-emacs-file "templates"))
-  (add-hook 'find-file-hook 'auto-insert)
-  (auto-insert-mode 1)
-
-  :config
-  (define-auto-insert "\\.html?$" "default-html.html"))
-#+END_SRC
-* HTML
-#+BEGIN_SRC emacs-lisp
-(setq sgml-quick-keys 'close)
-#+END_SRC
-* Live Editing
-#+BEGIN_SRC emacs-lisp
-(use-package impatient-mode
-:ensure t)
-(add-to-list 'load-path "~/.emacs.d/impatient-mode")
-(use-package htmlize
-:ensure t)
-(use-package simple-httpd
-:ensure t)
-#+END_SRC
-* Save
-#+BEGIN_SRC emacs-lisp
-(use-package super-save
-  :ensure t
-  :config
-  (super-save-mode +1))
+(use-package swiper    
+  :ensure t    
+  :bind    
+  (("C-s" . swiper)    
+   ("M-x" . counsel-M-x)    
+   ("C-x C-f" . counsel-find-file)    
+   ("<f1> f" . counsel-describe-function)    
+   ("<f1> v" . counsel-describe-variable)    
+   ("<f1> l" . counsel-load-library)    
+   ("<f2> i" . counsel-info-lookup-symbol)    
+   ("<f2> u" . counsel-unicode-char)    
+   ("C-c g" . counsel-git)    
+   ("C-c j" . counsel-git-grep)    
+   ("C-c k" . counsel-ag)    
+   ("C-x l" . counsel-locate)    
+   ("C-S-o" . counsel-rhythmbox)    
+   ("C-c C-r" . ivy-resume))    
+  :config    
+  (ivy-mode 1)    
+  (setq ivy-use-virtual-buffers t)    
+  (setq ivy-count-format "(%d/%d) ")    
+  (setq projectile-completion-system 'ivy)    
+  (setq magit-completing-read-function 'ivy-completing-read)
+)
 #+END_SRC
 * Terminal
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<M-f12>") 'shell);
 #+END_SRC
-* Edit multiple regions
+* things to try
+reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
+https://github.com/fniessen/org-html-themes
+https://github.com/joaotavora/yasnippet
+
+* Undo Tree
 #+BEGIN_SRC emacs-lisp
-(use-package iedit
-:ensure t)
+(use-package undo-tree
+  :ensure t
+  :init(global-undo-tree-mode))
 #+END_SRC
