@@ -42,36 +42,66 @@
 #+END_SRC
 * C++
 #+BEGIN_SRC emacs-lisp
-;; Run C programs directly from within emacs
-(defun execute-c-program ()
-  (interactive)
-  (defvar foo)
-  (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
-  (shell-command foo))
+    ;; Run C programs directly from within emacs
+    (defun execute-c-program ()
+      (interactive)
+      (save-buffer)
+      (defvar foo)
+      (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+      (shell-command foo))
 
-(global-set-key [C-f1] 'execute-c-program)
+    (global-set-key [C-f1] 'execute-c-program)
 
-(defun ls ()
-  "Lists the contents of the current directory."
-  (interactive)
-  (save-buffer)
-  (shell-command "./run.sh"))
+    ;; (defun ls ()
+    ;;   "Lists the contents of the current directory."
+    ;;   (interactive)
+    ;;   (save-buffer)
+    ;;   (shell-command "./run.sh"))
+    ;; (global-set-key (kbd "<f6>") 'ls);
 
-(global-set-key (kbd "<f6>") 'ls);
+    (semantic-mode 1)
 
-(semantic-mode 1)
+    (use-package srefactor
+    :ensure t)
 
-(use-package srefactor
-:ensure t)
+  ;; (add-hook 'c++-mode-hook
+  ;;           (lambda ()
+  ;; 	  (save-buffer)
+  ;;             (unless (file-exists-p "Makefile")
+  ;;               (set (make-local-variable 'compile-command)
+  ;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "g++ -g -Wall -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
 
+  ;; (add-hook 'c-mode-hook
+  ;;       (lambda ()
+  ;;       (save-buffer)
+  ;;         (unless (file-exists-p "Makefile")
+  ;;           (set (make-local-variable 'compile-command)
+  ;;                (let* ((file (file-name-nondirectory buffer-file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
 #+END_SRC
 * Dictionary
 https://oremacs.com/2015/05/22/define-word/
 
 * Edit multiple regions
 #+BEGIN_SRC emacs-lisp
-(use-package iedit
-:ensure t)
+;;(use-package iedit)
+(use-package multiple-cursors)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 #+END_SRC
 * HTML
 #+BEGIN_SRC emacs-lisp
@@ -454,6 +484,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   :ensure t
   :config
   (super-save-mode +1))
+(desktop-save-mode t)
 #+END_SRC
 * shortcuts
 #+BEGIN_SRC emacs-lisp
@@ -530,4 +561,29 @@ https://github.com/joaotavora/yasnippet
 (use-package undo-tree
   :ensure t
   :init(global-undo-tree-mode))
+#+END_SRC
+* Python
+#+BEGIN_SRC emacs-lisp
+(add-hook 'python-mode-hook
+          (lambda ()
+              (set (make-local-variable 'compile-command)
+                   (concat "python " buffer-file-name))))
+(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
+(setq compilation-ask-about-save nil)
+#+END_SRC
+* Browser
+#+BEGIN_SRC emacs-lisp
+(setq browse-url-generic-program
+      (cond
+       ((eq window-system 'mac) "open") ; mac
+       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
+        (executable-find "google-chrome"))
+       ))
+
+'(org-file-apps
+    (quote
+      ((auto-mode . emacs)
+      ("\\.mm\\'" . default)
+      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
+      ("\\.pdf\\'" . default))))
 #+END_SRC
