@@ -1,0 +1,479 @@
+(setq use-package-always-ensure t)
+
+(use-package auto-complete
+  :ensure t
+  :init
+  (progn
+    (ac-config-default)
+    (global-auto-complete-mode t)
+    ))
+
+(use-package autoinsert
+  :init
+  ;; Don't want to be prompted before insertion:
+  (setq auto-insert-query nil)
+
+  (setq auto-insert-directory (locate-user-emacs-file "templates"))
+  (add-hook 'find-file-hook 'auto-insert)
+  (auto-insert-mode 1)
+
+  :config
+  (define-auto-insert "\\.html?$" "default-html.html"))
+
+(setq
+ ;; Don't clobber symlinks
+ backup-by-copying t
+ backup-directory-alist
+ ;; Don't litter my fs tree
+ '(("." . "~/.backups"))
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ ;; Use versioned backups
+ version-control t)
+
+;; Run C programs directly from within emacs
+  (defun execute-c-program ()
+    (interactive)
+    (save-buffer)
+    (defvar foo)
+    (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+    (shell-command foo))
+
+  (global-set-key [C-f1] 'execute-c-program)
+
+  ;; (defun ls ()
+  ;;   "Lists the contents of the current directory."
+  ;;   (interactive)
+  ;;   (save-buffer)
+  ;;   (shell-command "./run.sh"))
+  ;; (global-set-key (kbd "<f6>") 'ls);
+
+  (semantic-mode 1)
+
+  (use-package srefactor
+  :ensure t)
+
+;; (add-hook 'c++-mode-hook
+;;           (lambda ()
+;; 	  (save-buffer)
+;;             (unless (file-exists-p "Makefile")
+;;               (set (make-local-variable 'compile-command)
+;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
+;;                       (executable (convert-filename-to-executable file)))
+;;                  (concat "g++ -g -Wall -o "
+;;                          (file-name-sans-extension file)
+;;                          " "
+;;                          file
+;;                          " && "
+;;                          executable))))))
+
+;; (add-hook 'c-mode-hook
+;;       (lambda ()
+;;       (save-buffer)
+;;         (unless (file-exists-p "Makefile")
+;;           (set (make-local-variable 'compile-command)
+;;                (let* ((file (file-name-nondirectory buffer-file-name))
+;;                       (executable (convert-filename-to-executable file)))
+;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
+;;                          (file-name-sans-extension file)
+;;                          " "
+;;                          file
+;;                          " && "
+;;                          executable))))))
+
+;;(use-package iedit)
+(use-package multiple-cursors)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+
+(setq sgml-quick-keys 'close)
+
+(use-package org-download
+  :ensure t
+  :config
+  ;; add support to dired
+  (add-hook 'dired-mode-hook 'org-download-enable))
+ 
+(defun drestivo/org-download-method (link)
+  "This is an helper function for org-download.
+It creates an \"./image\" folder within the same directory of the org file.
+Images are separated inside that image folder by additional folders one per
+org file.
+More info can be found here: https://github.com/abo-abo/org-download/issues/40.
+See the commit message for an example:
+https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc03039bf397b"
+  (let ((filename
+         (file-name-nondirectory
+          (car (url-path-and-query
+                (url-generic-parse-url link)))))
+        (dir (concat
+              (file-name-directory (buffer-file-name))
+              (format "%s/%s/%s"
+                      "images"
+                      (file-name-base (buffer-file-name))
+                      (org-download--dir-2)))))
+    (progn
+      (setq filename-with-timestamp (format "%s%s.%s"
+                                            (file-name-sans-extension filename)
+                                            (format-time-string org-download-timestamp)
+                                            (file-name-extension filename)))
+      ;; Check if directory exists otherwise creates it
+      (unless (file-exists-p dir)
+        (make-directory dir t))
+      (message (format "Image: %s saved!" (expand-file-name filename-with-timestamp dir)))
+      (expand-file-name filename-with-timestamp dir))))
+
+(setq org-download-method  'drestivo/org-download-method)
+
+(use-package try
+  :ensure t)
+
+(use-package counsel
+:ensure t)
+
+(use-package lorem-ipsum
+:ensure t)
+
+(use-package which-key
+  :ensure t
+  :config (which-key-mode))
+
+(use-package org-bullets
+  :ensure t
+  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(use-package company
+  :ensure t)
+(add-hook 'after-init-hook 'global-company-mode)
+
+(setq indo-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+
+(defalias 'list-buffers 'ibuffer)
+;;(defalias 'list-buffers 'ibuffer-other-window
+
+(use-package flycheck
+     :ensure t
+     :init
+     (global-flycheck-mode t))
+
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs              (if (executable-find "python") 3 0)
+          treemacs-deferred-git-apply-delay   0.5
+          treemacs-display-in-side-window     t
+          treemacs-file-event-delay           5000
+          treemacs-file-follow-delay          0.2
+          treemacs-follow-after-init          t
+          treemacs-follow-recenter-distance   0.1
+          treemacs-git-command-pipe           ""
+          treemacs-goto-tag-strategy          'refetch-index
+          treemacs-indentation                2
+          treemacs-indentation-string         " "
+          treemacs-is-never-other-window      nil
+          treemacs-max-git-entries            5000
+          treemacs-no-png-images              nil
+          treemacs-project-follow-cleanup     nil
+          treemacs-persist-file               (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-recenter-after-file-follow nil
+          treemacs-recenter-after-tag-follow  nil
+          treemacs-show-cursor                nil
+          treemacs-show-hidden-files          t
+          treemacs-silent-filewatch           nil
+          treemacs-silent-refresh             nil
+          treemacs-sorting                    'alphabetic-desc
+          treemacs-space-between-root-nodes   t
+          treemacs-tag-follow-cleanup         t
+          treemacs-tag-follow-delay           1.5
+          treemacs-width                      35)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null (executable-find "python3"))))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("M-1"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package multiple-cursors
+:ensure t)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+
+;;(load-theme 'deeper-blue)
+(use-package idea-darkula-theme
+:ensure t)
+ (load-theme 'idea-darkula t)
+
+(setq inhibit-startup-message t)
+(setq default-directory "/home/slk/Dropbox")
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(fset 'yes-or-no-p 'y-or-n-p)
+(global-visual-line-mode 1)
+(setq frame-title-format "emacs")
+
+(defun toggle-frame-split ()
+  "If the frame is split vertically, split it horizontally or vice versa.
+Assumes that the frame is only split into two."
+  (interactive)
+  (unless (= (length (window-list)) 2) (error "Can only toggle a frame split in two"))
+  (let ((split-vertically-p (window-combined-p)))
+    (delete-window) ; closes current window
+    (if split-vertically-p
+        (split-window-horizontally)
+      (split-window-vertically)) ; gives us a split with the other window twice
+    (switch-to-buffer nil))) ; restore the original window in this part of the frame
+
+;;shift + arrows -> change frames -> dosent work in org mode
+
+;(use-package tabbar-ruler
+;  :ensure t)
+;(setq tabbar-ruler-global-tabbar t)    ; get tabbar
+  ;; (use-package tabbar
+  ;;   :ensure t
+  ;;   :config
+  ;;   (tabbar-mode 1)
+  ;;  )
+
+(global-hl-line-mode t) ;;highlight
+(blink-cursor-mode 0)
+
+(show-paren-mode 1) ;;highlight
+(electric-pair-mode 1) ;;()
+
+(use-package hungry-delete
+  :ensure t
+  :config
+  (global-hungry-delete-mode))
+
+(use-package expand-region
+  :ensure t
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region)
+  )
+
+(setq scroll-step 1)
+
+;; (cua-mode 1)
+
+;; (use-package ergoemacs-mode
+;; :ensure t)
+
+(defun move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
+
+(defun move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+(global-set-key (kbd "C-S-<up>")  'move-line-up)
+(global-set-key (kbd "C-S-<down>")  'move-line-down)
+
+(use-package js2-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;; Better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+
+(use-package js2-refactor)
+(use-package xref-js2)
+
+(add-hook 'js2-mode-hook #'js2-refactor-mode)
+(js2r-add-keybindings-with-prefix "C-c C-r")
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
+;; unbind it.
+(define-key js-mode-map (kbd "M-.") nil)
+
+(add-hook 'js2-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+;;(use-package skewer-mode
+;;:ensure t)
+;;(add-hook 'js2-mode-hook 'skewer-mode)
+;;(add-hook 'css-mode-hook 'skewer-css-mode)
+;;(add-hook 'html-mode-hook 'skewer-html-mode)
+;;(setq httpd-root "/home/slk500/Work/pong")
+
+;; (use-package paredit
+;;     :ensure t)
+
+;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+
+(use-package impatient-mode
+:ensure t)
+(add-to-list 'load-path "~/.emacs.d/impatient-mode")
+(use-package htmlize
+:ensure t)
+(use-package simple-httpd
+:ensure t)
+
+(use-package php-mode :ensure t)
+
+(use-package phpunit :ensure t)
+
+(require 'org)
+(require 'ob)
+
+(defgroup ob-php nil
+  "org-mode blocks for PHP."
+  :group 'org)
+
+(defcustom ob-php:inf-php-buffer "*php*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+(defun org-babel-execute:php (body params)
+  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+  (let* ((cmd "php")
+         (body (concat "<?php\n" body "\n?>")))
+    (org-babel-eval cmd body)
+    ))
+
+(eval-after-load "org"
+  '(add-to-list 'org-src-lang-modes '("php" . php)))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+             '(:results . "output"))
+
+(provide 'ob-php)
+
+;;(org-babel-do-load-languages 'org-babel-load-languages 
+  ;;                           '((emacs-lisp . t)
+    ;;                           (ipython . t)))
+
+(use-package super-save
+  :ensure t
+  :config
+  (super-save-mode +1))
+(desktop-save-mode t)
+
+(global-set-key (kbd "<f5>") 'revert-buffer)
+(global-set-key (kbd "C-x 5") 'toggle-frame-split)
+
+(add-hook 'org-shiftup-final-hook 'windmove-up)
+(add-hook 'org-shiftleft-final-hook 'windmove-left)
+(add-hook 'org-shiftdown-final-hook 'windmove-down)
+(add-hook 'org-shiftright-final-hook 'windmove-right)
+
+(windmove-default-keybindings)
+
+(lorem-ipsum-use-default-bindings)
+
+(use-package yasnippet
+  :ensure t
+  :init
+  :config
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+(use-package yasnippet-snippets
+  :ensure t)
+
+;; dont show hidden files
+(setq counsel-find-file-ignore-regexp
+        (concat
+         ;; File names beginning with # or .
+         "\\(?:\\`[#.]\\)"
+         ;; File names ending with # or ~
+         "\\|\\(?:\\`.+?[#~]\\'\\)"))
+
+(use-package swiper    
+  :ensure t    
+  :bind    
+  (("C-s" . swiper)    
+   ("M-x" . counsel-M-x)    
+   ("C-x C-f" . counsel-find-file)    
+   ("<f1> f" . counsel-describe-function)    
+   ("<f1> v" . counsel-describe-variable)    
+   ("<f1> l" . counsel-load-library)    
+   ("<f2> i" . counsel-info-lookup-symbol)    
+   ("<f2> u" . counsel-unicode-char)    
+   ("C-c g" . counsel-git)    
+   ("C-c j" . counsel-git-grep)    
+   ("C-c k" . counsel-ag)    
+   ("C-x l" . counsel-locate)    
+   ("C-S-o" . counsel-rhythmbox)    
+   ("C-c C-r" . ivy-resume))    
+  :config    
+  (ivy-mode 1)    
+  (setq ivy-use-virtual-buffers t)    
+  (setq ivy-count-format "(%d/%d) ")    
+  (setq projectile-completion-system 'ivy)    
+  (setq magit-completing-read-function 'ivy-completing-read)
+)
+
+(global-set-key (kbd "<M-f12>") 'shell);
+
+(use-package undo-tree
+  :ensure t
+  :init(global-undo-tree-mode))
+
+(add-hook 'python-mode-hook
+          (lambda ()
+              (set (make-local-variable 'compile-command)
+                   (concat "python " buffer-file-name))))
+(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
+(setq compilation-ask-about-save nil)
+
+(setq browse-url-generic-program
+      (cond
+       ((eq window-system 'mac) "open") ; mac
+       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
+        (executable-find "google-chrome"))
+       ))
+
+'(org-file-apps
+    (quote
+      ((auto-mode . emacs)
+      ("\\.mm\\'" . default)
+      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
+      ("\\.pdf\\'" . default))))
