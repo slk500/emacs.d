@@ -335,7 +335,9 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 ** scroling
 #+BEGIN_SRC emacs-lisp
-(setq scroll-step 1)
+(setq
+ hscroll-step 1
+ scroll-conservatively 1000) 
 #+END_SRC
 ** copy/paste/cut
 #+BEGIN_SRC emacs-lisp
@@ -439,34 +441,41 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 ** Babel
  #+BEGIN_SRC emacs-lisp
- (require 'org)
- (require 'ob)
+ 
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((shell . t)))
 
- (defgroup ob-php nil
-   "org-mode blocks for PHP."
-   :group 'org)
+   (require 'org)
+   (require 'ob)
 
- (defcustom ob-php:inf-php-buffer "*php*"
-   "Default PHP inferior buffer."
-   :group 'ob-php
-   :type 'string)
+   (defgroup ob-php nil
+     "org-mode blocks for PHP."
+     :group 'org)
 
- (defun org-babel-execute:php (body params)
-   "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-   (let* ((cmd "php")
-          (body (concat "<?php\n" body "\n?>")))
-     (org-babel-eval cmd body)
-     ))
+   (defcustom ob-php:inf-php-buffer "*phpunit*"
+     "Default PHP inferior buffer."
+     :group 'ob-php
+     :type 'string)
 
- (eval-after-load "org"
-   '(add-to-list 'org-src-lang-modes '("php" . php)))
+   ;;;###autoload
+   (eval-after-load "org"
+     '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
 
- (defvar org-babel-default-header-args:php '())
+   (defvar org-babel-default-header-args:phpunit '())
 
- (add-to-list 'org-babel-default-header-args:php
-              '(:results . "output"))
+   (add-to-list 'org-babel-default-header-args:phpunit
+		'(:results . "output"))
 
- (provide 'ob-php)
+   (provide 'ob-php)
+
+   ;;;###autoload
+   (defun org-babel-execute:phpunit (body params)
+     "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+     (let* ((cmd "/home/slk500/Dropbox/phprefactor/phpunithack.sh")
+	    (body (concat "<?php\n" body "\n?>")))
+	    (write-region body  nil "/home/slk500/Dropbox/phprefactor/test.php")
+       (org-babel-eval cmd body)
+       ))
  #+END_SRC
 
  https://www.philnewton.net/guides/emacs-as-a-php-editor/
@@ -586,4 +595,10 @@ https://github.com/joaotavora/yasnippet
       ("\\.mm\\'" . default)
       ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
       ("\\.pdf\\'" . default))))
+#+END_SRC
+* Org
+#+BEGIN_SRC emacs-lisp
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-preserve-indentation t)
 #+END_SRC
