@@ -417,6 +417,10 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 #+END_SRC
 https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
+** flycheck
+#+BEGIN_SRC emacs-lisp
+(setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+#+END_SRC
 * Live Editing
 #+BEGIN_SRC emacs-lisp
 (use-package impatient-mode
