@@ -1,4 +1,3 @@
-
 * auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
@@ -275,28 +274,27 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
  #+END_SRC
 ** others
  #+BEGIN_SRC emacs-lisp
- (setq inhibit-startup-message t)
- (setq default-directory (concat(file-name-directory buffer-file-name) "../"))
- (tool-bar-mode -1)
- (menu-bar-mode -1)
- (scroll-bar-mode -1)
- (fset 'yes-or-no-p 'y-or-n-p)
- (global-visual-line-mode 1)
- (setq frame-title-format "emacs")
+   (setq inhibit-startup-message t)
+   (tool-bar-mode -1)
+   (menu-bar-mode -1)
+   (scroll-bar-mode -1)
+   (fset 'yes-or-no-p 'y-or-n-p)
+   (global-visual-line-mode 1)
+   (setq frame-title-format "emacs")
 
- (defun toggle-frame-split ()
-   "If the frame is split vertically, split it horizontally or vice versa.
- Assumes that the frame is only split into two."
-   (interactive)
-   (unless (= (length (window-list)) 2) (error "Can only toggle a frame split in two"))
-   (let ((split-vertically-p (window-combined-p)))
-     (delete-window) ; closes current window
-     (if split-vertically-p
-         (split-window-horizontally)
-       (split-window-vertically)) ; gives us a split with the other window twice
-     (switch-to-buffer nil))) ; restore the original window in this part of the frame
+   (defun toggle-frame-split ()
+     "If the frame is split vertically, split it horizontally or vice versa.
+   Assumes that the frame is only split into two."
+     (interactive)
+     (unless (= (length (window-list)) 2) (error "Can only toggle a frame split in two"))
+     (let ((split-vertically-p (window-combined-p)))
+       (delete-window) ; closes current window
+       (if split-vertically-p
+	   (split-window-horizontally)
+	 (split-window-vertically)) ; gives us a split with the other window twice
+       (switch-to-buffer nil))) ; restore the original window in this part of the frame
 
- ;;shift + arrows -> change frames -> dosent work in org mode
+   ;;shift + arrows -> change frames -> dosent work in org mode
  #+END_SRC
 ** tabbar 
 #+BEGIN_SRC emacs-lisp
@@ -610,3 +608,14 @@ https://github.com/joaotavora/yasnippet
       org-src-tab-acts-natively t
       org-src-preserve-indentation t)
 #+END_SRC
+* Init file
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
+#+END_SRC
+
+
+
