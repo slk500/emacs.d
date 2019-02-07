@@ -1,3 +1,4 @@
+
 * auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
@@ -275,7 +276,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ** others
  #+BEGIN_SRC emacs-lisp
  (setq inhibit-startup-message t)
- (setq default-directory "/home/slk/Dropbox")
+ (setq default-directory (concat(file-name-directory buffer-file-name) "../"))
  (tool-bar-mode -1)
  (menu-bar-mode -1)
  (scroll-bar-mode -1)
@@ -470,16 +471,19 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
    (add-to-list 'org-babel-default-header-args:phpunit
 		'(:results . "output"))
 
-   (provide 'ob-php)
+(provide 'ob-php)
+
+;;(concat(file-name-directory buffer-file-name) "../Dropbox/phprefactor")
 
    ;;;###autoload
    (defun org-babel-execute:phpunit (body params)
      "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-     (let* ((cmd "/home/slk500/Dropbox/phprefactor/phpunithack.sh")
+     (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
 	    (body (concat "<?php\n" body "\n?>")))
-	    (write-region body  nil "/home/slk500/Dropbox/phprefactor/test.php")
+	    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
        (org-babel-eval cmd body)
        ))
+       
  #+END_SRC
 
  https://www.philnewton.net/guides/emacs-as-a-php-editor/
