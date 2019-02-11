@@ -620,7 +620,7 @@ https://github.com/joaotavora/yasnippet
 * Copy
 #+BEGIN_SRC emacs-lisp
  (defun get-point (symbol &optional arg)
-      "get the point"
+   "get the point"
       (funcall symbol arg)
       (point))
      
@@ -651,9 +651,17 @@ https://github.com/joaotavora/yasnippet
       "Save current line into Kill-Ring without mark the line "
        (interactive "P")
        (copy-thing 'beginning-of-line 'end-of-line arg)
-       (paste-to-mark arg)
+     ;;  (paste-to-mark arg)
      )
 
 (global-set-key (kbd "C-c l") 'copy-line)
+(setq x-select-enable-clipboard t)
 #+END_SRC
-
+* String
+#+BEGIN_SRC emacs-lisp
+(defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
+#+END_SRC
+* Magit
+#+BEGIN_SRC emacs-lisp
+(use-package magit)
+#+END_SRC
