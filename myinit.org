@@ -615,7 +615,45 @@ https://github.com/joaotavora/yasnippet
 
 #+BEGIN_SRC emacs-lisp
 ;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
+(setq default-directory "home/slk/Dropbox")
 #+END_SRC
+* Copy
+#+BEGIN_SRC emacs-lisp
+ (defun get-point (symbol &optional arg)
+      "get the point"
+      (funcall symbol arg)
+      (point))
+     
+    (defun copy-thing (begin-of-thing end-of-thing &optional arg)
+      "Copy thing between beg & end into kill ring."
+      (save-excursion
+        (let ((beg (get-point begin-of-thing 1))
+              (end (get-point end-of-thing arg)))
+          (copy-region-as-kill beg end))))
+     
+    (defun paste-to-mark (&optional arg)
+      "Paste things to mark, or to the prompt in shell-mode."
+      (unless (eq arg 1)
+        (if (string= "shell-mode" major-mode)
+            (comint-next-prompt 25535)
+          (goto-char (mark)))
+        (yank)))
+     
+  (defun copy-word (&optional arg)
+      "Copy words at point into kill-ring"
+       (interactive "P")
+       (copy-thing 'backward-word 'forward-word arg)
+       ;;(paste-to-mark arg)
+     )
+(global-set-key (kbd "C-c w") 'copy-word)
 
+     (defun copy-line (&optional arg)
+      "Save current line into Kill-Ring without mark the line "
+       (interactive "P")
+       (copy-thing 'beginning-of-line 'end-of-line arg)
+       (paste-to-mark arg)
+     )
 
+(global-set-key (kbd "C-c l") 'copy-line)
+#+END_SRC
 
