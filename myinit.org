@@ -263,14 +263,18 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (global-set-key (kbd "C->") 'mc/mark-next-like-this)
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
-#+END_SRC
-* interface tweaks
+(global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+
+
+
+#+End_src
+* Interface tweaks
 ** theme 
  #+BEGIN_SRC emacs-lisp
  ;;(load-theme 'deeper-blue)
-(use-package idea-darkula-theme
-:ensure t)
- (load-theme 'idea-darkula t)
+;; (use-package idea-darkula-theme
+;; :ensure t)
+;;  (load-theme 'idea-darkula t)
  #+END_SRC
 ** others
  #+BEGIN_SRC emacs-lisp
@@ -420,6 +424,12 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+BEGIN_SRC emacs-lisp
 (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 #+END_SRC
+** slime
+#+BEGIN_SRC emacs-lisp
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(setq slime-contribs '(slime-fancy))
+(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
+#+END_SRC
 * Live Editing
 #+BEGIN_SRC emacs-lisp
 (use-package impatient-mode
@@ -430,21 +440,14 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (use-package simple-httpd
 :ensure t)
 #+END_SRC
-* Modes
-** Org-Mode
-** Enrich Mode?
 * PHP
-** PHP Mode
- #+BEGIN_SRC emacs-lisp
- (use-package php-mode :ensure t)
- #+END_SRC
 ** PHPUnit
 #+BEGIN_SRC emacs-lisp
 (use-package phpunit :ensure t)
 #+END_SRC
 ** Babel
- #+BEGIN_SRC emacs-lisp
- 
+*** phpunit
+   #+BEGIN_SRC emacs-lisp 
 (org-babel-do-load-languages
  'org-babel-load-languages '((shell . t)))
 
@@ -455,7 +458,12 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
      "org-mode blocks for PHP."
      :group 'org)
 
-   (defcustom ob-php:inf-php-buffer "*phpunit*"
+    (defcustom ob-php:inf-php-buffer "*phpunit*"
+     "Default PHP inferior buffer."
+     :group 'ob-php
+     :type 'string)
+
+   (defcustom ob-php:inf-php-buffer "*php*"
      "Default PHP inferior buffer."
      :group 'ob-php
      :type 'string)
@@ -464,10 +472,21 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
    (eval-after-load "org"
      '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
 
+   ;;;###autoload
+   (eval-after-load "org"
+     '(add-to-list 'org-src-lang-modes '("php" . php)))
+
+
    (defvar org-babel-default-header-args:phpunit '())
 
    (add-to-list 'org-babel-default-header-args:phpunit
 		'(:results . "output"))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+		'(:results . "output"))
+
 
 (provide 'ob-php)
 
@@ -482,10 +501,75 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
        (org-babel-eval cmd body)
        ))
        
- #+END_SRC
+   #+END_SRC
 
- https://www.philnewton.net/guides/emacs-as-a-php-editor/
- 
+   https://www.philnewton.net/guides/emacs-as-a-php-editor/
+*** php
+#+BEGIN_SRC emacs-lisp
+(require 'org)
+(require 'ob)
+
+(defgroup ob-php nil
+  "org-mode blocks for PHP."
+  :group 'org)
+
+(defcustom ob-php:inf-php-buffer "*php*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+;;;###autoload
+(defun org-babel-execute:php (body params)
+  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+  (let* ((cmd "php")
+         (body (concat "<?php\n" body "\n?>")))
+    (org-babel-eval cmd body)
+    ))
+
+;;;###autoload
+(eval-after-load "org"
+  '(add-to-list 'org-src-lang-modes '("php" . php)))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+             '(:results . "output"))
+
+(provide 'ob-php)
+
+#+END_SRC
+** dump jump
+#+BEGIN_SRC emacs-lisp
+;; (use-package dumb-jump
+;;   :bind (("M-g o" . dumb-jump-go-other-window)
+;;          ("M-g j" . dumb-jump-go)
+;;          ("M-g i" . dumb-jump-go-prompt)
+;;          ("M-g x" . dumb-jump-go-prefer-external)
+;;          ("M-g z" . dumb-jump-go-prefer-external-other-window))
+;;   :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
+;;   :ensure)
+#+END_SRC
+** ac-phpctags & mode
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'ac-php )
+    (package-refresh-contents)
+    (package-install 'ac-php )
+    )
+  (require 'cl)
+  (require 'php-mode)
+  (add-hook 'php-mode-hook
+            '(lambda ()
+               (auto-complete-mode t)
+               (require 'ac-php)
+               (setq ac-sources  '(ac-source-php ) )
+               (yas-global-mode 1)
+               (ac-php-core-eldoc-setup ) ;; enable eldoc
+
+               (define-key php-mode-map  (kbd "C-]") 'ac-php-find-symbol-at-point)   ;goto define
+               (define-key php-mode-map  (kbd "C-t") 'ac-php-location-stack-back)    ;go back
+               ))
+
+#+END_SRC
 * Python
 #+BEGIN_SRC emacs-lisp
 ;;(org-babel-do-load-languages 'org-babel-load-languages 
@@ -518,13 +602,13 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * snippets
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :ensure t
-  :init
-  :config
-  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
-(use-package yasnippet-snippets
-  :ensure t)
+;; (use-package yasnippet
+;;   :ensure t
+;;   :init
+;;   :config
+;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+;; (use-package yasnippet-snippets
+;;   :ensure t)
 #+END_SRC
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
@@ -568,9 +652,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * things to try
 reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
+** Enrich Mode?
 https://github.com/fniessen/org-html-themes
-https://github.com/joaotavora/yasnippet
-
 # * Undo Tree
 # #+BEGIN_SRC emacs-lisp
 # (use-package undo-tree
@@ -607,6 +690,13 @@ https://github.com/joaotavora/yasnippet
 (setq org-edit-src-content-indentation 0
       org-src-tab-acts-natively t
       org-src-preserve-indentation t)
+
+(global-set-key "\C-ca" 'org-agenda)
+#+END_SRC
+** encryption
+#+BEGIN_SRC emacs-lisp
+(require 'epa-file)
+(epa-file-enable)
 #+END_SRC
 * Init file
 #+BEGIN_SRC emacs-lisp
@@ -664,4 +754,8 @@ https://github.com/joaotavora/yasnippet
 * Magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit)
+#+END_SRC
+* Center
+#+BEGIN_SRC emacs-lisp
+(use-package centered-window :ensure t)
 #+END_SRC
