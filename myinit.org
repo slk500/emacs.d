@@ -759,3 +759,15 @@ https://github.com/fniessen/org-html-themes
 #+BEGIN_SRC emacs-lisp
 (use-package centered-window :ensure t)
 #+END_SRC
+* Projectile
+#+BEGIN_SRC emacs-lisp
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+(projectile-mode +1)
+#+END_SRC
+* Fold
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c C-f") 'fold-this-all)
+(global-set-key (kbd "C-c C-F") 'fold-this)
+(global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
+#+END_SRC
