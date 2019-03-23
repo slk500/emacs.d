@@ -761,6 +761,8 @@ https://github.com/fniessen/org-html-themes
 #+END_SRC
 * Projectile
 #+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t)
 (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 (projectile-mode +1)
@@ -791,3 +793,20 @@ https://github.com/fniessen/org-html-themes
 #+BEGIN_SRC emacs-lisp
 (electric-indent-mode +1)
 #+END_SRC
+* Paste
+#+BEGIN_SRC emacs-lisp
+ (dolist (command '(yank yank-pop))
+   (eval `(defadvice ,command (after indent-region activate)
+            (and (not current-prefix-arg)
+                 (member major-mode '(emacs-lisp-mode lisp-mode
+                                                      clojure-mode    scheme-mode
+                                                      haskell-mode    ruby-mode
+                                                      rspec-mode      python-mode
+                                                      c-mode          c++-mode
+                                                      objc-mode       latex-mode
+                                                      plain-tex-mode clojurescript-mode))
+                 (let ((mark-even-if-inactive transient-mark-mode))
+                   (indent-region (region-beginning) (region-end) nil))))))
+#+END_SRC
+
+
