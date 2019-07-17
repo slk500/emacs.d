@@ -1,3 +1,7 @@
+* Alarm Bell
+#+BEGIN_SRC emacs-lisp
+(setq ring-bell-function 'ignore)
+#+END_SRC
 * auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
@@ -39,6 +43,43 @@
  kept-old-versions 2
  ;; Use versioned backups
  version-control t)
+#+END_SRC
+* Browser
+#+BEGIN_SRC emacs-lisp
+(setq browse-url-generic-program
+      (cond
+       ((eq window-system 'mac) "open") ; mac
+       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
+        (executable-find "google-chrome"))
+       ))
+
+'(org-file-apps
+    (quote
+      ((auto-mode . emacs)
+      ("\\.mm\\'" . default)
+      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
+      ("\\.pdf\\'" . default))))
+#+END_SRC
+* Buffers
+#+BEGIN_SRC emacs-lisp
+(use-package buffer-move :ensure t)
+(global-set-key (kbd "<C-S-up>")     'buf-move-up)
+(global-set-key (kbd "<C-S-down>")   'buf-move-down)
+(global-set-key (kbd "<C-S-left>")   'buf-move-left)
+(global-set-key (kbd "<C-S-right>")  'buf-move-right)
+
+(defun transpose-windows ()
+   "Transpose two windows.  If more or less than two windows are visible, error."
+   (interactive)
+   (unless (= 2 (count-windows))
+     (error "There are not 2 windows."))
+   (let* ((windows (window-list))
+          (w1 (car windows))
+          (w2 (nth 1 windows))
+          (w1b (window-buffer w1))
+          (w2b (window-buffer w2)))
+     (set-window-buffer w1 w2b)
+     (set-window-buffer w2 w1b)))
 #+END_SRC
 * C++
 #+BEGIN_SRC emacs-lisp
@@ -92,9 +133,63 @@
   ;;                          " && "
   ;;                          executable))))))
 #+END_SRC
+* Center
+#+BEGIN_SRC emacs-lisp
+(use-package centered-window :ensure t)
+#+END_SRC
+* Copy
+#+BEGIN_SRC emacs-lisp
+ (defun get-point (symbol &optional arg)
+   "get the point"
+      (funcall symbol arg)
+      (point))
+     
+    (defun copy-thing (begin-of-thing end-of-thing &optional arg)
+      "Copy thing between beg & end into kill ring."
+      (save-excursion
+        (let ((beg (get-point begin-of-thing 1))
+              (end (get-point end-of-thing arg)))
+          (copy-region-as-kill beg end))))
+     
+    (defun paste-to-mark (&optional arg)
+      "Paste things to mark, or to the prompt in shell-mode."
+      (unless (eq arg 1)
+        (if (string= "shell-mode" major-mode)
+            (comint-next-prompt 25535)
+          (goto-char (mark)))
+        (yank)))
+     
+  (defun copy-word (&optional arg)
+      "Copy words at point into kill-ring"
+       (interactive "P")
+       (copy-thing 'backward-word 'forward-word arg)
+       ;;(paste-to-mark arg)
+     )
+(global-set-key (kbd "C-c w") 'copy-word)
+
+     (defun copy-line (&optional arg)
+      "Save current line into Kill-Ring without mark the line "
+       (interactive "P")
+       (copy-thing 'beginning-of-line 'end-of-line arg)
+     ;;  (paste-to-mark arg)
+     )
+
+(global-set-key (kbd "C-c l") 'copy-line)
+(setq x-select-enable-clipboard t)
+#+END_SRC
 * Dictionary
 https://oremacs.com/2015/05/22/define-word/
+(use-package define-word)
+(global-set-key (kbd "C-c d") 'define-word-at-point)
+(global-set-key (kbd "C-c D") 'define-word)
 
+* Dired
+#+BEGIN_SRC emacs-lisp
+(use-package dired+
+:ensure t
+:config (require 'dired+))
+
+#+END_SRC
 * Edit multiple regions
 #+BEGIN_SRC emacs-lisp
 ;;(use-package iedit)
@@ -103,9 +198,39 @@ https://oremacs.com/2015/05/22/define-word/
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 #+END_SRC
+* El-get
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+
+
+
+(unless (require 'el-get nil t)
+  (url-retrieve
+   "https://raw.github.com/dimitri/el-get/master/el-get-install.el"
+   (lambda (s)
+     (end-of-buffer)
+     (eval-print-last-sexp))))
+
+#+END_SRC
+asdad
+* Fold
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c C-f") 'fold-this-all)
+(global-set-key (kbd "C-c C-F") 'fold-this)
+(global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
+#+END_SRC
 * HTML
 #+BEGIN_SRC emacs-lisp
 (setq sgml-quick-keys 'close)
+#+END_SRC
+* Init file
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
+(setq default-directory "home/slk/Dropbox")
 #+END_SRC
 * installs
 ** Image drag & drop download
@@ -271,10 +396,10 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * Interface tweaks
 ** theme 
  #+BEGIN_SRC emacs-lisp
- ;;(load-theme 'deeper-blue)
+ (load-theme 'wheatgrass)
 ;; (use-package idea-darkula-theme
 ;; :ensure t)
-;;  (load-theme 'idea-darkula t)
+;;(load-theme 'idea-darkula t)
  #+END_SRC
 ** others
  #+BEGIN_SRC emacs-lisp
@@ -302,7 +427,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
  #+END_SRC
 ** tinker 
 #+BEGIN_SRC emacs-lisp
-(global-hl-line-mode t) ;;highlight
+;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
 #+END_SRC
 ** parentheses
@@ -375,6 +500,13 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
+(require 'ob-js)
+
+(add-to-list 'org-babel-load-languages '(js . t))
+(org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+(add-to-list 'org-babel-tangle-lang-exts '("js" . "js"))
+
+
 #+END_SRC
 ** Skewer
 #+BEGIN_SRC emacs-lisp
@@ -384,6 +516,20 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ;;(add-hook 'css-mode-hook 'skewer-css-mode)
 ;;(add-hook 'html-mode-hook 'skewer-html-mode)
 ;;(setq httpd-root "/home/slk500/Work/pong")
+#+END_SRC
+* Json
+#+BEGIN_SRC emacs-lisp
+(use-package flymake-json :ensure t)
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
+(setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
+#+END_SRC
+* Key Chord
+#+BEGIN_SRC emacs-lisp
+(use-package key-chord :ensure t)
+(key-chord-mode 1)
+(key-chord-define-global "ww"     'transpose-windows)
+
+
 #+END_SRC
 * Lisp
 ** Paredit
@@ -420,7 +566,63 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (use-package simple-httpd
 :ensure t)
 #+END_SRC
+* Magit
+#+BEGIN_SRC emacs-lisp
+(use-package magit)
+#+END_SRC
+* Org
+#+BEGIN_SRC emacs-lisp
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-preserve-indentation t)
+
+(global-set-key "\C-ca" 'org-agenda)
+
+(require 'ox)
+
+(defun org+-export-header-only (tree _back-end _channel)
+  "Remove the content of headlines with the :exportHeadlineOnly: tag in TREE.
+This function can be used in `org-export-filter-parse-tree-functions'."
+  ;; We modify the tree by side-effect and ignore the return value.
+  (org-element-map
+      tree
+      'headline
+    (lambda (el)
+      (when (assoc-string 'exportHeadlineOnly (org-element-property :tags el))
+        (org-element-set-contents el nil)
+        )))
+  tree)
+
+(add-to-list 'org-export-filter-parse-tree-functions #'org+-export-header-only)
+
+#+END_SRC
+** encryption
+#+BEGIN_SRC emacs-lisp
+(require 'epa-file)
+(epa-file-enable)
+#+END_SRC
+* Paste
+#+BEGIN_SRC emacs-lisp
+ (dolist (command '(yank yank-pop))
+   (eval `(defadvice ,command (after indent-region activate)
+            (and (not current-prefix-arg)
+                 (member major-mode '(emacs-lisp-mode lisp-mode
+                                                      clojure-mode    scheme-mode
+                                                      haskell-mode    ruby-mode
+                                                      rspec-mode      python-mode
+                                                      c-mode          c++-mode
+                                                      objc-mode       latex-mode
+                                                      plain-tex-mode clojurescript-mode typescript-mode))
+                 (let ((mark-even-if-inactive transient-mark-mode))
+                   (indent-region (region-beginning) (region-end) nil))))))
+#+END_SRC
+* PDF
+#+BEGIN_SRC emacs-lisp
+(pdf-tools-install)
+#+END_SRC
+
 * PHP
+https://github.com/Abuelodelanada/pepe-emacs-config
 ** PHPUnit
 #+BEGIN_SRC emacs-lisp
 (use-package phpunit :ensure t)
@@ -550,12 +752,29 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
                ))
 
 #+END_SRC
+* Projectile
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t)
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+(projectile-mode +1)
+#+END_SRC
 * Python
 #+BEGIN_SRC emacs-lisp
 ;;(org-babel-do-load-languages 'org-babel-load-languages 
   ;;                           '((emacs-lisp . t)
     ;;                           (ipython . t)))
 
+#+END_SRC
+* Python
+#+BEGIN_SRC emacs-lisp
+(add-hook 'python-mode-hook
+          (lambda ()
+              (set (make-local-variable 'compile-command)
+                   (concat "python " buffer-file-name))))
+(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
+(setq compilation-ask-about-save nil)
 #+END_SRC
 * Save
 #+BEGIN_SRC emacs-lisp
@@ -589,6 +808,10 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 ;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
 ;; (use-package yasnippet-snippets
 ;;   :ensure t)
+#+END_SRC
+* String
+#+BEGIN_SRC emacs-lisp
+(defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
 #+END_SRC
 * swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
@@ -640,180 +863,6 @@ https://github.com/fniessen/org-html-themes
 #   :ensure t
 #   :init(global-undo-tree-mode))
 # #+END_SRC
-* Python
-#+BEGIN_SRC emacs-lisp
-(add-hook 'python-mode-hook
-          (lambda ()
-              (set (make-local-variable 'compile-command)
-                   (concat "python " buffer-file-name))))
-(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
-(setq compilation-ask-about-save nil)
-#+END_SRC
-* Browser
-#+BEGIN_SRC emacs-lisp
-(setq browse-url-generic-program
-      (cond
-       ((eq window-system 'mac) "open") ; mac
-       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
-        (executable-find "google-chrome"))
-       ))
-
-'(org-file-apps
-    (quote
-      ((auto-mode . emacs)
-      ("\\.mm\\'" . default)
-      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
-      ("\\.pdf\\'" . default))))
-#+END_SRC
-* Org
-#+BEGIN_SRC emacs-lisp
-(setq org-edit-src-content-indentation 0
-      org-src-tab-acts-natively t
-      org-src-preserve-indentation t)
-
-(global-set-key "\C-ca" 'org-agenda)
-
-(require 'ox)
-
-(defun org+-export-header-only (tree _back-end _channel)
-  "Remove the content of headlines with the :exportHeadlineOnly: tag in TREE.
-This function can be used in `org-export-filter-parse-tree-functions'."
-  ;; We modify the tree by side-effect and ignore the return value.
-  (org-element-map
-      tree
-      'headline
-    (lambda (el)
-      (when (assoc-string 'exportHeadlineOnly (org-element-property :tags el))
-        (org-element-set-contents el nil)
-        )))
-  tree)
-
-(add-to-list 'org-export-filter-parse-tree-functions #'org+-export-header-only)
-
-#+END_SRC
-** encryption
-#+BEGIN_SRC emacs-lisp
-(require 'epa-file)
-(epa-file-enable)
-#+END_SRC
-* Init file
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
-(setq default-directory "home/slk/Dropbox")
-#+END_SRC
-* Copy
-#+BEGIN_SRC emacs-lisp
- (defun get-point (symbol &optional arg)
-   "get the point"
-      (funcall symbol arg)
-      (point))
-     
-    (defun copy-thing (begin-of-thing end-of-thing &optional arg)
-      "Copy thing between beg & end into kill ring."
-      (save-excursion
-        (let ((beg (get-point begin-of-thing 1))
-              (end (get-point end-of-thing arg)))
-          (copy-region-as-kill beg end))))
-     
-    (defun paste-to-mark (&optional arg)
-      "Paste things to mark, or to the prompt in shell-mode."
-      (unless (eq arg 1)
-        (if (string= "shell-mode" major-mode)
-            (comint-next-prompt 25535)
-          (goto-char (mark)))
-        (yank)))
-     
-  (defun copy-word (&optional arg)
-      "Copy words at point into kill-ring"
-       (interactive "P")
-       (copy-thing 'backward-word 'forward-word arg)
-       ;;(paste-to-mark arg)
-     )
-(global-set-key (kbd "C-c w") 'copy-word)
-
-     (defun copy-line (&optional arg)
-      "Save current line into Kill-Ring without mark the line "
-       (interactive "P")
-       (copy-thing 'beginning-of-line 'end-of-line arg)
-     ;;  (paste-to-mark arg)
-     )
-
-(global-set-key (kbd "C-c l") 'copy-line)
-(setq x-select-enable-clipboard t)
-#+END_SRC
-* String
-#+BEGIN_SRC emacs-lisp
-(defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
-#+END_SRC
-* Magit
-#+BEGIN_SRC emacs-lisp
-(use-package magit)
-#+END_SRC
-* Center
-#+BEGIN_SRC emacs-lisp
-(use-package centered-window :ensure t)
-#+END_SRC
-* Projectile
-#+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t)
-(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-(projectile-mode +1)
-#+END_SRC
-* Fold
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c C-f") 'fold-this-all)
-(global-set-key (kbd "C-c C-F") 'fold-this)
-(global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
-#+END_SRC
-* Alarm Bell
-#+BEGIN_SRC emacs-lisp
-(setq ring-bell-function 'ignore)
-#+END_SRC
-* Web-mode
-#+BEGIN_SRC emacs-lisp
-(use-package web-mode :ensure t)
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-
-(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-#+END_SRC
-#+BEGIN_SRC emacs-lisp
-(electric-indent-mode +1)
-#+END_SRC
-* Paste
-#+BEGIN_SRC emacs-lisp
- (dolist (command '(yank yank-pop))
-   (eval `(defadvice ,command (after indent-region activate)
-            (and (not current-prefix-arg)
-                 (member major-mode '(emacs-lisp-mode lisp-mode
-                                                      clojure-mode    scheme-mode
-                                                      haskell-mode    ruby-mode
-                                                      rspec-mode      python-mode
-                                                      c-mode          c++-mode
-                                                      objc-mode       latex-mode
-                                                      plain-tex-mode clojurescript-mode typescript-mode))
-                 (let ((mark-even-if-inactive transient-mark-mode))
-                   (indent-region (region-beginning) (region-end) nil))))))
-#+END_SRC
-* Buffer move
-#+BEGIN_SRC emacs-lisp
-(use-package buffer-move :ensure t)
-(global-set-key (kbd "<C-S-up>")     'buf-move-up)
-(global-set-key (kbd "<C-S-down>")   'buf-move-down)
-(global-set-key (kbd "<C-S-left>")   'buf-move-left)
-(global-set-key (kbd "<C-S-right>")  'buf-move-right)
-#+END_SRC
 * TypeScript
 #+BEGIN_SRC emacs-lisp
 (use-package typescript-mode :ensure t)
@@ -839,36 +888,19 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 #+END_SRC
-* Key Chord
+* Web-mode
 #+BEGIN_SRC emacs-lisp
-(use-package key-chord :ensure t)
-(key-chord-mode 1)
+(use-package web-mode :ensure t)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 #+END_SRC
-* Json
 #+BEGIN_SRC emacs-lisp
-(use-package flymake-json :ensure t)
-(setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
-(setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
+(electric-indent-mode +1)
 #+END_SRC
-* Dired
-#+BEGIN_SRC emacs-lisp
-(use-package dired+
-:ensure t
-:config (require 'dired+))
-
-#+END_SRC
-* El-get
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
-
-
-
-(unless (require 'el-get nil t)
-  (url-retrieve
-   "https://raw.github.com/dimitri/el-get/master/el-get-install.el"
-   (lambda (s)
-     (end-of-buffer)
-     (eval-print-last-sexp))))
-
-#+END_SRC
-asdad
