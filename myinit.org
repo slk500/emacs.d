@@ -1,4 +1,5 @@
-* Alarm Bell
+* Audio
+** Alarm Bell
 #+BEGIN_SRC emacs-lisp
 (setq ring-bell-function 'ignore)
 #+END_SRC
@@ -8,13 +9,13 @@
 #+END_SRC
 * autocomplete
 #+BEGIN_SRC emacs-lisp
-(use-package auto-complete
-  :ensure t
-  :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    ))
+;; (use-package auto-complete
+;;   :ensure t
+;;   :init
+;;   (progn
+;;     (ac-config-default)
+;;     (global-auto-complete-mode t)
+;;     ))
 #+END_SRC
 * Autoinsert
 #+BEGIN_SRC emacs-lisp
@@ -81,58 +82,6 @@
      (set-window-buffer w1 w2b)
      (set-window-buffer w2 w1b)))
 #+END_SRC
-* C++
-#+BEGIN_SRC emacs-lisp
-    ;; Run C programs directly from within emacs
-    (defun execute-c-program ()
-      (interactive)
-      (save-buffer)
-      (defvar foo)
-      (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
-      (shell-command foo))
-
-    (global-set-key [C-f1] 'execute-c-program)
-
-    ;; (defun ls ()
-    ;;   "Lists the contents of the current directory."
-    ;;   (interactive)
-    ;;   (save-buffer)
-    ;;   (shell-command "./run.sh"))
-    ;; (global-set-key (kbd "<f6>") 'ls);
-
-    (semantic-mode 1)
-
-    (use-package srefactor
-    :ensure t)
-
-  ;; (add-hook 'c++-mode-hook
-  ;;           (lambda ()
-  ;; 	  (save-buffer)
-  ;;             (unless (file-exists-p "Makefile")
-  ;;               (set (make-local-variable 'compile-command)
-  ;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
-  ;;                       (executable (convert-filename-to-executable file)))
-  ;;                  (concat "g++ -g -Wall -o "
-  ;;                          (file-name-sans-extension file)
-  ;;                          " "
-  ;;                          file
-  ;;                          " && "
-  ;;                          executable))))))
-
-  ;; (add-hook 'c-mode-hook
-  ;;       (lambda ()
-  ;;       (save-buffer)
-  ;;         (unless (file-exists-p "Makefile")
-  ;;           (set (make-local-variable 'compile-command)
-  ;;                (let* ((file (file-name-nondirectory buffer-file-name))
-  ;;                       (executable (convert-filename-to-executable file)))
-  ;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
-  ;;                          (file-name-sans-extension file)
-  ;;                          " "
-  ;;                          file
-  ;;                          " && "
-  ;;                          executable))))))
-#+END_SRC
 * Center
 #+BEGIN_SRC emacs-lisp
 (use-package centered-window :ensure t)
@@ -174,7 +123,7 @@
      ;;  (paste-to-mark arg)
      )
 
-(global-set-key (kbd "C-c l") 'copy-line)
+;;(global-set-key (kbd "C-c l") 'copy-line) 
 (setq x-select-enable-clipboard t)
 #+END_SRC
 * Dictionary
@@ -185,9 +134,9 @@ https://oremacs.com/2015/05/22/define-word/
 
 * Dired
 #+BEGIN_SRC emacs-lisp
-(use-package dired+
-:ensure t
-:config (require 'dired+))
+;; (use-package dired+
+;; :ensure t
+;; :config (require 'dired+))
 
 #+END_SRC
 * Edit multiple regions
@@ -218,10 +167,6 @@ asdad
 (global-set-key (kbd "C-c C-f") 'fold-this-all)
 (global-set-key (kbd "C-c C-F") 'fold-this)
 (global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
-#+END_SRC
-* HTML
-#+BEGIN_SRC emacs-lisp
-(setq sgml-quick-keys 'close)
 #+END_SRC
 * Init file
 #+BEGIN_SRC emacs-lisp
@@ -381,18 +326,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   :after treemacs projectile
   :ensure t)
 #+END_SRC
-** multiple cursors
-#+BEGIN_SRC emacs-lisp
-(use-package multiple-cursors
-:ensure t)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
-(global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-
-
-
-#+End_src
 * Interface tweaks
 ** theme 
  #+BEGIN_SRC emacs-lisp
@@ -476,47 +409,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   (global-set-key (kbd "C-S-<up>")  'move-line-up)
   (global-set-key (kbd "C-S-<down>")  'move-line-down)
 #+END_SRC
-* JS
-#+BEGIN_SRC emacs-lisp
-(use-package js2-mode)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-
-;; Better imenu
-(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
-
-(use-package js2-refactor)
-(use-package xref-js2)
-
-(add-hook 'js2-mode-hook #'js2-refactor-mode)
-(js2r-add-keybindings-with-prefix "C-c C-r")
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
-;; unbind it.
-(define-key js-mode-map (kbd "M-.") nil)
-
-(add-hook 'js2-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-(require 'ob-js)
-
-(add-to-list 'org-babel-load-languages '(js . t))
-(org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
-(add-to-list 'org-babel-tangle-lang-exts '("js" . "js"))
-
-
-#+END_SRC
-** Skewer
-#+BEGIN_SRC emacs-lisp
-;;(use-package skewer-mode
-;;:ensure t)
-;;(add-hook 'js2-mode-hook 'skewer-mode)
-;;(add-hook 'css-mode-hook 'skewer-css-mode)
-;;(add-hook 'html-mode-hook 'skewer-html-mode)
-;;(setq httpd-root "/home/slk500/Work/pong")
-#+END_SRC
 * Json
 #+BEGIN_SRC emacs-lisp
 (use-package flymake-json :ensure t)
@@ -530,31 +422,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (key-chord-define-global "ww"     'transpose-windows)
 
 
-#+END_SRC
-* Lisp
-** Paredit
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package paredit
-  ;;     :ensure t)
-
-  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-#+END_SRC
-https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
-** flycheck
-#+BEGIN_SRC emacs-lisp
-(setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-#+END_SRC
-** slime
-#+BEGIN_SRC emacs-lisp
-(setq inferior-lisp-program "/usr/bin/sbcl")
-(setq slime-contribs '(slime-fancy))
-(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 #+END_SRC
 * Live Editing
 #+BEGIN_SRC emacs-lisp
@@ -616,19 +483,15 @@ This function can be used in `org-export-filter-parse-tree-functions'."
                  (let ((mark-even-if-inactive transient-mark-mode))
                    (indent-region (region-beginning) (region-end) nil))))))
 #+END_SRC
-* PDF
-#+BEGIN_SRC emacs-lisp
-(pdf-tools-install)
-#+END_SRC
-
-* PHP
+* Programming
+** PHP
 https://github.com/Abuelodelanada/pepe-emacs-config
-** PHPUnit
+*** PHPUnit
 #+BEGIN_SRC emacs-lisp
 (use-package phpunit :ensure t)
 #+END_SRC
-** Babel
-*** phpunit
+*** Babel
+**** phpunit
    #+BEGIN_SRC emacs-lisp 
 (org-babel-do-load-languages
  'org-babel-load-languages '((shell . t)))
@@ -686,7 +549,7 @@ https://github.com/Abuelodelanada/pepe-emacs-config
    #+END_SRC
 
    https://www.philnewton.net/guides/emacs-as-a-php-editor/
-*** php
+**** php
 #+BEGIN_SRC emacs-lisp
 (require 'org)
 (require 'ob)
@@ -720,18 +583,18 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 (provide 'ob-php)
 
 #+END_SRC
-** dump jump
+*** dump jump
 #+BEGIN_SRC emacs-lisp
-;; (use-package dumb-jump
-;;   :bind (("M-g o" . dumb-jump-go-other-window)
-;;          ("M-g j" . dumb-jump-go)
-;;          ("M-g i" . dumb-jump-go-prompt)
-;;          ("M-g x" . dumb-jump-go-prefer-external)
-;;          ("M-g z" . dumb-jump-go-prefer-external-other-window))
-;;   :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
-;;   :ensure)
+(use-package dumb-jump
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
+  :ensure)
 #+END_SRC
-** ac-phpctags & mode
+*** ac-phpctags & mode
 #+BEGIN_SRC emacs-lisp
 (unless (package-installed-p 'ac-php )
     (package-refresh-contents)
@@ -752,22 +615,125 @@ https://github.com/Abuelodelanada/pepe-emacs-config
                ))
 
 #+END_SRC
-* Projectile
+** JS
 #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t)
-(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-(projectile-mode +1)
-#+END_SRC
-* Python
-#+BEGIN_SRC emacs-lisp
-;;(org-babel-do-load-languages 'org-babel-load-languages 
-  ;;                           '((emacs-lisp . t)
-    ;;                           (ipython . t)))
+(use-package js2-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;; Better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+
+(use-package js2-refactor)
+(use-package xref-js2)
+
+(add-hook 'js2-mode-hook #'js2-refactor-mode)
+(js2r-add-keybindings-with-prefix "C-c C-r")
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
+;; unbind it.
+(define-key js-mode-map (kbd "M-.") nil)
+
+(add-hook 'js2-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+(require 'ob-js)
+
+(add-to-list 'org-babel-load-languages '(js . t))
+(org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+(add-to-list 'org-babel-tangle-lang-exts '("js" . "js"))
+
 
 #+END_SRC
-* Python
+*** Skewer
+#+BEGIN_SRC emacs-lisp
+;;(use-package skewer-mode
+;;:ensure t)
+;;(add-hook 'js2-mode-hook 'skewer-mode)
+;;(add-hook 'css-mode-hook 'skewer-css-mode)
+;;(add-hook 'html-mode-hook 'skewer-html-mode)
+;;(setq httpd-root "/home/slk500/Work/pong")
+#+END_SRC
+** C++
+#+BEGIN_SRC emacs-lisp
+    ;; Run C programs directly from within emacs
+    (defun execute-c-program ()
+      (interactive)
+      (save-buffer)
+      (defvar foo)
+      (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+      (shell-command foo))
+
+    (global-set-key [C-f1] 'execute-c-program)
+
+    ;; (defun ls ()
+    ;;   "Lists the contents of the current directory."
+    ;;   (interactive)
+    ;;   (save-buffer)
+    ;;   (shell-command "./run.sh"))
+    ;; (global-set-key (kbd "<f6>") 'ls);
+
+    (semantic-mode 1)
+
+    (use-package srefactor
+    :ensure t)
+
+  ;; (add-hook 'c++-mode-hook
+  ;;           (lambda ()
+  ;; 	  (save-buffer)
+  ;;             (unless (file-exists-p "Makefile")
+  ;;               (set (make-local-variable 'compile-command)
+  ;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "g++ -g -Wall -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
+
+  ;; (add-hook 'c-mode-hook
+  ;;       (lambda ()
+  ;;       (save-buffer)
+  ;;         (unless (file-exists-p "Makefile")
+  ;;           (set (make-local-variable 'compile-command)
+  ;;                (let* ((file (file-name-nondirectory buffer-file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
+#+END_SRC
+** Lisp
+*** Paredit
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package paredit
+  ;;     :ensure t)
+
+  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+#+END_SRC
+https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
+*** flycheck
+#+BEGIN_SRC emacs-lisp
+(setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+#+END_SRC
+*** slime
+#+BEGIN_SRC emacs-lisp
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(setq slime-contribs '(slime-fancy))
+(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
+#+END_SRC
+** Python
 #+BEGIN_SRC emacs-lisp
 (add-hook 'python-mode-hook
           (lambda ()
@@ -775,6 +741,71 @@ https://github.com/Abuelodelanada/pepe-emacs-config
                    (concat "python " buffer-file-name))))
 (global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
 (setq compilation-ask-about-save nil)
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+;;(org-babel-do-load-languages 'org-babel-load-languages 
+  ;;                           '((emacs-lisp . t)
+    ;;                           (ipython . t)))
+
+#+END_SRC
+** HTML
+#+BEGIN_SRC emacs-lisp
+(setq sgml-quick-keys 'close)
+#+END_SRC
+** Web-mode
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode :ensure t)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+(electric-indent-mode +1)
+(setq org-src-tab-acts-natively t)
+(setq org-startup-indented t)
+#+END_SRC
+** TypeScript
+#+BEGIN_SRC emacs-lisp
+(use-package typescript-mode :ensure t)
+(use-package tide :ensure t)
+
+(defun setup-tide-mode ()
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  ;; company is an optional dependency. You have to
+  ;; install it separately via package-install
+  ;; `M-x package-install [ret] company`
+  (company-mode +1))
+
+;; aligns annotation to the right hand side
+(setq company-tooltip-align-annotations t)
+
+;; formats the buffer before saving
+(add-hook 'before-save-hook 'tide-format-before-save)
+
+(add-hook 'typescript-mode-hook #'setup-tide-mode)
+#+END_SRC
+* PDF
+#+BEGIN_SRC emacs-lisp
+(pdf-tools-install)
+#+END_SRC
+* Projectile
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t)
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+(projectile-mode +1)
 #+END_SRC
 * Save
 #+BEGIN_SRC emacs-lisp
@@ -863,44 +894,3 @@ https://github.com/fniessen/org-html-themes
 #   :ensure t
 #   :init(global-undo-tree-mode))
 # #+END_SRC
-* TypeScript
-#+BEGIN_SRC emacs-lisp
-(use-package typescript-mode :ensure t)
-(use-package tide :ensure t)
-
-(defun setup-tide-mode ()
-  (interactive)
-  (tide-setup)
-  (flycheck-mode +1)
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
-  (eldoc-mode +1)
-  (tide-hl-identifier-mode +1)
-  ;; company is an optional dependency. You have to
-  ;; install it separately via package-install
-  ;; `M-x package-install [ret] company`
-  (company-mode +1))
-
-;; aligns annotation to the right hand side
-(setq company-tooltip-align-annotations t)
-
-;; formats the buffer before saving
-(add-hook 'before-save-hook 'tide-format-before-save)
-
-(add-hook 'typescript-mode-hook #'setup-tide-mode)
-#+END_SRC
-* Web-mode
-#+BEGIN_SRC emacs-lisp
-(use-package web-mode :ensure t)
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-
-(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-#+END_SRC
-#+BEGIN_SRC emacs-lisp
-(electric-indent-mode +1)
-#+END_SRC
