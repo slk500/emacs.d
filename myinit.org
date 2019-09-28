@@ -86,7 +86,8 @@
 #+BEGIN_SRC emacs-lisp
 (use-package centered-window :ensure t)
 #+END_SRC
-* Copy
+* Copy & Paste
+** Copy
 #+BEGIN_SRC emacs-lisp
  (defun get-point (symbol &optional arg)
    "get the point"
@@ -126,6 +127,31 @@
 ;;(global-set-key (kbd "C-c l") 'copy-line) 
 (setq x-select-enable-clipboard t)
 #+END_SRC
+** Paste
+#+BEGIN_SRC emacs-lisp
+ (dolist (command '(yank yank-pop))
+   (eval `(defadvice ,command (after indent-region activate)
+            (and (not current-prefix-arg)
+                 (member major-mode '(emacs-lisp-mode lisp-mode
+                                                      clojure-mode    scheme-mode
+                                                      haskell-mode    ruby-mode
+                                                      rspec-mode      python-mode
+                                                      c-mode          c++-mode
+                                                      objc-mode       latex-mode
+                                                      plain-tex-mode clojurescript-mode typescript-mode org-mode))
+                 (let ((mark-even-if-inactive transient-mark-mode))
+                   (indent-region (region-beginning) (region-end) nil))))))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+(defun unfill-paragraph (&optional region)
+      "Takes a multi-line paragraph and makes it into a single line of text."
+      (interactive (progn (barf-if-buffer-read-only) '(t)))
+      (let ((fill-column (point-max))
+            ;; This would override `fill-column' if it's an integer.
+            (emacs-lisp-docstring-fill-column t))
+        (fill-paragraph nil region)))
+
+#+END_SRC
 * Dictionary
 https://oremacs.com/2015/05/22/define-word/
 (use-package define-word)
@@ -137,7 +163,6 @@ https://oremacs.com/2015/05/22/define-word/
 ;; (use-package dired+
 ;; :ensure t
 ;; :config (require 'dired+))
-
 #+END_SRC
 * Edit multiple regions
 #+BEGIN_SRC emacs-lisp
@@ -150,9 +175,6 @@ https://oremacs.com/2015/05/22/define-word/
 * El-get
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
-
-
-
 (unless (require 'el-get nil t)
   (url-retrieve
    "https://raw.github.com/dimitri/el-get/master/el-get-install.el"
@@ -175,7 +197,7 @@ asdad
 
 #+BEGIN_SRC emacs-lisp
 ;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
-(setq default-directory "home/slk/Dropbox")
+;;(setq default-directory "home/slk/Dropbox")
 #+END_SRC
 * installs
 ** Image drag & drop download
@@ -368,13 +390,15 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (show-paren-mode 1) ;;highlight
 (electric-pair-mode 1) ;;() wrap selected region in ".[ etc
 #+END_SRC
-** hungry-delete
+** Delete
+*** hungry-delete
 #+BEGIN_SRC emacs-lisp
 (use-package hungry-delete
   :ensure t
   :config
   (global-hungry-delete-mode))
 #+END_SRC
+
 ** expand-region
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
@@ -467,21 +491,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 #+BEGIN_SRC emacs-lisp
 (require 'epa-file)
 (epa-file-enable)
-#+END_SRC
-* Paste
-#+BEGIN_SRC emacs-lisp
- (dolist (command '(yank yank-pop))
-   (eval `(defadvice ,command (after indent-region activate)
-            (and (not current-prefix-arg)
-                 (member major-mode '(emacs-lisp-mode lisp-mode
-                                                      clojure-mode    scheme-mode
-                                                      haskell-mode    ruby-mode
-                                                      rspec-mode      python-mode
-                                                      c-mode          c++-mode
-                                                      objc-mode       latex-mode
-                                                      plain-tex-mode clojurescript-mode typescript-mode))
-                 (let ((mark-even-if-inactive transient-mark-mode))
-                   (indent-region (region-beginning) (region-end) nil))))))
 #+END_SRC
 * Programming
 ** PHP
@@ -615,6 +624,47 @@ https://github.com/Abuelodelanada/pepe-emacs-config
                ))
 
 #+END_SRC
+*** php-send-region
+#+BEGIN_SRC emacs-lisp
+					;alist of 'buffer-name / timer' items
+(defvar buffer-tail-alist nil)
+(defun buffer-tail (name)
+  "follow buffer tails"
+  (cond ((or (equal (buffer-name (current-buffer)) name)
+             (string-match "^ \\*Minibuf.*?\\*$" (buffer-name (current-buffer)))))
+        ((get-buffer name)
+	 (with-current-buffer (get-buffer name)
+           (goto-char (point-max))
+           (let ((windows (get-buffer-window-list (current-buffer) nil t)))
+             (while windows (set-window-point (car windows) (point-max))
+		    (with-selected-window (car windows) (recenter -3)) (setq windows (cdr windows))))))))
+
+(defun toggle-buffer-tail (name &optional force)
+  "toggle tailing of buffer NAME. when called non-interactively, a FORCE arg of 'on' or 'off' can be used to to ensure a given state for buffer NAME"
+  (interactive (list (cond ((if name name) (read-from-minibuffer 
+					    (concat "buffer name to tail" 
+						    (if buffer-tail-alist (concat " (" (caar buffer-tail-alist) ")") "") ": ")
+					    (if buffer-tail-alist (caar buffer-tail-alist)) nil nil
+					    (mapcar '(lambda (x) (car x)) buffer-tail-alist)
+					    (if buffer-tail-alist (caar buffer-tail-alist)))) nil)))
+  (let ((toggle (cond (force force) ((assoc name buffer-tail-alist) "off") (t "on")) ))
+    (if (not (or (equal toggle "on") (equal toggle "off"))) 
+	(error "invalid 'force' arg. required 'on'/'off'") 
+      (progn 
+        (while (assoc name buffer-tail-alist) 
+          (cancel-timer (cdr (assoc name buffer-tail-alist)))
+          (setq buffer-tail-alist (remove* name buffer-tail-alist :key 'car :test 'equal)))
+        (if (equal toggle "on")
+            (add-to-list 'buffer-tail-alist (cons name (run-at-time t 1 'buffer-tail name))))
+        (message "toggled 'tail buffer' for '%s' %s" name toggle)))))
+
+(toggle-buffer-tail "*PHP*" "on")
+#+END_SRC
+*** Behat
+#+BEGIN_SRC php
+(use-package feature-mode
+ :ensure t)
+#+END_SRC
 ** JS
 #+BEGIN_SRC emacs-lisp
 (use-package js2-mode)
@@ -743,10 +793,12 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (setq compilation-ask-about-save nil)
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
-;;(org-babel-do-load-languages 'org-babel-load-languages 
-  ;;                           '((emacs-lisp . t)
-    ;;                           (ipython . t)))
+(org-babel-do-load-languages 'org-babel-load-languages 
+                             '((emacs-lisp . t)
+                               (ipython . t)))
 
+(setenv "PATH" (concat (getenv "PATH") ":/home/slk500/anaconda3/bin/jupyter"))
+(setq jupyter-runtime-directory (shell-command-to-string "jupyter --runtime-dir"))
 #+END_SRC
 ** HTML
 #+BEGIN_SRC emacs-lisp
@@ -894,3 +946,28 @@ https://github.com/fniessen/org-html-themes
 #   :ensure t
 #   :init(global-undo-tree-mode))
 # #+END_SRC
+* PATH
+#+BEGIN_SRC emacs-lisp
+(use-package  exec-path-from-shell)
+#+END_SRC
+* RSS
+#+BEGIN_SRC emacs-lisp
+(use-package elfeed
+  :ensure t
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
+
+(use-package elfeed-org 
+  :ensure t)
+
+#+END_SRC
+* Filename
+#+BEGIN_SRC emacs-lisp
+(defun copy-full-path-to-kill-ring ()
+  "copy buffer's full path to kill ring"
+  (interactive)
+  (when buffer-file-name
+    (kill-new (file-truename buffer-file-name))))
+
+#+END_SRC
