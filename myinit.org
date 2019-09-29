@@ -500,98 +500,84 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 (use-package phpunit :ensure t)
 #+END_SRC
 *** Babel
-**** phpunit
-   #+BEGIN_SRC emacs-lisp 
-(org-babel-do-load-languages
- 'org-babel-load-languages '((shell . t)))
-
-   (require 'org)
-   (require 'ob)
-
-   (defgroup ob-php nil
-     "org-mode blocks for PHP."
-     :group 'org)
-
-    (defcustom ob-php:inf-php-buffer "*phpunit*"
-     "Default PHP inferior buffer."
-     :group 'ob-php
-     :type 'string)
-
-   (defcustom ob-php:inf-php-buffer "*php*"
-     "Default PHP inferior buffer."
-     :group 'ob-php
-     :type 'string)
-
-   ;;;###autoload
-   (eval-after-load "org"
-     '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
-
-   ;;;###autoload
-   (eval-after-load "org"
-     '(add-to-list 'org-src-lang-modes '("php" . php)))
+# **** phpunit
+#    #+BEGIN_SRC emacs-lisp 
+# (org-babel-do-load-languages
+#  'org-babel-load-languages '((shell . t)))
 
 
-   (defvar org-babel-default-header-args:phpunit '())
+#     (defcustom ob-php:inf-php-buffer "*phpunit*"
+#      "Default PHP inferior buffer."
+#      :group 'ob-php
+#      :type 'string)
 
-   (add-to-list 'org-babel-default-header-args:phpunit
-		'(:results . "output"))
+#    (defcustom ob-php:inf-php-buffer "*php*"
+#      "Default PHP inferior buffer."
+#      :group 'ob-php
+#      :type 'string)
 
-(defvar org-babel-default-header-args:php '())
+#    ;;;###autoload
+#    (eval-after-load "org"
+#      '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
 
-(add-to-list 'org-babel-default-header-args:php
-		'(:results . "output"))
+#    (defvar org-babel-default-header-args:phpunit '())
 
+#    (add-to-list 'org-babel-default-header-args:phpunit
+# 		'(:results . "output"))
 
-(provide 'ob-php)
+# (defvar org-babel-default-header-args:php '())
 
-;;(concat(file-name-directory buffer-file-name) "../Dropbox/phprefactor")
+# (add-to-list 'org-babel-default-header-args:php
+# 		'(:results . "output"))
 
-   ;;;###autoload
-   (defun org-babel-execute:phpunit (body params)
-     "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-     (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
-	    (body (concat "<?php\n" body "\n?>")))
-	    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
-       (org-babel-eval cmd body)
-       ))
+# ;;(concat(file-name-directory buffer-file-name) "../Dropbox/phprefactor")
+
+#    ;;;###autoload
+#    (defun org-babel-execute:phpunit (body params)
+#      "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+#      (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
+# 	    (body (concat "<?php\n" body "\n?>")))
+# 	    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
+#        (org-babel-eval cmd body)
+#        ))
        
-   #+END_SRC
+#    #+END_SRC
 
-   https://www.philnewton.net/guides/emacs-as-a-php-editor/
-**** php
-#+BEGIN_SRC emacs-lisp
-(require 'org)
-(require 'ob)
+#    https://www.philnewton.net/guides/emacs-as-a-php-editor/
+# **** php
+# #+BEGIN_SRC emacs-lisp
+# (require 'org)
+# (require 'ob)
 
-(defgroup ob-php nil
-  "org-mode blocks for PHP."
-  :group 'org)
+# (defgroup ob-php nil
+#   "org-mode blocks for PHP."
+#   :group 'org)
 
-(defcustom ob-php:inf-php-buffer "*php*"
-  "Default PHP inferior buffer."
-  :group 'ob-php
-  :type 'string)
+# (defcustom ob-php:inf-php-buffer "*php*"
+#   "Default PHP inferior buffer."
+#   :group 'ob-php
+#   :type 'string)
 
-;;;###autoload
-(defun org-babel-execute:php (body params)
-  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-  (let* ((cmd "php")
-         (body (concat "<?php\n" body "\n?>")))
-    (org-babel-eval cmd body)
-    ))
+# ;;;###autoload
+# (defun org-babel-execute:php (body params)
+#   "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+#   (let* ((cmd "php")
+#          (body (concat "<?php\n" body "\n?>")))
+#     (org-babel-eval cmd body)
+#     ))
 
-;;;###autoload
-(eval-after-load "org"
-  '(add-to-list 'org-src-lang-modes '("php" . php)))
+# ;;;###autoload
+# (eval-after-load "org"
+#   '(add-to-list 'org-src-lang-modes '("php" . php)))
 
-(defvar org-babel-default-header-args:php '())
+# (defvar org-babel-default-header-args:php '())
 
-(add-to-list 'org-babel-default-header-args:php
-             '(:results . "output"))
+# (add-to-list 'org-babel-default-header-args:php
+#              '(:results . "output"))
 
-(provide 'ob-php)
+# (provide 'ob-php)
 
-#+END_SRC
+# #+END_SRC
 *** dump jump
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
@@ -603,25 +589,25 @@ https://github.com/Abuelodelanada/pepe-emacs-config
   :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
   :ensure)
 #+END_SRC
-*** ac-phpctags & mode
-#+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'ac-php )
-    (package-refresh-contents)
-    (package-install 'ac-php )
-    )
-  (require 'cl)
-  (require 'php-mode)
-  (add-hook 'php-mode-hook
-            '(lambda ()
-               (auto-complete-mode t)
-               (require 'ac-php)
-               (setq ac-sources  '(ac-source-php ) )
-               (yas-global-mode 1)
-               (ac-php-core-eldoc-setup ) ;; enable eldoc
+*** ac-phpctags & mode 
+#+BEGIN_SRC emacs-lisp dosent work uadter update emacs 27
+;; (unless (package-installed-p 'ac-php )
+;;     (package-refresh-contents)
+;;     (package-install 'ac-php )
+;;     )
+;;   (require 'cl)
+;;   (require 'php-mode)
+;;   (add-hook 'php-mode-hook
+;;             '(lambda ()
+;;                (auto-complete-mode t)
+;;                (require 'ac-php)
+;;                (setq ac-sources  '(ac-source-php ) )
+;;                (yas-global-mode 1)
+;;                (ac-php-core-eldoc-setup ) ;; enable eldoc
 
-               (define-key php-mode-map  (kbd "C-]") 'ac-php-find-symbol-at-point)   ;goto define
-               (define-key php-mode-map  (kbd "C-t") 'ac-php-location-stack-back)    ;go back
-               ))
+;;                (define-key php-mode-map  (kbd "C-]") 'ac-php-find-symbol-at-point)   ;goto define
+;;                (define-key php-mode-map  (kbd "C-t") 'ac-php-location-stack-back)    ;go back
+;;                ))
 
 #+END_SRC
 *** php-send-region
@@ -661,7 +647,7 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 (toggle-buffer-tail "*PHP*" "on")
 #+END_SRC
 *** Behat
-#+BEGIN_SRC php
+#+BEGIN_SRC emacs-lisp
 (use-package feature-mode
  :ensure t)
 #+END_SRC
@@ -784,22 +770,22 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 #+END_SRC
 ** Python
-#+BEGIN_SRC emacs-lisp
-(add-hook 'python-mode-hook
-          (lambda ()
-              (set (make-local-variable 'compile-command)
-                   (concat "python " buffer-file-name))))
-(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
-(setq compilation-ask-about-save nil)
-#+END_SRC
-#+BEGIN_SRC emacs-lisp
-(org-babel-do-load-languages 'org-babel-load-languages 
-                             '((emacs-lisp . t)
-                               (ipython . t)))
+# #+BEGIN_SRC emacs-lisp
+# (add-hook 'python-mode-hook
+#           (lambda ()
+#               (set (make-local-variable 'compile-command)
+#                    (concat "python " buffer-file-name))))
+# (global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
+# (setq compilation-ask-about-save nil)
+# #+END_SRC
+# #+BEGIN_SRC emacs-lisp
+# (org-babel-do-load-languages 'org-babel-load-languages 
+#                              '((emacs-lisp . t)
+#                                (ipython . t)))
 
-(setenv "PATH" (concat (getenv "PATH") ":/home/slk500/anaconda3/bin/jupyter"))
-(setq jupyter-runtime-directory (shell-command-to-string "jupyter --runtime-dir"))
-#+END_SRC
+# (setenv "PATH" (concat (getenv "PATH") ":/home/slk500/anaconda3/bin/jupyter"))
+# (setq jupyter-runtime-directory (shell-command-to-string "jupyter --runtime-dir"))
+# #+END_SRC
 ** HTML
 #+BEGIN_SRC emacs-lisp
 (setq sgml-quick-keys 'close)
@@ -961,6 +947,8 @@ https://github.com/fniessen/org-html-themes
 (use-package elfeed-org 
   :ensure t)
 
+(global-set-key (kbd "C-x w") 'elfeed)
+
 #+END_SRC
 * Filename
 #+BEGIN_SRC emacs-lisp
@@ -970,4 +958,13 @@ https://github.com/fniessen/org-html-themes
   (when buffer-file-name
     (kill-new (file-truename buffer-file-name))))
 
+#+END_SRC
+* updates
+#+BEGIN_SRC emacs-lisp
+(use-package auto-package-update
+  :ensure t
+  :config
+  (setq auto-package-update-delete-old-versions t
+        auto-package-update-interval 4)
+  (auto-package-update-maybe))
 #+END_SRC
