@@ -203,15 +203,6 @@ asdad
 (global-set-key (kbd "C-c C-F") 'fold-this)
 (global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
 #+END_SRC
-* Init file
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-;;(setq default-directory (concat (file-name-directory (buffer-file-name))))
-;;(setq default-directory "home/slk/Dropbox")
-#+END_SRC
 * installs
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
@@ -466,19 +457,17 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   (global-set-key (kbd "C-S-<up>")  'move-line-up)
   (global-set-key (kbd "C-S-<down>")  'move-line-down)
 #+END_SRC
+** Key Chord
+#+BEGIN_SRC emacs-lisp
+(use-package key-chord :ensure t)
+(key-chord-mode 1)
+(key-chord-define-global "ww"     'transpose-windows)
+#+END_SRC
 * Json
 #+BEGIN_SRC emacs-lisp
 (use-package flymake-json :ensure t)
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
 (setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
-#+END_SRC
-* Key Chord
-#+BEGIN_SRC emacs-lisp
-(use-package key-chord :ensure t)
-(key-chord-mode 1)
-(key-chord-define-global "ww"     'transpose-windows)
-
-
 #+END_SRC
 * Live Editing
 #+BEGIN_SRC emacs-lisp
@@ -492,10 +481,15 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 * Magit
 #+BEGIN_SRC emacs-lisp
-(use-package magit)
+;;(use-package magit)
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp
+
+(require 'org-tempo)
+
+(require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+
 (setq org-edit-src-content-indentation 0
       org-src-tab-acts-natively t
       org-src-preserve-indentation t)
@@ -525,97 +519,92 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (require 'epa-file)
 (epa-file-enable)
 #+END_SRC
+** Babel
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages 
+ '((shell . t)
+   (clojure . t)))
+#+end_src 
 * Programming
 ** PHP
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
   :ensure t)
-
 #+END_SRC
 https://github.com/Abuelodelanada/pepe-emacs-config
-*** PHPUnit
-#+BEGIN_SRC emacs-lisp
+*** phpunit
+   #+BEGIN_SRC emacs-lisp 
 (use-package phpunit :ensure t)
+
+(defcustom ob-php:inf-php-buffer "*phpunit*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+(defcustom ob-php:inf-php-buffer "*php*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+   ;;;###autoload
+(eval-after-load "org"
+  '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
+
+(defvar org-babel-default-header-args:phpunit '())
+
+(add-to-list 'org-babel-default-header-args:phpunit
+	     '(:results . "output"))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+	     '(:results . "output"))
+
+   ;;;###autoload
+(defun org-babel-execute:phpunit (body params)
+  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+  (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
+	 (body (concat "<?php\n" body "\n?>")))
+    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
+    (org-babel-eval cmd body)
+    ))
+
+   #+END_SRC
+
+   https://www.philnewton.net/guides/emacs-as-a-php-editor/
+*** php
+#+BEGIN_SRC emacs-lisp
+
+(defgroup ob-php nil
+  "org-mode blocks for PHP."
+  :group 'org)
+
+(defcustom ob-php:inf-php-buffer "*php*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+;;;###autoload
+(defun org-babel-execute:php (body params)
+  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+  (let* ((cmd "php")
+         (body (concat "<?php\n" body "\n?>")))
+    (org-babel-eval cmd body)
+    ))
+
+;;;###autoload
+(eval-after-load "org"
+  '(add-to-list 'org-src-lang-modes '("php" . php)))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+             '(:results . "output"))
+
+(provide 'ob-php)
+
 #+END_SRC
-*** Babel
-# **** phpunit
-#    #+BEGIN_SRC emacs-lisp 
-# (org-babel-do-load-languages
-#  'org-babel-load-languages '((shell . t)))
-
-
-#     (defcustom ob-php:inf-php-buffer "*phpunit*"
-#      "Default PHP inferior buffer."
-#      :group 'ob-php
-#      :type 'string)
-
-#    (defcustom ob-php:inf-php-buffer "*php*"
-#      "Default PHP inferior buffer."
-#      :group 'ob-php
-#      :type 'string)
-
-#    ;;;###autoload
-#    (eval-after-load "org"
-#      '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
-
-#    (defvar org-babel-default-header-args:phpunit '())
-
-#    (add-to-list 'org-babel-default-header-args:phpunit
-# 		'(:results . "output"))
-
-# (defvar org-babel-default-header-args:php '())
-
-# (add-to-list 'org-babel-default-header-args:php
-# 		'(:results . "output"))
-
-# ;;(concat(file-name-directory buffer-file-name) "../Dropbox/phprefactor")
-
-#    ;;;###autoload
-#    (defun org-babel-execute:phpunit (body params)
-#      "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-#      (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
-# 	    (body (concat "<?php\n" body "\n?>")))
-# 	    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
-#        (org-babel-eval cmd body)
-#        ))
-       
-#    #+END_SRC
-
-#    https://www.philnewton.net/guides/emacs-as-a-php-editor/
-# **** php
-# #+BEGIN_SRC emacs-lisp
-# (require 'org)
-# (require 'ob)
-
-# (defgroup ob-php nil
-#   "org-mode blocks for PHP."
-#   :group 'org)
-
-# (defcustom ob-php:inf-php-buffer "*php*"
-#   "Default PHP inferior buffer."
-#   :group 'ob-php
-#   :type 'string)
-
-# ;;;###autoload
-# (defun org-babel-execute:php (body params)
-#   "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-#   (let* ((cmd "php")
-#          (body (concat "<?php\n" body "\n?>")))
-#     (org-babel-eval cmd body)
-#     ))
-
-# ;;;###autoload
-# (eval-after-load "org"
-#   '(add-to-list 'org-src-lang-modes '("php" . php)))
-
-# (defvar org-babel-default-header-args:php '())
-
-# (add-to-list 'org-babel-default-header-args:php
-#              '(:results . "output"))
-
-# (provide 'ob-php)
-
-# #+END_SRC
 *** dump jump
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
@@ -774,6 +763,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (use-package clojure-mode
   :ensure t)
 
+(setq org-babel-clojure-backend 'cider)
 #+END_SRC
 ** Python
 # #+BEGIN_SRC emacs-lisp
@@ -851,7 +841,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 (global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/Dropbox/homepage/index.org")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/Dropbox/phprefactor/index.org")))
-
+ (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
+(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
 (global-set-key (kbd "<f9>") 'centered-window-mode)
 
 #+END_SRC
@@ -954,4 +945,19 @@ https://github.com/fniessen/org-html-themes
   (setq auto-package-update-delete-old-versions t
         auto-package-update-interval 4)
   (auto-package-update-maybe))
+#+END_SRC
+* irc 
+#+BEGIN_SRC emacs-lisp
+(setq erc-autojoin-channels-alist
+      '(("freenode.net" "#emacs-pl" "#php")))
+#+END_SRC
+* Dir
+#+BEGIN_SRC emacs-lisp
+(defun my-create-non-existent-directory ()
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
+      (make-directory parent-directory t))))
+
+(add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
 #+END_SRC
