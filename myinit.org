@@ -1,17 +1,9 @@
-* Benchmark
-#+BEGIN_SRC emacs-lisp
-(use-package benchmark-init
-  :ensure t
-  :config
-  ;; To disable collection of benchmark data after init is done.
-  (add-hook 'after-init-hook 'benchmark-init/deactivate))
-#+END_SRC
 * Audio
 ** Alarm Bell
 #+BEGIN_SRC emacs-lisp
 (setq ring-bell-function 'ignore)
 #+END_SRC
-* auto
+* Auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
 #+END_SRC
@@ -20,17 +12,26 @@
 (use-package restart-emacs
 :ensure t)
 #+END_SRC
-* autocomplete
+** updates
 #+BEGIN_SRC emacs-lisp
-;; (use-package auto-complete
-;;   :ensure t
-;;   :init
-;;   (progn
-;;     (ac-config-default)
-;;     (global-auto-complete-mode t)
-;;     ))
+(use-package auto-package-update
+  :ensure t
+  :config
+  (setq auto-package-update-delete-old-versions t
+        auto-package-update-interval 4)
+  (auto-package-update-maybe))
 #+END_SRC
-* Autoinsert
+** complete
+#+BEGIN_SRC emacs-lisp
+(use-package auto-complete
+  :ensure t
+  :init
+  (progn
+    (ac-config-default)
+    (global-auto-complete-mode t)
+    ))
+#+END_SRC
+** insert
 #+BEGIN_SRC emacs-lisp
 (use-package autoinsert
   :init
@@ -58,6 +59,14 @@
  ;; Use versioned backups
  version-control t)
 #+END_SRC
+* Benchmark
+#+BEGIN_SRC emacs-lisp
+(use-package benchmark-init
+  :ensure t
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
+#+END_SRC
 * Browser
 #+BEGIN_SRC emacs-lisp
 (setq browse-url-generic-program
@@ -76,12 +85,6 @@
 #+END_SRC
 * Buffers
 #+BEGIN_SRC emacs-lisp
-(use-package buffer-move :ensure t)
-(global-set-key (kbd "<C-S-up>")     'buf-move-up)
-(global-set-key (kbd "<C-S-down>")   'buf-move-down)
-(global-set-key (kbd "<C-S-left>")   'buf-move-left)
-(global-set-key (kbd "<C-S-right>")  'buf-move-right)
-
 (defun transpose-windows ()
    "Transpose two windows.  If more or less than two windows are visible, error."
    (interactive)
@@ -95,48 +98,52 @@
      (set-window-buffer w1 w2b)
      (set-window-buffer w2 w1b)))
 #+END_SRC
-* Center
+** center
 #+BEGIN_SRC emacs-lisp
 (use-package centered-window :ensure t)
 #+END_SRC
 * Copy & Paste
 ** Copy
 #+BEGIN_SRC emacs-lisp
- (defun get-point (symbol &optional arg)
-   "get the point"
-      (funcall symbol arg)
-      (point))
-     
-    (defun copy-thing (begin-of-thing end-of-thing &optional arg)
-      "Copy thing between beg & end into kill ring."
-      (save-excursion
-        (let ((beg (get-point begin-of-thing 1))
-              (end (get-point end-of-thing arg)))
-          (copy-region-as-kill beg end))))
-     
-    (defun paste-to-mark (&optional arg)
-      "Paste things to mark, or to the prompt in shell-mode."
-      (unless (eq arg 1)
-        (if (string= "shell-mode" major-mode)
-            (comint-next-prompt 25535)
-          (goto-char (mark)))
-        (yank)))
-     
-  (defun copy-word (&optional arg)
-      "Copy words at point into kill-ring"
-       (interactive "P")
-       (copy-thing 'backward-word 'forward-word arg)
-       ;;(paste-to-mark arg)
-     )
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+          (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
+
+(defun paste-to-mark (&optional arg)
+  "Paste things to mark, or to the prompt in shell-mode."
+  (unless (eq arg 1)
+    (if (string= "shell-mode" major-mode)
+        (comint-next-prompt 25535)
+      (goto-char (mark)))
+    (yank)))
+
+(defun copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg)
+  ;;(paste-to-mark arg)
+  )
 (global-set-key (kbd "C-c w") 'copy-word)
 
-     (defun copy-line (&optional arg)
-      "Save current line into Kill-Ring without mark the line "
-       (interactive "P")
-       (copy-thing 'beginning-of-line 'end-of-line arg)
-     ;;  (paste-to-mark arg)
-     )
-
+(defun copy-line (&optional arg)
+  "Do a kill-line but copy rather than kill.  This function directly calls
+    kill-line, so see documentation of kill-line for how to use it including prefix
+    argument and relevant variables.  This function works by temporarily making the
+    buffer read-only."
+  (interactive "P")
+  (let ((buffer-read-only t)
+        (kill-read-only-ok t))
+    (kill-line arg)))
+;; optional key binding
+(global-set-key "\C-c\C-k" 'copy-line)
 ;;(global-set-key (kbd "C-c l") 'copy-line) 
 (setq x-select-enable-clipboard t)
 #+END_SRC
@@ -171,6 +178,16 @@ https://oremacs.com/2015/05/22/define-word/
 (global-set-key (kbd "C-c d") 'define-word-at-point)
 (global-set-key (kbd "C-c D") 'define-word)
 
+* Dir
+#+BEGIN_SRC emacs-lisp
+(defun my-create-non-existent-directory ()
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
+      (make-directory parent-directory t))))
+
+(add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
+#+END_SRC
 * Dired
 #+BEGIN_SRC emacs-lisp
 ;; (use-package dired+
@@ -197,6 +214,15 @@ https://oremacs.com/2015/05/22/define-word/
 
 #+END_SRC
 asdad
+* Filename
+#+BEGIN_SRC emacs-lisp
+(defun copy-full-path-to-kill-ring ()
+  "copy buffer's full path to kill ring"
+  (interactive)
+  (when buffer-file-name
+    (kill-new (file-truename buffer-file-name))))
+
+#+END_SRC
 * Fold
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-c C-f") 'fold-this-all)
@@ -263,14 +289,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
     :ensure t
     :config (which-key-mode))
 
-  (use-package org-bullets
-    :ensure t
-    :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-  (use-package company
-    :ensure t)
-  (add-hook 'after-init-hook 'global-company-mode)
-
   (setq indo-enable-flex-matching t)
   (setq ido-everywhere t)
   (ido-mode 1)
@@ -279,15 +297,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   ;;(defalias 'list-buffers 'ibuffer-other-window
   
   #+END_SRC
-
-** flycheck
-   #+BEGIN_SRC emacs-lisp
-     (use-package flycheck
-	  :ensure t
-	  :init
-	  (global-flycheck-mode t))
-   #+END_SRC
-  
 ** Treemacs
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
@@ -463,6 +472,11 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (key-chord-mode 1)
 (key-chord-define-global "ww"     'transpose-windows)
 #+END_SRC
+* irc 
+#+BEGIN_SRC emacs-lisp
+(setq erc-autojoin-channels-alist
+      '(("freenode.net" "#emacs-pl" "#php")))
+#+END_SRC
 * Json
 #+BEGIN_SRC emacs-lisp
 (use-package flymake-json :ensure t)
@@ -485,6 +499,10 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp
+
+(use-package org-bullets
+  :ensure t
+  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (require 'org-tempo)
 
@@ -525,8 +543,26 @@ This function can be used in `org-export-filter-parse-tree-functions'."
  'org-babel-load-languages 
  '((shell . t)
    (clojure . t)))
+
+;;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
 #+end_src 
+* PATH
+#+BEGIN_SRC emacs-lisp
+(use-package  exec-path-from-shell)
+#+END_SRC
+* PDF
+#+BEGIN_SRC emacs-lisp
+(pdf-tools-install)
+#+END_SRC
 * Programming
+** syntax check 
+*** flycheck
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck
+  :ensure t
+  :init
+  (global-flycheck-mode t))
+#+END_SRC  
 ** PHP
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
@@ -731,18 +767,39 @@ https://github.com/Abuelodelanada/pepe-emacs-config
   ;;                          executable))))))
 #+END_SRC
 ** Lisp
+*** ddd
+#+begin_src emacs-lisp
+(defun org-mode-<>-syntax-fix (start end)
+  (when (eq major-mode 'org-mode)
+    (save-excursion
+      (goto-char start)
+      (while (re-search-forward "<\\|>" end t)
+	(when (get-text-property (point) 'src-block)
+	  ;; This is a < or > in an org-src block
+	  (put-text-property (point) (1- (point))
+			     'syntax-table (string-to-syntax "_")))))))
+
+(add-hook 'org-mode-hook
+	  (lambda ()
+            (setq syntax-propertize-function 'org-mode-<>-syntax-fix)
+            (syntax-propertize (point-max))))
+
+#+end_src
 *** Paredit
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package paredit
-  ;;     :ensure t)
+(use-package paredit
+  :ensure t)
 
-  ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-  ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-  ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-  ;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-  ;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-  ;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install 
+
+(add-hook 'clojure-mode-hook 'paredit-mode)
+;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 #+END_SRC
 https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 *** flycheck
@@ -753,9 +810,9 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+BEGIN_SRC emacs-lisp
 (setq inferior-lisp-program "/usr/bin/sbcl")
 (setq slime-contribs '(slime-fancy))
-(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
+;;(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 #+END_SRC
-** Clojure
+*** Clojure
 #+BEGIN_SRC emacs-lisp
 (use-package cider
   :ensure t)
@@ -764,6 +821,15 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   :ensure t)
 
 (setq org-babel-clojure-backend 'cider)
+
+					; Let's have pretty source code blocks
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-fontify-natively t
+      org-confirm-babel-evaluate nil)
+
+(global-set-key (kbd "<f3>") 'cider-eval-region) 
+
 #+END_SRC
 ** Python
 # #+BEGIN_SRC emacs-lisp
@@ -804,17 +870,19 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (setq org-src-tab-acts-natively t)
 (setq org-startup-indented t)
 #+END_SRC
-* PDF
+* RSS
 #+BEGIN_SRC emacs-lisp
-(pdf-tools-install)
-#+END_SRC
-* Projectile
-#+BEGIN_SRC emacs-lisp
-(use-package projectile
+(use-package elfeed
+  :ensure t
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
+
+(use-package elfeed-org 
   :ensure t)
-(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-(projectile-mode +1)
+
+(global-set-key (kbd "C-x w") 'elfeed)
+
 #+END_SRC
 * Save
 #+BEGIN_SRC emacs-lisp
@@ -860,16 +928,19 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+BEGIN_SRC emacs-lisp
 (defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
 #+END_SRC
-* swiper / consuel / ivy
+* swiper / consuel / ivy / company
 #+BEGIN_SRC emacs-lisp
+(use-package company
+  :ensure t)
+(add-hook 'after-init-hook 'global-company-mode)
 
 ;; dont show hidden files
 (setq counsel-find-file-ignore-regexp
-        (concat
-         ;; File names beginning with # or .
-         "\\(?:\\`[#.]\\)"
-         ;; File names ending with # or ~
-         "\\|\\(?:\\`.+?[#~]\\'\\)"))
+      (concat
+       ;; File names beginning with # or .
+       "\\(?:\\`[#.]\\)"
+       ;; File names ending with # or ~
+       "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
 (use-package swiper    
   :ensure t    
@@ -894,7 +965,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   (setq ivy-count-format "(%d/%d) ")    
   (setq projectile-completion-system 'ivy)    
   (setq magit-completing-read-function 'ivy-completing-read)
-)
+  )
 #+END_SRC
 * Terminal
 #+BEGIN_SRC emacs-lisp
@@ -910,54 +981,3 @@ https://github.com/fniessen/org-html-themes
 #   :ensure t
 #   :init(global-undo-tree-mode))
 # #+END_SRC
-* PATH
-#+BEGIN_SRC emacs-lisp
-(use-package  exec-path-from-shell)
-#+END_SRC
-* RSS
-#+BEGIN_SRC emacs-lisp
-(use-package elfeed
-  :ensure t
-  :config
-  (elfeed-org)
-  (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
-
-(use-package elfeed-org 
-  :ensure t)
-
-(global-set-key (kbd "C-x w") 'elfeed)
-
-#+END_SRC
-* Filename
-#+BEGIN_SRC emacs-lisp
-(defun copy-full-path-to-kill-ring ()
-  "copy buffer's full path to kill ring"
-  (interactive)
-  (when buffer-file-name
-    (kill-new (file-truename buffer-file-name))))
-
-#+END_SRC
-* updates
-#+BEGIN_SRC emacs-lisp
-(use-package auto-package-update
-  :ensure t
-  :config
-  (setq auto-package-update-delete-old-versions t
-        auto-package-update-interval 4)
-  (auto-package-update-maybe))
-#+END_SRC
-* irc 
-#+BEGIN_SRC emacs-lisp
-(setq erc-autojoin-channels-alist
-      '(("freenode.net" "#emacs-pl" "#php")))
-#+END_SRC
-* Dir
-#+BEGIN_SRC emacs-lisp
-(defun my-create-non-existent-directory ()
-  (let ((parent-directory (file-name-directory buffer-file-name)))
-    (when (and (not (file-exists-p parent-directory))
-               (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
-      (make-directory parent-directory t))))
-
-(add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
-#+END_SRC
