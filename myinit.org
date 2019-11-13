@@ -14,22 +14,29 @@
 #+END_SRC
 ** updates
 #+BEGIN_SRC emacs-lisp
-(use-package auto-package-update
-  :ensure t
-  :config
-  (setq auto-package-update-delete-old-versions t
-        auto-package-update-interval 4)
-  (auto-package-update-maybe))
+;; (use-package auto-package-update
+;;   :ensure t
+;;   :config
+;;   (setq auto-package-update-delete-old-versions t
+;;         auto-package-update-interval 4)
+;;   (auto-package-update-maybe))
 #+END_SRC
 ** complete
 #+BEGIN_SRC emacs-lisp
-(use-package auto-complete
-  :ensure t
-  :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    ))
+;; (use-package auto-complete
+;;   :ensure t
+;;   :init
+;;   (progn
+;;     (ac-config-default)
+;;     (global-auto-complete-mode t)
+;;     ))
+
+;; (use-package company
+;;   :ensure t)
+;; (add-hook 'after-init-hook 'global-company-mode)
+;;(use-package helm)
+;(require 'helm-config)
+;;(require helm-swoop)
 #+END_SRC
 ** insert
 #+BEGIN_SRC emacs-lisp
@@ -67,6 +74,7 @@
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
 #+END_SRC
+https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly
 * Browser
 #+BEGIN_SRC emacs-lisp
 (setq browse-url-generic-program
@@ -100,7 +108,8 @@
 #+END_SRC
 ** center
 #+BEGIN_SRC emacs-lisp
-(use-package centered-window :ensure t)
+  ;; (use-package centered-window-mode 
+  ;; :ensure t)
 #+END_SRC
 * Copy & Paste
 ** Copy
@@ -144,7 +153,6 @@
     (kill-line arg)))
 ;; optional key binding
 (global-set-key "\C-c\C-k" 'copy-line)
-;;(global-set-key (kbd "C-c l") 'copy-line) 
 (setq x-select-enable-clipboard t)
 #+END_SRC
 ** Paste
@@ -172,12 +180,6 @@
         (fill-paragraph nil region)))
 
 #+END_SRC
-* Dictionary
-https://oremacs.com/2015/05/22/define-word/
-(use-package define-word)
-(global-set-key (kbd "C-c d") 'define-word-at-point)
-(global-set-key (kbd "C-c D") 'define-word)
-
 * Dir
 #+BEGIN_SRC emacs-lisp
 (defun my-create-non-existent-directory ()
@@ -188,6 +190,14 @@ https://oremacs.com/2015/05/22/define-word/
 
 (add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
 #+END_SRC
+* Dictionary
+https://oremacs.com/2015/05/22/define-word/
+#+begin_src emacs-lisp
+(use-package define-word)
+(global-set-key (kbd "C-c d") 'define-word-at-point)
+(global-set-key (kbd "C-c D") 'define-word)
+#+end_src
+** Aspell
 * Dired
 #+BEGIN_SRC emacs-lisp
 ;; (use-package dired+
@@ -196,11 +206,11 @@ https://oremacs.com/2015/05/22/define-word/
 #+END_SRC
 * Edit multiple regions
 #+BEGIN_SRC emacs-lisp
-;;(use-package iedit)
-(use-package multiple-cursors)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+(use-package iedit)
+;; (use-package multiple-cursors)
+;; (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+;; (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+;; (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 #+END_SRC
 * El-get
 #+BEGIN_SRC emacs-lisp
@@ -280,9 +290,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
     :ensure t)
 
   (use-package counsel
-  :ensure t)
-
-  (use-package lorem-ipsum
   :ensure t)
 
   (use-package which-key
@@ -418,11 +425,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
 #+END_SRC
-** parentheses
-#+BEGIN_SRC emacs-lisp
-(show-paren-mode 1) ;;highlight
-(electric-pair-mode 1) ;;() wrap selected region in ".[ etc
-#+END_SRC
 ** Delete
 *** hungry-delete
 #+BEGIN_SRC emacs-lisp
@@ -440,11 +442,16 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
 #+END_SRC
-** scroling
+** smooth scroling
 #+BEGIN_SRC emacs-lisp
 (setq
  hscroll-step 1
  scroll-conservatively 1000) 
+
+(use-package fast-scroll)
+(fast-scroll-config)
+(fast-scroll-mode 1)
+
 #+END_SRC
 ** move-line up/down
 #+BEGIN_SRC emacs-lisp
@@ -500,13 +507,20 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * Org
 #+BEGIN_SRC emacs-lisp
 
+(use-package org
+  :ensure org-plus-contrib)
+
 (use-package org-bullets
   :ensure t
   :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-(require 'org-tempo)
+					;(require 'org-tempo)
+
+
 
 (require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+
+					;(require 'org-checklist)
 
 (setq org-edit-src-content-indentation 0
       org-src-tab-acts-natively t
@@ -531,6 +545,8 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (add-to-list 'org-export-filter-parse-tree-functions #'org+-export-header-only)
 
+
+
 #+END_SRC
 ** encryption
 #+BEGIN_SRC emacs-lisp
@@ -552,16 +568,16 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 #+END_SRC
 * PDF
 #+BEGIN_SRC emacs-lisp
-(pdf-tools-install)
+;; (pdf-tools-install)
 #+END_SRC
 * Programming
 ** syntax check 
 *** flycheck
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :ensure t
-  :init
-  (global-flycheck-mode t))
+;; (use-package flycheck
+;;   :ensure t
+;;   :init
+;;   (global-flycheck-mode t))
 #+END_SRC  
 ** PHP
 #+BEGIN_SRC emacs-lisp
@@ -785,14 +801,27 @@ https://github.com/Abuelodelanada/pepe-emacs-config
             (syntax-propertize (point-max))))
 
 #+end_src
-*** Paredit
+*** parentheses
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1) ;;highlight
+(electric-pair-mode 1) ;;() wrap selected region in ".[ etc
+(use-package rainbow-delimiters)
+#+END_SRC
+Since Emacs 24.1(released 2012-06).
+Put this in your emacs init: (electric-pair-mode 1).
+Now If you select a word and hit (, it will become (word). Same for ", [, { etc.
+**** Paredit
 #+BEGIN_SRC emacs-lisp
 (use-package paredit
   :ensure t)
 
-(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install 
-
+(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install
 (add-hook 'clojure-mode-hook 'paredit-mode)
+(add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
+
+
+
 ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
 ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
 ;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
@@ -808,8 +837,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 *** slime
 #+BEGIN_SRC emacs-lisp
-(setq inferior-lisp-program "/usr/bin/sbcl")
-(setq slime-contribs '(slime-fancy))
+;(setq inferior-lisp-program "/usr/bin/sbcl")
+;(setq slime-contribs '(slime-fancy))
 ;;(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 #+END_SRC
 *** Clojure
@@ -822,6 +851,26 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 (setq org-babel-clojure-backend 'cider)
 
+;;was trying to fix the bug
+(declare-function nrepl-send-string-sync "ext:nrepl" (code &optional ns))
+(defun org-babel-execute:clojure (body params)
+"Execute a block of Clojure code with Babel."
+(require 'nrepl)
+(with-temp-buffer
+(insert (org-babel-expand-body:clojure body params))
+((lambda (result)
+(let ((result-params (cdr (assoc :result-params params))))
+(if (or (member "scalar" result-params)
+(member "verbatim" result-params))
+result
+(condition-case nil (org-babel-script-escape result)
+(error result)))))
+(plist-get (nrepl-send-string-sync
+(buffer-substring-no-properties (point-min) (point-max))
+(cdr (assoc :package params)))
+:value))))
+
+
 					; Let's have pretty source code blocks
 (setq org-edit-src-content-indentation 0
       org-src-tab-acts-natively t
@@ -829,6 +878,19 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
       org-confirm-babel-evaluate nil)
 
 (global-set-key (kbd "<f3>") 'cider-eval-region) 
+
+**** Refactor
+(use-package clj-refactor)
+(use-package refactor-nrepl)
+(defun my-clojure-mode-hook ()
+  (clj-refactor-mode 1)
+  (yas-minor-mode 1) ; for adding require/use/import statements
+  ;; This choice of keybinding leaves cider-macroexpand-1 unbound
+  (cljr-add-keybindings-with-prefix "C-c C-m"))
+
+(add-hook 'clojure-mode-hook #'my-clojure-mode-hook)
+
+
 
 #+END_SRC
 ** Python
@@ -872,17 +934,19 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * RSS
 #+BEGIN_SRC emacs-lisp
+(use-package elfeed-org 
+  :ensure t)
+
 (use-package elfeed
   :ensure t
   :config
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
 
-(use-package elfeed-org 
-  :ensure t)
+
 
 (global-set-key (kbd "C-x w") 'elfeed)
-
+(global-set-key (kbd "C-x w") 'elfeed)
 #+END_SRC
 * Save
 #+BEGIN_SRC emacs-lisp
@@ -895,7 +959,10 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * shortcuts
 #+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<f8>") 'visual-line-mode)
 (global-set-key (kbd "<f5>") 'revert-buffer)
+(global-set-key (kbd "<f9>") 'centered-window-mode)
+
 (global-set-key (kbd "C-x 5") 'toggle-frame-split)
 
 (add-hook 'org-shiftup-final-hook 'windmove-up)
@@ -905,13 +972,11 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 (windmove-default-keybindings)
 
-(lorem-ipsum-use-default-bindings)
-
 (global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/Dropbox/homepage/index.org")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/Dropbox/phprefactor/index.org")))
- (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
+(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
 (global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
-(global-set-key (kbd "<f9>") 'centered-window-mode)
+
 
 #+END_SRC
 * snippets
@@ -930,10 +995,6 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * swiper / consuel / ivy / company
 #+BEGIN_SRC emacs-lisp
-(use-package company
-  :ensure t)
-(add-hook 'after-init-hook 'global-company-mode)
-
 ;; dont show hidden files
 (setq counsel-find-file-ignore-regexp
       (concat
@@ -969,10 +1030,10 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * Terminal
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "<M-f12>") 'shell);
+(global-set-key (kbd "<M-f12>") 'shell)
 #+END_SRC
 * things to try
-reveal.js - presentation in html => rawgit.com -> servers presentation online from org mode
+reveal.js - presentation in html
 ** Enrich Mode?
 https://github.com/fniessen/org-html-themes
 # * Undo Tree
@@ -981,3 +1042,25 @@ https://github.com/fniessen/org-html-themes
 #   :ensure t
 #   :init(global-undo-tree-mode))
 # #+END_SRC
+* My Functions
+#+begin_src emacs-lisp
+(defun my-org-books-to-table ()
+  "Generate a list of books and insert as org-table."
+  (interactive)
+  (let (books result)
+    (org-map-entries
+     (lambda ()
+       ;; Check if the heading title is books.
+       (when (string-equal (nth 1 (org-get-outline-path t)) "books")
+	 (org-map-entries
+	  (lambda ()
+	    (let ((olp (org-get-outline-path t)))
+	      ;; Push books to list.
+	      (push (list (nth 0 olp) (nth 2 olp)) books)))
+	  "LEVEL=3" 'tree)))
+     "LEVEL=2")
+    (setq books (nreverse books))
+    (setq result (append (list '(title topic) 'hline) books))
+    (insert (concat (orgtbl-to-orgtbl result nil) "\n"))
+    nil))
+#+end_src
