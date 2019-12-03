@@ -108,8 +108,8 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
 #+END_SRC
 ** center
 #+BEGIN_SRC emacs-lisp
-  (use-package centered-window 
-  :ensure t)
+   (use-package centered-window 
+     :ensure t)
 #+END_SRC
 * Copy & Paste
 ** Copy
@@ -517,6 +517,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   :ensure t
   :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
+(require 'org-tempo)
 
 (require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
