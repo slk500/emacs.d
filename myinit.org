@@ -108,8 +108,8 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
 #+END_SRC
 ** center
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package centered-window-mode 
-  ;; :ensure t)
+  (use-package centered-window 
+  :ensure t)
 #+END_SRC
 * Copy & Paste
 ** Copy
@@ -510,17 +510,17 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (use-package org
   :ensure org-plus-contrib)
 
+(require 'org-tempo);Org source block babel expansion stopped working
+(require 'org-checklist)
+
 (use-package org-bullets
   :ensure t
   :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-					;(require 'org-tempo)
-
-
 
 (require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
-					;(require 'org-checklist)
+(require 'org-checklist)
 
 (setq org-edit-src-content-indentation 0
       org-src-tab-acts-natively t
@@ -561,6 +561,49 @@ This function can be used in `org-export-filter-parse-tree-functions'."
    (clojure . t)))
 
 ;;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
+
+(defun org-begin-template ()
+  "Make a template at point."
+  (interactive)
+  (if (org-at-table-p)
+      (call-interactively 'org-table-rotate-recalc-marks)
+    (let* ((choices '(("s" . "SRC")
+                      ("e" . "EXAMPLE")
+                      ("q" . "QUOTE")
+                      ("v" . "VERSE")
+                      ("c" . "CENTER")
+                      ("l" . "LaTeX")
+                      ("h" . "HTML")
+                      ("a" . "ASCII")))
+           (key
+            (key-description
+             (vector
+              (read-key
+               (concat (propertize "Template type: " 'face 'minibuffer-prompt)
+                       (mapconcat (lambda (choice)
+                                    (concat (propertize (car choice) 'face 'font-lock-type-face)
+                                            ": "
+                                            (cdr choice)))
+                                  choices
+                                  ", ")))))))
+      (let ((result (assoc key choices)))
+        (when result
+          (let ((choice (cdr result)))
+            (cond
+             ((region-active-p)
+              (let ((start (region-beginning))
+                    (end (region-end)))
+                (goto-char end)
+                (insert "#+END_" choice "\n")
+                (goto-char start)
+                (insert "#+BEGIN_" choice "\n")))
+             (t
+              (insert "#+BEGIN_" choice "\n")
+              (save-excursion (insert "#+END_" choice))))))))))
+
+;;bind to key
+(define-key org-mode-map (kbd "C-<") 'org-begin-template)
+
 #+end_src 
 * PATH
 #+BEGIN_SRC emacs-lisp
@@ -568,7 +611,15 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 #+END_SRC
 * PDF
 #+BEGIN_SRC emacs-lisp
-;; (pdf-tools-install)
+(use-package pdf-tools
+  :ensure t
+  :init (pdf-tools-install)
+  :custom
+  (pdf-view-midnight-colors '("#ffffff" . "#000000"))
+  :config
+  (setq pdf-view-have-image-mode-pixel-vscroll nil) ; doesn't work when t
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer))
 #+END_SRC
 * Programming
 ** syntax check 
@@ -733,7 +784,9 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 ** C++
 #+BEGIN_SRC emacs-lisp
     ;; Run C programs directly from within emacs
-    (defun execute-c-program ()
+(use-package cmake-mode)    
+
+(defun execute-c-program ()
       (interactive)
       (save-buffer)
       (defvar foo)
