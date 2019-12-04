@@ -1099,3 +1099,9 @@ https://github.com/fniessen/org-html-themes
     (insert (concat (orgtbl-to-orgtbl result nil) "\n"))
     nil))
 #+end_src
+* GPG
+gpg --gen-key
+#+begin_src text
+-*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
+#+end_src
+
