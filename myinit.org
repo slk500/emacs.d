@@ -490,6 +490,11 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
 (setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
 #+END_SRC
+* Yaml
+#+begin_src emacs-lisp
+(use-package yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+#+end_src
 * Live Editing
 #+BEGIN_SRC emacs-lisp
 (use-package impatient-mode
@@ -502,7 +507,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 * Magit
 #+BEGIN_SRC emacs-lisp
-;;(use-package magit)
+(use-package magit)
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp
