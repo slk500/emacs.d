@@ -731,7 +731,7 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 ;;     (package-refresh-contents)
 ;;     (package-install 'ac-php )
 ;;     )
-;;   (require 'cl)
+;;  (require 'cl)
 ;;   (require 'php-mode)
 ;;   (add-hook 'php-mode-hook
 ;;             '(lambda ()
@@ -966,6 +966,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
 
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
 (electric-indent-mode +1)
@@ -994,8 +995,6 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   :ensure t
   :config
   (super-save-mode +1))
-
-(desktop-save-mode t)
 #+END_SRC
 * shortcuts
 #+BEGIN_SRC emacs-lisp
