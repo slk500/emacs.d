@@ -30,13 +30,6 @@
 ;;     (ac-config-default)
 ;;     (global-auto-complete-mode t)
 ;;     ))
-
-;; (use-package company
-;;   :ensure t)
-;; (add-hook 'after-init-hook 'global-company-mode)
-;;(use-package helm)
-;(require 'helm-config)
-;;(require helm-swoop)
 #+END_SRC
 ** insert
 #+BEGIN_SRC emacs-lisp
@@ -551,7 +544,16 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (add-to-list 'org-export-filter-parse-tree-functions #'org+-export-header-only)
 
-
+(defun org-table-strip-table-at-point ()
+  (interactive)
+  (let* ((table (delete 'hline (org-table-to-lisp)))
+	 (contents (orgtbl-to-generic
+		    table '(:sep "\t"))))
+    (goto-char (org-table-begin))
+    (re-search-forward "|")
+    (backward-char)
+    (delete-region (point) (org-table-end))
+    (insert contents)))
 
 #+END_SRC
 ** encryption
@@ -1032,7 +1034,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+BEGIN_SRC emacs-lisp
 (defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
 #+END_SRC
-* swiper / consuel / ivy / company
+* swiper / consuel / ivy
 #+BEGIN_SRC emacs-lisp
 ;; dont show hidden files
 (setq counsel-find-file-ignore-regexp
@@ -1046,7 +1048,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   :ensure t    
   :bind    
   (("C-s" . swiper)    
-   ("M-x" . counsel-M-x)    
+   ("M-x" . counsel-M-x)   
+   ("C-x b" . ivy-switch-buffer)  
    ("C-x C-f" . counsel-find-file)    
    ("<f1> f" . counsel-describe-function)    
    ("<f1> v" . counsel-describe-variable)    
@@ -1066,6 +1069,36 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   (setq projectile-completion-system 'ivy)    
   (setq magit-completing-read-function 'ivy-completing-read)
   )
+
+(use-package ivy-rich)
+(ivy-rich-mode 1)
+
+'(ivy-switch-buffer
+  (:columns
+   ((ivy-rich-candidate (:width 30))  ; return the candidate itself
+    (ivy-rich-switch-buffer-size (:width 7))  ; return the buffer size
+    (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right)); return the buffer indicators
+    (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))          ; return the major mode info
+    (ivy-rich-switch-buffer-project (:width 15 :face success))             ; return project name using `projectile'
+    (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))  ; return file path relative to project root or `default-directory' if project is nil
+   :predicate
+   (lambda (cand) (get-buffer cand)))
+  counsel-M-x
+  (:columns
+   ((counsel-M-x-transformer (:width 40))  ; thr original transformer
+    (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))  ; return the docstring of the command
+  counsel-describe-function
+  (:columns
+   ((counsel-describe-function-transformer (:width 40))  ; the original transformer
+    (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))  ; return the docstring of the function
+  counsel-describe-variable
+  (:columns
+   ((counsel-describe-variable-transformer (:width 40))  ; the original transformer
+    (ivy-rich-counsel-variable-docstring (:face font-lock-doc-face))))  ; return the docstring of the variable
+  counsel-recentf
+  (:columns
+   ((ivy-rich-candidate (:width 0.8)) ; return the candidate itself
+    (ivy-rich-file-last-modified-time (:face font-lock-comment-face))))) ; return the last modified time of the file
 #+END_SRC
 * Terminal
 #+BEGIN_SRC emacs-lisp
@@ -1108,4 +1141,5 @@ gpg --gen-key
 #+begin_src text
 -*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
 #+end_src
+
 
