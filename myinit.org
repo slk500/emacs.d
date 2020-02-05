@@ -1138,8 +1138,14 @@ https://github.com/fniessen/org-html-themes
 #+end_src
 * GPG
 gpg --gen-key
+
 #+begin_src text
 -*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
 #+end_src
+#+begin_src emacs-lisp
+(setq epg-gpg-home-directory "~/.gnupg")
 
-
+#+end_src
+* Notes
+** delete blank lines 
+M-x flush-lines RET ^$ RET
