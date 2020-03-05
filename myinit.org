@@ -104,6 +104,14 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
    (use-package centered-window 
      :ensure t)
 #+END_SRC
+** resize - have to chose shortcuts
+#+begin_src emacs-lisp
+;; (global-set-key (kbd "<C-up>") 'shrink-window)
+;; (global-set-key (kbd "<C-down>") 'enlarge-window)
+;; (global-set-key (kbd "<C-left>") 'shrink-window-horizontally)
+;; (global-set-key (kbd "<C-right>") 'enlarge-window-horizontally)
+#+end_src
+
 * Copy & Paste
 ** Copy
 #+BEGIN_SRC emacs-lisp
@@ -196,7 +204,8 @@ https://oremacs.com/2015/05/22/define-word/
 ;; (use-package dired+
 ;; :ensure t
 ;; :config (require 'dired+))
-#+END_SRC
+#+END_SR
+
 * Edit multiple regions
 #+BEGIN_SRC emacs-lisp
 (use-package iedit)
@@ -628,6 +637,51 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   (setq pdf-view-have-image-mode-pixel-vscroll nil) ; doesn't work when t
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer))
+
+;; midnite mode hook
+(add-hook 'pdf-view-mode-hook (lambda ()
+                                (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
+
+(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber profile as default (see below)
+
+(defun bms/pdf-no-filter ()
+  "View pdf without colour filter."
+  (interactive)
+  (pdf-view-midnight-minor-mode -1)
+  )
+
+;; change midnite mode colours functions
+(defun bms/pdf-midnite-original ()
+  "Set pdf-view-midnight-colors to original colours."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#839496" . "#002b36" )) ; original values
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-amber ()
+  "Set pdf-view-midnight-colors to amber on dark slate blue."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; amber
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-green ()
+  "Set pdf-view-midnight-colors to green on black."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#00B800" . "#000000" )) ; green 
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-colour-schemes ()
+  "Midnight mode colour schemes bound to keys"
+  (local-set-key (kbd "!") (quote bms/pdf-no-filter))
+  (local-set-key (kbd "@") (quote bms/pdf-midnite-amber)) 
+  (local-set-key (kbd "#") (quote bms/pdf-midnite-green))
+  (local-set-key (kbd "$") (quote bms/pdf-midnite-original))
+  )  
+
+(add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
+
 #+END_SRC
 * Programming
 ** syntax check 
