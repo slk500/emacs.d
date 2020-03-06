@@ -682,6 +682,23 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
 
+;;install org-pdfview
+
+(use-package org-pdftools
+  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  (with-eval-after-load 'org
+    (org-link-set-parameters "pdftools"
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)
+    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+
+(use-package org-noter-pdftools
+  :after (org-noter))
+
+
+
 #+END_SRC
 * Programming
 ** syntax check 
@@ -1115,7 +1132,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
    ("C-c k" . counsel-ag)    
    ("C-x l" . counsel-locate)    
    ("C-S-o" . counsel-rhythmbox)    
-   ("C-c C-r"0 . ivy-resume))    
+   ("C-c C-r" . ivy-resume))    
   :config    
   (ivy-mode 1)    
   (setq ivy-use-virtual-buffers t)    

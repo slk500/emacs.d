@@ -1,12 +1,24 @@
+(setq ring-bell-function 'ignore)
+
 (setq use-package-always-ensure t)
 
-(use-package auto-complete
-  :ensure t
-  :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    ))
+(use-package restart-emacs
+:ensure t)
+
+;; (use-package auto-package-update
+;;   :ensure t
+;;   :config
+;;   (setq auto-package-update-delete-old-versions t
+;;         auto-package-update-interval 4)
+;;   (auto-package-update-maybe))
+
+;; (use-package auto-complete
+;;   :ensure t
+;;   :init
+;;   (progn
+;;     (ac-config-default)
+;;     (global-auto-complete-mode t)
+;;     ))
 
 (use-package autoinsert
   :init
@@ -32,63 +44,142 @@
  ;; Use versioned backups
  version-control t)
 
-;; Run C programs directly from within emacs
-  (defun execute-c-program ()
-    (interactive)
-    (save-buffer)
-    (defvar foo)
-    (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
-    (shell-command foo))
+(use-package benchmark-init
+  :ensure t
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
-  (global-set-key [C-f1] 'execute-c-program)
+(setq browse-url-generic-program
+      (cond
+       ((eq window-system 'mac) "open") ; mac
+       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
+        (executable-find "google-chrome"))
+       ))
 
-  ;; (defun ls ()
-  ;;   "Lists the contents of the current directory."
-  ;;   (interactive)
-  ;;   (save-buffer)
-  ;;   (shell-command "./run.sh"))
-  ;; (global-set-key (kbd "<f6>") 'ls);
+'(org-file-apps
+    (quote
+      ((auto-mode . emacs)
+      ("\\.mm\\'" . default)
+      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
+      ("\\.pdf\\'" . default))))
 
-  (semantic-mode 1)
+(defun transpose-windows ()
+   "Transpose two windows.  If more or less than two windows are visible, error."
+   (interactive)
+   (unless (= 2 (count-windows))
+     (error "There are not 2 windows."))
+   (let* ((windows (window-list))
+          (w1 (car windows))
+          (w2 (nth 1 windows))
+          (w1b (window-buffer w1))
+          (w2b (window-buffer w2)))
+     (set-window-buffer w1 w2b)
+     (set-window-buffer w2 w1b)))
 
-  (use-package srefactor
+(use-package centered-window 
   :ensure t)
 
-;; (add-hook 'c++-mode-hook
-;;           (lambda ()
-;; 	  (save-buffer)
-;;             (unless (file-exists-p "Makefile")
-;;               (set (make-local-variable 'compile-command)
-;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
-;;                       (executable (convert-filename-to-executable file)))
-;;                  (concat "g++ -g -Wall -o "
-;;                          (file-name-sans-extension file)
-;;                          " "
-;;                          file
-;;                          " && "
-;;                          executable))))))
+;; (global-set-key (kbd "<C-up>") 'shrink-window)
+;; (global-set-key (kbd "<C-down>") 'enlarge-window)
+;; (global-set-key (kbd "<C-left>") 'shrink-window-horizontally)
+;; (global-set-key (kbd "<C-right>") 'enlarge-window-horizontally)
 
-;; (add-hook 'c-mode-hook
-;;       (lambda ()
-;;       (save-buffer)
-;;         (unless (file-exists-p "Makefile")
-;;           (set (make-local-variable 'compile-command)
-;;                (let* ((file (file-name-nondirectory buffer-file-name))
-;;                       (executable (convert-filename-to-executable file)))
-;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
-;;                          (file-name-sans-extension file)
-;;                          " "
-;;                          file
-;;                          " && "
-;;                          executable))))))
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
 
-;;(use-package iedit)
-(use-package multiple-cursors)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+          (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
 
-(setq sgml-quick-keys 'close)
+(defun paste-to-mark (&optional arg)
+  "Paste things to mark, or to the prompt in shell-mode."
+  (unless (eq arg 1)
+    (if (string= "shell-mode" major-mode)
+        (comint-next-prompt 25535)
+      (goto-char (mark)))
+    (yank)))
+
+(defun copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg)
+  ;;(paste-to-mark arg)
+  )
+(global-set-key (kbd "C-c w") 'copy-word)
+
+(defun copy-line (&optional arg)
+  "Do a kill-line but copy rather than kill.  This function directly calls
+    kill-line, so see documentation of kill-line for how to use it including prefix
+    argument and relevant variables.  This function works by temporarily making the
+    buffer read-only."
+  (interactive "P")
+  (let ((buffer-read-only t)
+        (kill-read-only-ok t))
+    (kill-line arg)))
+;; optional key binding
+(global-set-key "\C-c\C-k" 'copy-line)
+(setq x-select-enable-clipboard t)
+
+(dolist (command '(yank yank-pop))
+  (eval `(defadvice ,command (after indent-region activate)
+           (and (not current-prefix-arg)
+                (member major-mode '(emacs-lisp-mode lisp-mode
+                                                     clojure-mode    scheme-mode
+                                                     haskell-mode    ruby-mode
+                                                     rspec-mode      python-mode
+                                                     c-mode          c++-mode
+                                                     objc-mode       latex-mode
+                                                     plain-tex-mode clojurescript-mode typescript-mode org-mode))
+                (let ((mark-even-if-inactive transient-mark-mode))
+                  (indent-region (region-beginning) (region-end) nil))))))
+
+(defun unfill-paragraph (&optional region)
+      "Takes a multi-line paragraph and makes it into a single line of text."
+      (interactive (progn (barf-if-buffer-read-only) '(t)))
+      (let ((fill-column (point-max))
+            ;; This would override `fill-column' if it's an integer.
+            (emacs-lisp-docstring-fill-column t))
+        (fill-paragraph nil region)))
+
+(defun my-create-non-existent-directory ()
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
+      (make-directory parent-directory t))))
+
+(add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
+
+(use-package define-word)
+(global-set-key (kbd "C-c d") 'define-word-at-point)
+(global-set-key (kbd "C-c D") 'define-word)
+
+;; (use-package dired+
+;; :ensure t
+;; :config (require 'dired+))
+
+(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+(unless (require 'el-get nil t)
+  (url-retrieve
+   "https://raw.github.com/dimitri/el-get/master/el-get-install.el"
+   (lambda (s)
+     (end-of-buffer)
+     (eval-print-last-sexp))))
+
+(defun copy-full-path-to-kill-ring ()
+  "copy buffer's full path to kill ring"
+  (interactive)
+  (when buffer-file-name
+    (kill-new (file-truename buffer-file-name))))
+
+(global-set-key (kbd "C-c C-f") 'fold-this-all)
+(global-set-key (kbd "C-c C-F") 'fold-this)
+(global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
 
 (use-package org-download
   :ensure t
@@ -133,20 +224,9 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (use-package counsel
 :ensure t)
 
-(use-package lorem-ipsum
-:ensure t)
-
 (use-package which-key
   :ensure t
   :config (which-key-mode))
-
-(use-package org-bullets
-  :ensure t
-  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-(use-package company
-  :ensure t)
-(add-hook 'after-init-hook 'global-company-mode)
 
 (setq indo-enable-flex-matching t)
 (setq ido-everywhere t)
@@ -154,11 +234,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 
 (defalias 'list-buffers 'ibuffer)
 ;;(defalias 'list-buffers 'ibuffer-other-window
-
-(use-package flycheck
-     :ensure t
-     :init
-     (global-flycheck-mode t))
 
 (use-package treemacs
   :ensure t
@@ -218,23 +293,35 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 
+
+
 (use-package treemacs-projectile
   :after treemacs projectile
   :ensure t)
 
-(use-package multiple-cursors
-:ensure t)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+;;(load-theme 'wheatgrass)
+;; (use-package idea-darkula-theme
+;; :ensure t)
+;;(load-theme 'idea-darkula t)
 
-;;(load-theme 'deeper-blue)
-(use-package idea-darkula-theme
+(use-package doom-themes
 :ensure t)
- (load-theme 'idea-darkula t)
+
+;; Global settings (defaults)
+(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+;; may have their own settings.
+(load-theme 'doom-one t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
 
 (setq inhibit-startup-message t)
-(setq default-directory "/home/slk/Dropbox")
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
@@ -250,26 +337,14 @@ Assumes that the frame is only split into two."
   (let ((split-vertically-p (window-combined-p)))
     (delete-window) ; closes current window
     (if split-vertically-p
-        (split-window-horizontally)
+	(split-window-horizontally)
       (split-window-vertically)) ; gives us a split with the other window twice
     (switch-to-buffer nil))) ; restore the original window in this part of the frame
 
 ;;shift + arrows -> change frames -> dosent work in org mode
 
-;(use-package tabbar-ruler
-;  :ensure t)
-;(setq tabbar-ruler-global-tabbar t)    ; get tabbar
-  ;; (use-package tabbar
-  ;;   :ensure t
-  ;;   :config
-  ;;   (tabbar-mode 1)
-  ;;  )
-
-(global-hl-line-mode t) ;;highlight
+;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
-
-(show-paren-mode 1) ;;highlight
-(electric-pair-mode 1) ;;()
 
 (use-package hungry-delete
   :ensure t
@@ -282,12 +357,13 @@ Assumes that the frame is only split into two."
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
 
-(setq scroll-step 1)
+(setq
+ hscroll-step 1
+ scroll-conservatively 1000) 
 
-;; (cua-mode 1)
-
-;; (use-package ergoemacs-mode
-;; :ensure t)
+(use-package fast-scroll)
+(fast-scroll-config)
+(fast-scroll-mode 1)
 
 (defun move-line-up ()
   "Move up the current line."
@@ -307,45 +383,19 @@ Assumes that the frame is only split into two."
 (global-set-key (kbd "C-S-<up>")  'move-line-up)
 (global-set-key (kbd "C-S-<down>")  'move-line-down)
 
-(use-package js2-mode)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(use-package key-chord :ensure t)
+(key-chord-mode 1)
+(key-chord-define-global "ww"     'transpose-windows)
 
-;; Better imenu
-(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+(setq erc-autojoin-channels-alist
+      '(("freenode.net" "#emacs-pl" "#php")))
 
-(use-package js2-refactor)
-(use-package xref-js2)
+(use-package flymake-json :ensure t)
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
+(setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
 
-(add-hook 'js2-mode-hook #'js2-refactor-mode)
-(js2r-add-keybindings-with-prefix "C-c C-r")
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
-;; unbind it.
-(define-key js-mode-map (kbd "M-.") nil)
-
-(add-hook 'js2-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
-
-;;(use-package skewer-mode
-;;:ensure t)
-;;(add-hook 'js2-mode-hook 'skewer-mode)
-;;(add-hook 'css-mode-hook 'skewer-css-mode)
-;;(add-hook 'html-mode-hook 'skewer-html-mode)
-;;(setq httpd-root "/home/slk500/Work/pong")
-
-;; (use-package paredit
-;;     :ensure t)
-
-;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+(use-package yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 
 (use-package impatient-mode
 :ensure t)
@@ -355,12 +405,223 @@ Assumes that the frame is only split into two."
 (use-package simple-httpd
 :ensure t)
 
-(use-package php-mode :ensure t)
+(use-package magit)
+
+(use-package org
+  :ensure org-plus-contrib)
+
+(require 'org-tempo);Org source block babel expansion stopped working
+(require 'org-checklist)
+
+(use-package org-bullets
+  :ensure t
+  :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(require 'org-tempo)
+
+(require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+
+(require 'org-checklist)
+
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-preserve-indentation t)
+
+(global-set-key "\C-ca" 'org-agenda)
+
+(require 'ox)
+
+(defun org+-export-header-only (tree _back-end _channel)
+  "Remove the content of headlines with the :exportHeadlineOnly: tag in TREE.
+This function can be used in `org-export-filter-parse-tree-functions'."
+  ;; We modify the tree by side-effect and ignore the return value.
+  (org-element-map
+      tree
+      'headline
+    (lambda (el)
+      (when (assoc-string 'exportHeadlineOnly (org-element-property :tags el))
+        (org-element-set-contents el nil)
+        )))
+  tree)
+
+(add-to-list 'org-export-filter-parse-tree-functions #'org+-export-header-only)
+
+(defun org-table-strip-table-at-point ()
+  (interactive)
+  (let* ((table (delete 'hline (org-table-to-lisp)))
+	 (contents (orgtbl-to-generic
+		    table '(:sep "\t"))))
+    (goto-char (org-table-begin))
+    (re-search-forward "|")
+    (backward-char)
+    (delete-region (point) (org-table-end))
+    (insert contents)))
+
+(require 'epa-file)
+(epa-file-enable)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages 
+ '((shell . t)
+   (clojure . t)))
+
+;;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
+
+(defun org-begin-template ()
+  "Make a template at point."
+  (interactive)
+  (if (org-at-table-p)
+      (call-interactively 'org-table-rotate-recalc-marks)
+    (let* ((choices '(("s" . "SRC")
+                      ("e" . "EXAMPLE")
+                      ("q" . "QUOTE")
+                      ("v" . "VERSE")
+                      ("c" . "CENTER")
+                      ("l" . "LaTeX")
+                      ("h" . "HTML")
+                      ("a" . "ASCII")))
+           (key
+            (key-description
+             (vector
+              (read-key
+               (concat (propertize "Template type: " 'face 'minibuffer-prompt)
+                       (mapconcat (lambda (choice)
+                                    (concat (propertize (car choice) 'face 'font-lock-type-face)
+                                            ": "
+                                            (cdr choice)))
+                                  choices
+                                  ", ")))))))
+      (let ((result (assoc key choices)))
+        (when result
+          (let ((choice (cdr result)))
+            (cond
+             ((region-active-p)
+              (let ((start (region-beginning))
+                    (end (region-end)))
+                (goto-char end)
+                (insert "#+END_" choice "\n")
+                (goto-char start)
+                (insert "#+BEGIN_" choice "\n")))
+             (t
+              (insert "#+BEGIN_" choice "\n")
+              (save-excursion (insert "#+END_" choice))))))))))
+
+;;bind to key
+(define-key org-mode-map (kbd "C-<") 'org-begin-template)
+
+(use-package  exec-path-from-shell)
+
+(use-package pdf-tools
+  :ensure t
+  :init (pdf-tools-install)
+  :custom
+  (pdf-view-midnight-colors '("#ffffff" . "#000000"))
+  :config
+  (setq pdf-view-have-image-mode-pixel-vscroll nil) ; doesn't work when t
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer))
+
+;; midnite mode hook
+(add-hook 'pdf-view-mode-hook (lambda ()
+                                (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
+
+(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber profile as default (see below)
+
+(defun bms/pdf-no-filter ()
+  "View pdf without colour filter."
+  (interactive)
+  (pdf-view-midnight-minor-mode -1)
+  )
+
+;; change midnite mode colours functions
+(defun bms/pdf-midnite-original ()
+  "Set pdf-view-midnight-colors to original colours."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#839496" . "#002b36" )) ; original values
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-amber ()
+  "Set pdf-view-midnight-colors to amber on dark slate blue."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; amber
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-green ()
+  "Set pdf-view-midnight-colors to green on black."
+  (interactive)
+  (setq pdf-view-midnight-colors '("#00B800" . "#000000" )) ; green 
+  (pdf-view-midnight-minor-mode)
+  )
+
+(defun bms/pdf-midnite-colour-schemes ()
+  "Midnight mode colour schemes bound to keys"
+  (local-set-key (kbd "!") (quote bms/pdf-no-filter))
+  (local-set-key (kbd "@") (quote bms/pdf-midnite-amber)) 
+  (local-set-key (kbd "#") (quote bms/pdf-midnite-green))
+  (local-set-key (kbd "$") (quote bms/pdf-midnite-original))
+  )  
+
+(add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
+
+;;install org-pdfview
+
+(use-package org-pdftools
+  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  (with-eval-after-load 'org
+    (org-link-set-parameters "pdftools"
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)
+    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+
+(use-package org-noter-pdftools
+  :after (org-noter))
+
+;; (use-package flycheck
+;;   :ensure t
+;;   :init
+;;   (global-flycheck-mode t))
+
+(use-package php-mode
+  :ensure t)
 
 (use-package phpunit :ensure t)
 
-(require 'org)
-(require 'ob)
+(defcustom ob-php:inf-php-buffer "*phpunit*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+(defcustom ob-php:inf-php-buffer "*php*"
+  "Default PHP inferior buffer."
+  :group 'ob-php
+  :type 'string)
+
+   ;;;###autoload
+(eval-after-load "org"
+  '(add-to-list 'org-src-lang-modes '("phpunit" . php)))
+
+(defvar org-babel-default-header-args:phpunit '())
+
+(add-to-list 'org-babel-default-header-args:phpunit
+	     '(:results . "output"))
+
+(defvar org-babel-default-header-args:php '())
+
+(add-to-list 'org-babel-default-header-args:php
+	     '(:results . "output"))
+
+   ;;;###autoload
+(defun org-babel-execute:phpunit (body params)
+  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
+  (let* ((cmd (concat(file-name-directory buffer-file-name) "../phprefactor/phpunithack.sh"))
+	 (body (concat "<?php\n" body "\n?>")))
+    (write-region body  nil (concat(file-name-directory buffer-file-name) "../phprefactor/test.php"))
+    (org-babel-eval cmd body)
+    ))
 
 (defgroup ob-php nil
   "org-mode blocks for PHP."
@@ -371,6 +632,7 @@ Assumes that the frame is only split into two."
   :group 'ob-php
   :type 'string)
 
+;;;###autoload
 (defun org-babel-execute:php (body params)
   "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
   (let* ((cmd "php")
@@ -378,6 +640,7 @@ Assumes that the frame is only split into two."
     (org-babel-eval cmd body)
     ))
 
+;;;###autoload
 (eval-after-load "org"
   '(add-to-list 'org-src-lang-modes '("php" . php)))
 
@@ -388,17 +651,206 @@ Assumes that the frame is only split into two."
 
 (provide 'ob-php)
 
-;;(org-babel-do-load-languages 'org-babel-load-languages 
-  ;;                           '((emacs-lisp . t)
-    ;;                           (ipython . t)))
+(use-package dumb-jump
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
+  :ensure)
+
+;; (unless (package-installed-p 'ac-php )
+;;     (package-refresh-contents)
+;;     (package-install 'ac-php )
+;;     )
+;;  (require 'cl)
+;;   (require 'php-mode)
+;;   (add-hook 'php-mode-hook
+;;             '(lambda ()
+;;                (auto-complete-mode t)
+;;                (require 'ac-php)
+;;                (setq ac-sources  '(ac-source-php ) )
+;;                (yas-global-mode 1)
+;;                (ac-php-core-eldoc-setup ) ;; enable eldoc
+
+;;                (define-key php-mode-map  (kbd "C-]") 'ac-php-find-symbol-at-point)   ;goto define
+;;                (define-key php-mode-map  (kbd "C-t") 'ac-php-location-stack-back)    ;go back
+;;                ))
+
+;alist of 'buffer-name / timer' items
+(defvar buffer-tail-alist nil)
+(defun buffer-tail (name)
+  "follow buffer tails"
+  (cond ((or (equal (buffer-name (current-buffer)) name)
+             (string-match "^ \\*Minibuf.*?\\*$" (buffer-name (current-buffer)))))
+        ((get-buffer name)
+	 (with-current-buffer (get-buffer name)
+           (goto-char (point-max))
+           (let ((windows (get-buffer-window-list (current-buffer) nil t)))
+             (while windows (set-window-point (car windows) (point-max))
+		    (with-selected-window (car windows) (recenter -3)) (setq windows (cdr windows))))))))
+
+(defun toggle-buffer-tail (name &optional force)
+  "toggle tailing of buffer NAME. when called non-interactively, a FORCE arg of 'on' or 'off' can be used to to ensure a given state for buffer NAME"
+  (interactive (list (cond ((if name name) (read-from-minibuffer 
+					    (concat "buffer name to tail" 
+						    (if buffer-tail-alist (concat " (" (caar buffer-tail-alist) ")") "") ": ")
+					    (if buffer-tail-alist (caar buffer-tail-alist)) nil nil
+					    (mapcar '(lambda (x) (car x)) buffer-tail-alist)
+					    (if buffer-tail-alist (caar buffer-tail-alist)))) nil)))
+  (let ((toggle (cond (force force) ((assoc name buffer-tail-alist) "off") (t "on")) ))
+    (if (not (or (equal toggle "on") (equal toggle "off"))) 
+	(error "invalid 'force' arg. required 'on'/'off'") 
+      (progn 
+        (while (assoc name buffer-tail-alist) 
+          (cancel-timer (cdr (assoc name buffer-tail-alist)))
+          (setq buffer-tail-alist (remove* name buffer-tail-alist :key 'car :test 'equal)))
+        (if (equal toggle "on")
+            (add-to-list 'buffer-tail-alist (cons name (run-at-time t 1 'buffer-tail name))))
+        (message "toggled 'tail buffer' for '%s' %s" name toggle)))))
+
+(toggle-buffer-tail "*PHP*" "on")
+
+(use-package feature-mode
+ :ensure t)
+
+;; Run C programs directly from within emacs
+(use-package cmake-mode)    
+
+(defun execute-c-program ()
+      (interactive)
+      (save-buffer)
+      (defvar foo)
+      (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
+      (shell-command foo))
+
+    (global-set-key [C-f1] 'execute-c-program)
+
+    ;; (defun ls ()
+    ;;   "Lists the contents of the current directory."
+    ;;   (interactive)
+    ;;   (save-buffer)
+    ;;   (shell-command "./run.sh"))
+    ;; (global-set-key (kbd "<f6>") 'ls);
+
+    (semantic-mode 1)
+
+    (use-package srefactor
+    :ensure t)
+
+  ;; (add-hook 'c++-mode-hook
+  ;;           (lambda ()
+  ;; 	  (save-buffer)
+  ;;             (unless (file-exists-p "Makefile")
+  ;;               (set (make-local-variable 'compile-command)
+  ;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "g++ -g -Wall -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
+
+  ;; (add-hook 'c-mode-hook
+  ;;       (lambda ()
+  ;;       (save-buffer)
+  ;;         (unless (file-exists-p "Makefile")
+  ;;           (set (make-local-variable 'compile-command)
+  ;;                (let* ((file (file-name-nondirectory buffer-file-name))
+  ;;                       (executable (convert-filename-to-executable file)))
+  ;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
+  ;;                          (file-name-sans-extension file)
+  ;;                          " "
+  ;;                          file
+  ;;                          " && "
+  ;;                          executable))))))
+
+(defun org-mode-<>-syntax-fix (start end)
+  (when (eq major-mode 'org-mode)
+    (save-excursion
+      (goto-char start)
+      (while (re-search-forward "<\\|>" end t)
+	(when (get-text-property (point) 'src-block)
+	  ;; This is a < or > in an org-src block
+	  (put-text-property (point) (1- (point))
+			     'syntax-table (string-to-syntax "_")))))))
+
+(add-hook 'org-mode-hook
+	  (lambda ()
+            (setq syntax-propertize-function 'org-mode-<>-syntax-fix)
+            (syntax-propertize (point-max))))
+
+(show-paren-mode 1) ;;highlight
+(electric-pair-mode 1) ;;() wrap selected region in ".[ etc
+(use-package rainbow-delimiters)
+
+(use-package paredit
+  :ensure t)
+
+(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install
+(add-hook 'clojure-mode-hook 'paredit-mode)
+(add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
+
+
+
+;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+;;     (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+;;     (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+;;     (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+;;     (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+
+(setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+
+;(setq inferior-lisp-program "/usr/bin/sbcl")
+;(setq slime-contribs '(slime-fancy))
+;;(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
+
+(setq sgml-quick-keys 'close)
+
+(use-package web-mode :ensure t)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
+
+(electric-indent-mode +1)
+(setq org-src-tab-acts-natively t)
+(setq org-startup-indented t)
+
+(use-package elfeed-org 
+  :ensure t)
+
+(use-package elfeed
+  :ensure t
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
+
+
+
+(global-set-key (kbd "C-x w") 'elfeed)
+(global-set-key (kbd "C-x w") 'elfeed)
 
 (use-package super-save
   :ensure t
   :config
   (super-save-mode +1))
-(desktop-save-mode t)
 
+(global-set-key (kbd "<f8>") 'visual-line-mode)
 (global-set-key (kbd "<f5>") 'revert-buffer)
+(global-set-key (kbd "<f9>") 'centered-window-mode)
+
 (global-set-key (kbd "C-x 5") 'toggle-frame-split)
 
 (add-hook 'org-shiftup-final-hook 'windmove-up)
@@ -408,29 +860,35 @@ Assumes that the frame is only split into two."
 
 (windmove-default-keybindings)
 
-(lorem-ipsum-use-default-bindings)
+(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/Dropbox/homepage/index.org")))
+(global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/Dropbox/phprefactor/index.org")))
+(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
+(global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
 
-(use-package yasnippet
-  :ensure t
-  :init
-  :config
-  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
-(use-package yasnippet-snippets
-  :ensure t)
+;; (use-package yasnippet
+;;   :ensure t
+;;   :init
+;;   :config
+;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+;; (use-package yasnippet-snippets
+;;   :ensure t)
+
+(defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
 
 ;; dont show hidden files
 (setq counsel-find-file-ignore-regexp
-        (concat
-         ;; File names beginning with # or .
-         "\\(?:\\`[#.]\\)"
-         ;; File names ending with # or ~
-         "\\|\\(?:\\`.+?[#~]\\'\\)"))
+      (concat
+       ;; File names beginning with # or .
+       "\\(?:\\`[#.]\\)"
+       ;; File names ending with # or ~
+       "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
 (use-package swiper    
   :ensure t    
   :bind    
   (("C-s" . swiper)    
-   ("M-x" . counsel-M-x)    
+   ("M-x" . counsel-M-x)   
+   ("C-x b" . ivy-switch-buffer)  
    ("C-x C-f" . counsel-find-file)    
    ("<f1> f" . counsel-describe-function)    
    ("<f1> v" . counsel-describe-variable)    
@@ -449,31 +907,59 @@ Assumes that the frame is only split into two."
   (setq ivy-count-format "(%d/%d) ")    
   (setq projectile-completion-system 'ivy)    
   (setq magit-completing-read-function 'ivy-completing-read)
-)
+  )
 
-(global-set-key (kbd "<M-f12>") 'shell);
+(use-package ivy-rich
+  :ensure t)
+(ivy-rich-mode 1)
 
-(use-package undo-tree
-  :ensure t
-  :init(global-undo-tree-mode))
+'(ivy-switch-buffer
+  (:columns
+   ((ivy-rich-candidate (:width 30))  ; return the candidate itself
+    (ivy-rich-switch-buffer-size (:width 7))  ; return the buffer size
+    (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right)); return the buffer indicators
+    (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))          ; return the major mode info
+    (ivy-rich-switch-buffer-project (:width 15 :face success))             ; return project name using `projectile'
+    (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))  ; return file path relative to project root or `default-directory' if project is nil
+   :predicate
+   (lambda (cand) (get-buffer cand)))
+  counsel-M-x
+  (:columns
+   ((counsel-M-x-transformer (:width 40))  ; thr original transformer
+    (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))  ; return the docstring of the command
+  counsel-describe-function
+  (:columns
+   ((counsel-describe-function-transformer (:width 40))  ; the original transformer
+    (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))  ; return the docstring of the function
+  counsel-describe-variable
+  (:columns
+   ((counsel-describe-variable-transformer (:width 40))  ; the original transformer
+    (ivy-rich-counsel-variable-docstring (:face font-lock-doc-face))))  ; return the docstring of the variable
+  counsel-recentf
+  (:columns
+   ((ivy-rich-candidate (:width 0.8)) ; return the candidate itself
+    (ivy-rich-file-last-modified-time (:face font-lock-comment-face))))) ; return the last modified time of the file
 
-(add-hook 'python-mode-hook
-          (lambda ()
-              (set (make-local-variable 'compile-command)
-                   (concat "python " buffer-file-name))))
-(global-set-key (kbd "<f4>") (lambda () (interactive) (setq current-prefix-arg '(4)) (call-interactively 'compile)))
-(setq compilation-ask-about-save nil)
+(global-set-key (kbd "<M-f12>") 'shell)
 
-(setq browse-url-generic-program
-      (cond
-       ((eq window-system 'mac) "open") ; mac
-       ((or (eq system-type 'gnu/linux) (eq system-type 'linux)) ; linux
-        (executable-find "google-chrome"))
-       ))
+(defun my-org-books-to-table ()
+  "Generate a list of books and insert as org-table."
+  (interactive)
+  (let (books result)
+    (org-map-entries
+     (lambda ()
+       ;; Check if the heading title is books.
+       (when (string-equal (nth 1 (org-get-outline-path t)) "books")
+	 (org-map-entries
+	  (lambda ()
+	    (let ((olp (org-get-outline-path t)))
+	      ;; Push books to list.
+	      (push (list (nth 0 olp) (nth 2 olp)) books)))
+	  "LEVEL=3" 'tree)))
+     "LEVEL=2")
+    (setq books (nreverse books))
+    (setq result (append (list '(title topic) 'hline) books))
+    (insert (concat (orgtbl-to-orgtbl result nil) "\n"))
+    nil))
 
-'(org-file-apps
-    (quote
-      ((auto-mode . emacs)
-      ("\\.mm\\'" . default)
-      ("\\.x?html?\\'" . "/usr/bin/google-chrome %s")
-      ("\\.pdf\\'" . default))))
+(setq epg-gpg-home-directory "~/.gnupg")
