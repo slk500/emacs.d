@@ -204,10 +204,10 @@ https://oremacs.com/2015/05/22/define-word/
 ;; (use-package dired+
 ;; :ensure t
 ;; :config (require 'dired+))
-#+END_SR
+#+END_SRC
 
 * Edit multiple regions
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC 
 (use-package iedit)
 ;; (use-package multiple-cursors)
 ;; (global-set-key (kbd "C->") 'mc/mark-next-like-this)
@@ -1115,7 +1115,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
    ("C-c k" . counsel-ag)    
    ("C-x l" . counsel-locate)    
    ("C-S-o" . counsel-rhythmbox)    
-   ("C-c C-r" . ivy-resume))    
+   ("C-c C-r"0 . ivy-resume))    
   :config    
   (ivy-mode 1)    
   (setq ivy-use-virtual-buffers t)    
@@ -1124,7 +1124,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   (setq magit-completing-read-function 'ivy-completing-read)
   )
 
-(use-package ivy-rich)
+(use-package ivy-rich
+  :ensure t)
 (ivy-rich-mode 1)
 
 '(ivy-switch-buffer
