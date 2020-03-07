@@ -181,6 +181,10 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
         (fill-paragraph nil region)))
 
 #+END_SRC
+* Debug
+#+begin_src emacs-lisp
+(setq debug-on-error t)
+#+end_src
 * Dir
 #+BEGIN_SRC emacs-lisp
 (defun my-create-non-existent-directory ()
@@ -225,7 +229,7 @@ https://oremacs.com/2015/05/22/define-word/
      (eval-print-last-sexp))))
 
 #+END_SRC
-asdad
+
 * Filename
 #+BEGIN_SRC emacs-lisp
 (defun copy-full-path-to-kill-ring ()
@@ -430,10 +434,10 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ** Delete
 *** hungry-delete
 #+BEGIN_SRC emacs-lisp
-(use-package hungry-delete
-  :ensure t
-  :config
-  (global-hungry-delete-mode))
+;; (use-package hungry-delete
+;;   :ensure t
+;;   :config
+;;   (global-hungry-delete-mode))
 #+END_SRC
 
 ** expand-region
@@ -684,8 +688,10 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 ;;install org-pdfview
 
+
+
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  :config (setq org-pdftools-root-dir "~/Dropbox/books")
   (with-eval-after-load 'org
     (org-link-set-parameters "pdftools"
                              :follow #'org-pdftools-open
@@ -1221,3 +1227,6 @@ gpg --gen-key
 * Notes
 ** delete blank lines 
 M-x flush-lines RET ^$ RET
+<S>s
+
+

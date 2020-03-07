@@ -21,6 +21,8 @@ There are two things you can do about this warning:
     ;; For important compatibility libraries like cl-lib
     (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 (package-initialize)
+
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
       
 
 
@@ -38,11 +40,11 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   (quote
-    (hungry-delete flycheck-phpstan htmlize php-mode flycheck which-key use-package try tabbar org-bullets lorem-ipsum counsel company color-theme))))
+   '(org-noter-pdftools org-pdftools hungry-delete flycheck-phpstan htmlize php-mode flycheck which-key use-package try tabbar org-bullets lorem-ipsum counsel company color-theme))
+ '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(fringe ((t (:background "#282c34")))))

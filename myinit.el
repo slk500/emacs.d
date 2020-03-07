@@ -147,6 +147,8 @@
             (emacs-lisp-docstring-fill-column t))
         (fill-paragraph nil region)))
 
+(setq debug-on-error t)
+
 (defun my-create-non-existent-directory ()
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
@@ -346,10 +348,10 @@ Assumes that the frame is only split into two."
 ;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
 
-(use-package hungry-delete
-  :ensure t
-  :config
-  (global-hungry-delete-mode))
+;; (use-package hungry-delete
+;;   :ensure t
+;;   :config
+;;   (global-hungry-delete-mode))
 
 (use-package expand-region
   :ensure t
@@ -567,8 +569,10 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 ;;install org-pdfview
 
+
+
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  :config (setq org-pdftools-root-dir "~/Dropbox/books")
   (with-eval-after-load 'org
     (org-link-set-parameters "pdftools"
                              :follow #'org-pdftools-open
