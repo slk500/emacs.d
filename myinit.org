@@ -1,5 +1,4 @@
 * Audio
-** Alarm Bell
 #+BEGIN_SRC emacs-lisp
 (setq ring-bell-function 'ignore)
 #+END_SRC
@@ -205,9 +204,10 @@ https://oremacs.com/2015/05/22/define-word/
 ** Aspell
 * Dired
 #+BEGIN_SRC emacs-lisp
-;; (use-package dired+
-;; :ensure t
-;; :config (require 'dired+))
+(add-hook 'dired-mode-hook
+	  (lambda ()
+            (dired-hide-details-mode)
+            (dired-sort-toggle-or-edit)))
 #+END_SRC
 
 * Edit multiple regions
