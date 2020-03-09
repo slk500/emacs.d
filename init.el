@@ -40,7 +40,7 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(org-noter-pdftools org-pdftools hungry-delete flycheck-phpstan htmlize php-mode flycheck which-key use-package try tabbar org-bullets lorem-ipsum counsel company color-theme))
+   '(visual-regexp dired-subtree markdown-mode org-noter-pdftools org-pdftools hungry-delete flycheck-phpstan htmlize php-mode flycheck which-key use-package try tabbar org-bullets lorem-ipsum counsel company color-theme))
  '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -48,3 +48,4 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(fringe ((t (:background "#282c34")))))
+(put 'narrow-to-region 'disabled nil)
