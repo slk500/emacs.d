@@ -2,18 +2,17 @@
 
 (setq use-package-always-ensure t)
 
-(use-package restart-emacs
-:ensure t)
+(use-package restart-emacs)
 
 ;; (use-package auto-package-update
-;;   :ensure t
+;;   
 ;;   :config
 ;;   (setq auto-package-update-delete-old-versions t
 ;;         auto-package-update-interval 4)
 ;;   (auto-package-update-maybe))
 
 ;; (use-package auto-complete
-;;   :ensure t
+;;   
 ;;   :init
 ;;   (progn
 ;;     (ac-config-default)
@@ -45,7 +44,6 @@
  version-control t)
 
 (use-package benchmark-init
-  :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
@@ -78,7 +76,7 @@
      (set-window-buffer w2 w1b)))
 
 (use-package centered-window 
-  :ensure t)
+  )
 
 ;; (global-set-key (kbd "<C-up>") 'shrink-window)
 ;; (global-set-key (kbd "<C-down>") 'enlarge-window)
@@ -177,7 +175,6 @@
 (global-set-key (kbd "C-c M-f") 'fold-this-unfold-all)
 
 (use-package org-download
-  :ensure t
   :config
   ;; add support to dired
   (add-hook 'dired-mode-hook 'org-download-enable))
@@ -213,14 +210,9 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 
 (setq org-download-method  'drestivo/org-download-method)
 
-(use-package try
-  :ensure t)
-
-(use-package counsel
-:ensure t)
-
+(use-package try)
+(use-package counsel)
 (use-package which-key
-  :ensure t
   :config (which-key-mode))
 
 (setq indo-enable-flex-matching t)
@@ -231,7 +223,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ;;(defalias 'list-buffers 'ibuffer-other-window
 
 (use-package treemacs
-  :ensure t
   :defer t
   :init
   (with-eval-after-load 'winum
@@ -287,22 +278,11 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
         ("C-x t B"   . treemacs-bookmark)
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
-
-
-
 (use-package treemacs-projectile
-  :after treemacs projectile
-  :ensure t)
+  :after treemacs projectile)
 
-;;(load-theme 'wheatgrass)
-;; (use-package idea-darkula-theme
-;; :ensure t)
-;;(load-theme 'idea-darkula t)
+(use-package doom-themes)
 
-(use-package doom-themes
-:ensure t)
-
-;; Global settings (defaults)
 (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
       doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
@@ -338,16 +318,14 @@ Assumes that the frame is only split into two."
 
 ;;shift + arrows -> change frames -> dosent work in org mode
 
-;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
 
-;; (use-package hungry-delete
-;;   :ensure t
-;;   :config
-;;   (global-hungry-delete-mode))
+(use-package hungry-delete  
+  :config
+  (global-hungry-delete-mode))
 
 (use-package expand-region
-  :ensure t
+  
   :config
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
@@ -378,27 +356,19 @@ Assumes that the frame is only split into two."
 (global-set-key (kbd "C-S-<up>")  'move-line-up)
 (global-set-key (kbd "C-S-<down>")  'move-line-down)
 
-(use-package key-chord :ensure t)
+(use-package key-chord )
 (key-chord-mode 1)
 (key-chord-define-global "ww"     'transpose-windows)
 
 (setq erc-autojoin-channels-alist
       '(("freenode.net" "#emacs-pl" "#php")))
 
-(use-package flymake-json :ensure t)
+(use-package flymake-json )
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
 (setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
 
 (use-package yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
-
-(use-package impatient-mode
-:ensure t)
-(add-to-list 'load-path "~/.emacs.d/impatient-mode")
-(use-package htmlize
-:ensure t)
-(use-package simple-httpd
-:ensure t)
 
 (use-package magit)
 
@@ -409,13 +379,9 @@ Assumes that the frame is only split into two."
 (require 'org-checklist)
 
 (use-package org-bullets
-  :ensure t
   :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-(require 'org-tempo)
-
 (require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-
 (require 'org-checklist)
 
 (setq org-edit-src-content-indentation 0
@@ -454,6 +420,8 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (require 'epa-file)
 (epa-file-enable)
+
+(setq epg-gpg-home-directory "~/.gnupg")
 
 (org-babel-do-load-languages
  'org-babel-load-languages 
@@ -507,7 +475,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (use-package  exec-path-from-shell)
 
 (use-package pdf-tools
-  :ensure t
   :init (pdf-tools-install)
   :custom
   (pdf-view-midnight-colors '("#ffffff" . "#000000"))
@@ -516,7 +483,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer))
 
-;; midnite mode hook
 (add-hook 'pdf-view-mode-hook (lambda ()
                                 (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
 
@@ -578,14 +544,14 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   :after (org-noter))
 
 ;; (use-package flycheck
-;;   :ensure t
+;;   
 ;;   :init
 ;;   (global-flycheck-mode t))
 
 (use-package php-mode
-  :ensure t)
+  )
 
-(use-package phpunit :ensure t)
+(use-package phpunit )
 
 (defcustom ob-php:inf-php-buffer "*phpunit*"
   "Default PHP inferior buffer."
@@ -710,7 +676,7 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (toggle-buffer-tail "*PHP*" "on")
 
 (use-package feature-mode
- :ensure t)
+ )
 
 ;; Run C programs directly from within emacs
 (use-package cmake-mode)    
@@ -734,7 +700,7 @@ This function can be used in `org-export-filter-parse-tree-functions'."
     (semantic-mode 1)
 
     (use-package srefactor
-    :ensure t)
+    )
 
   ;; (add-hook 'c++-mode-hook
   ;;           (lambda ()
@@ -783,15 +749,12 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (electric-pair-mode 1) ;;() wrap selected region in ".[ etc
 (use-package rainbow-delimiters)
 
-(use-package paredit
-  :ensure t)
+(use-package paredit)
 
 (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install
 (add-hook 'clojure-mode-hook 'paredit-mode)
 (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
-
-
 
 ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
 ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
@@ -807,9 +770,22 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 ;(setq slime-contribs '(slime-fancy))
 ;;(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 
+(use-package cider)
+(use-package clojure-mode)
+(require 'ob-clojure)
+
+(setq org-babel-clojure-backend 'cider)
+					; Let's have pretty source code blocks
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-fontify-natively t
+      org-confirm-babel-evaluate nil)
+
+(global-set-key (kbd "<f3>") 'cider-eval-region)
+
 (setq sgml-quick-keys 'close)
 
-(use-package web-mode :ensure t)
+(use-package web-mode )
 (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
@@ -825,22 +801,16 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (setq org-src-tab-acts-natively t)
 (setq org-startup-indented t)
 
-(use-package elfeed-org 
-  :ensure t)
-
+(use-package elfeed-org)
 (use-package elfeed
-  :ensure t
   :config
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
 
-
-
 (global-set-key (kbd "C-x w") 'elfeed)
 (global-set-key (kbd "C-x w") 'elfeed)
 
-(use-package super-save
-  :ensure t
+(use-package super-save  
   :config
   (super-save-mode +1))
 
@@ -862,14 +832,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
 (global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
 
-;; (use-package yasnippet
-;;   :ensure t
-;;   :init
-;;   :config
-;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
-;; (use-package yasnippet-snippets
-;;   :ensure t)
-
 (defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
 
 ;; dont show hidden files
@@ -880,8 +842,7 @@ This function can be used in `org-export-filter-parse-tree-functions'."
        ;; File names ending with # or ~
        "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
-(use-package swiper    
-  :ensure t    
+(use-package swiper      
   :bind    
   (("C-s" . swiper)    
    ("M-x" . counsel-M-x)   
@@ -903,11 +864,9 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   (setq ivy-use-virtual-buffers t)    
   (setq ivy-count-format "(%d/%d) ")    
   (setq projectile-completion-system 'ivy)    
-  (setq magit-completing-read-function 'ivy-completing-read)
-  )
+  (setq magit-completing-read-function 'ivy-completing-read))
 
-(use-package ivy-rich
-  :ensure t)
+(use-package ivy-rich)
 (ivy-rich-mode 1)
 
 '(ivy-switch-buffer
@@ -959,4 +918,11 @@ This function can be used in `org-export-filter-parse-tree-functions'."
     (insert (concat (orgtbl-to-orgtbl result nil) "\n"))
     nil))
 
-(setq epg-gpg-home-directory "~/.gnupg")
+(use-package visual-regexp
+  :bind 
+("C-c r" . vr/replace))
+(setq dired-listing-switches "-al --group-directories-first")
+
+(define-key global-map (kbd "C-c q") 'vr/query-replace)
+;; if you use multiple-cursors, this is for you:
+(define-key global-map (kbd "C-c m") 'vr/mc-mark)

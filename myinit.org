@@ -8,13 +8,12 @@
 #+END_SRC
 ** restart
 #+BEGIN_SRC emacs-lisp
-(use-package restart-emacs
-:ensure t)
+(use-package restart-emacs)
 #+END_SRC
 ** updates
 #+BEGIN_SRC emacs-lisp
 ;; (use-package auto-package-update
-;;   :ensure t
+;;   
 ;;   :config
 ;;   (setq auto-package-update-delete-old-versions t
 ;;         auto-package-update-interval 4)
@@ -23,7 +22,7 @@
 ** complete
 #+BEGIN_SRC emacs-lisp
 ;; (use-package auto-complete
-;;   :ensure t
+;;   
 ;;   :init
 ;;   (progn
 ;;     (ac-config-default)
@@ -61,7 +60,6 @@
 * Benchmark
 #+BEGIN_SRC emacs-lisp
 (use-package benchmark-init
-  :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
@@ -101,7 +99,7 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
 ** center
 #+BEGIN_SRC emacs-lisp
    (use-package centered-window 
-     :ensure t)
+     )
 #+END_SRC
 ** resize - have to chose shortcuts
 #+begin_src emacs-lisp
@@ -208,10 +206,7 @@ https://oremacs.com/2015/05/22/define-word/
 	  (lambda ()
             (dired-hide-details-mode)
             (dired-sort-toggle-or-edit)))
-
-
 #+END_SRC
-
 * Edit multiple regions
 #+BEGIN_SRC 
 (use-package iedit)
@@ -227,7 +222,6 @@ https://oremacs.com/2015/05/22/define-word/
   (interactive)
   (when buffer-file-name
     (kill-new (file-truename buffer-file-name))))
-
 #+END_SRC
 * Fold
 #+BEGIN_SRC emacs-lisp
@@ -239,7 +233,6 @@ https://oremacs.com/2015/05/22/define-word/
 ** Image drag & drop download
 #+BEGIN_SRC emacs-lisp
 (use-package org-download
-  :ensure t
   :config
   ;; add support to dired
   (add-hook 'dired-mode-hook 'org-download-enable))
@@ -276,20 +269,11 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (setq org-download-method  'drestivo/org-download-method)
      
 #+END_SRC
-
-#+RESULTS:
-: drestivo/org-download-method
-
 ** Others
   #+BEGIN_SRC emacs-lisp 
-  (use-package try
-    :ensure t)
-
-  (use-package counsel
-  :ensure t)
-
+  (use-package try)
+  (use-package counsel)
   (use-package which-key
-    :ensure t
     :config (which-key-mode))
 
   (setq indo-enable-flex-matching t)
@@ -303,7 +287,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ** Treemacs
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
-  :ensure t
   :defer t
   :init
   (with-eval-after-load 'winum
@@ -359,25 +342,14 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
         ("C-x t B"   . treemacs-bookmark)
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
-
-
-
 (use-package treemacs-projectile
-  :after treemacs projectile
-  :ensure t)
+  :after treemacs projectile)
 #+END_SRC
 * Interface tweaks
 ** theme 
  #+BEGIN_SRC emacs-lisp
-;;(load-theme 'wheatgrass)
-;; (use-package idea-darkula-theme
-;; :ensure t)
-;;(load-theme 'idea-darkula t)
+(use-package doom-themes)
 
-(use-package doom-themes
-:ensure t)
-
-;; Global settings (defaults)
 (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
       doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
@@ -418,22 +390,21 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
  #+END_SRC
 ** tinker 
 #+BEGIN_SRC emacs-lisp
-;; (global-hl-line-mode t) ;;highlight
 (blink-cursor-mode 0)
 #+END_SRC
 ** Delete
 *** hungry-delete
 #+BEGIN_SRC emacs-lisp
-;; (use-package hungry-delete
-;;   :ensure t
-;;   :config
-;;   (global-hungry-delete-mode))
+(use-package hungry-delete  
+  :config
+  (global-hungry-delete-mode))
+
 #+END_SRC
 
 ** expand-region
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
-  :ensure t
+  
   :config
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
@@ -471,7 +442,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 ** Key Chord
 #+BEGIN_SRC emacs-lisp
-(use-package key-chord :ensure t)
+(use-package key-chord )
 (key-chord-mode 1)
 (key-chord-define-global "ww"     'transpose-windows)
 #+END_SRC
@@ -482,7 +453,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 #+END_SRC
 * Json
 #+BEGIN_SRC emacs-lisp
-(use-package flymake-json :ensure t)
+(use-package flymake-json )
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
 (setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
 #+END_SRC
@@ -491,23 +462,12 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (use-package yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 #+end_src
-* Live Editing
-#+BEGIN_SRC emacs-lisp
-(use-package impatient-mode
-:ensure t)
-(add-to-list 'load-path "~/.emacs.d/impatient-mode")
-(use-package htmlize
-:ensure t)
-(use-package simple-httpd
-:ensure t)
-#+END_SRC
 * Magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit)
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp
-
 (use-package org
   :ensure org-plus-contrib)
 
@@ -515,13 +475,9 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (require 'org-checklist)
 
 (use-package org-bullets
-  :ensure t
   :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-(require 'org-tempo)
-
 (require 'package) (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-
 (require 'org-checklist)
 
 (setq org-edit-src-content-indentation 0
@@ -557,13 +513,22 @@ This function can be used in `org-export-filter-parse-tree-functions'."
     (backward-char)
     (delete-region (point) (org-table-end))
     (insert contents)))
-
 #+END_SRC
 ** encryption
 #+BEGIN_SRC emacs-lisp
 (require 'epa-file)
 (epa-file-enable)
 #+END_SRC
+*** GPG
+gpg --gen-key
+
+#+begin_src text
+-*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
+#+end_src
+#+begin_src emacs-lisp
+(setq epg-gpg-home-directory "~/.gnupg")
+
+#+end_src
 ** Babel
 #+begin_src emacs-lisp
 (org-babel-do-load-languages
@@ -623,7 +588,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 * PDF
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
-  :ensure t
   :init (pdf-tools-install)
   :custom
   (pdf-view-midnight-colors '("#ffffff" . "#000000"))
@@ -632,7 +596,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer))
 
-;; midnite mode hook
 (add-hook 'pdf-view-mode-hook (lambda ()
                                 (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
 
@@ -701,19 +664,19 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 *** flycheck
 #+BEGIN_SRC emacs-lisp
 ;; (use-package flycheck
-;;   :ensure t
+;;   
 ;;   :init
 ;;   (global-flycheck-mode t))
 #+END_SRC  
 ** PHP
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
-  :ensure t)
+  )
 #+END_SRC
 https://github.com/Abuelodelanada/pepe-emacs-config
 *** phpunit
    #+BEGIN_SRC emacs-lisp 
-(use-package phpunit :ensure t)
+(use-package phpunit )
 
 (defcustom ob-php:inf-php-buffer "*phpunit*"
   "Default PHP inferior buffer."
@@ -854,7 +817,7 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 *** Behat
 #+BEGIN_SRC emacs-lisp
 (use-package feature-mode
- :ensure t)
+ )
 #+END_SRC
 ** C++
 #+BEGIN_SRC emacs-lisp
@@ -880,7 +843,7 @@ https://github.com/Abuelodelanada/pepe-emacs-config
     (semantic-mode 1)
 
     (use-package srefactor
-    :ensure t)
+    )
 
   ;; (add-hook 'c++-mode-hook
   ;;           (lambda ()
@@ -935,20 +898,14 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 (electric-pair-mode 1) ;;() wrap selected region in ".[ etc
 (use-package rainbow-delimiters)
 #+END_SRC
-Since Emacs 24.1(released 2012-06).
-Put this in your emacs init: (electric-pair-mode 1).
-Now If you select a word and hit (, it will become (word). Same for ", [, { etc.
 **** Paredit
 #+BEGIN_SRC emacs-lisp
-(use-package paredit
-  :ensure t)
+(use-package paredit)
 
 (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode) ;;add to install
 (add-hook 'clojure-mode-hook 'paredit-mode)
 (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
-
-
 
 ;;  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
 ;;     (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
@@ -971,12 +928,8 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 *** Clojure
 #+BEGIN_SRC emacs-lisp
-(use-package cider
-  :ensure t)
-
-(use-package clojure-mode
-  :ensure t)
-
+(use-package cider)
+(use-package clojure-mode)
 (require 'ob-clojure)
 
 (setq org-babel-clojure-backend 'cider)
@@ -986,21 +939,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
       org-src-fontify-natively t
       org-confirm-babel-evaluate nil)
 
-(global-set-key (kbd "<f3>") 'cider-eval-region) 
-
-**** Refactor
-(use-package clj-refactor)
-(use-package refactor-nrepl)
-(defun my-clojure-mode-hook ()
-  (clj-refactor-mode 1)
-  (yas-minor-mode 1) ; for adding require/use/import statements
-  ;; This choice of keybinding leaves cider-macroexpand-1 unbound
-  (cljr-add-keybindings-with-prefix "C-c C-m"))
-
-(add-hook 'clojure-mode-hook #'my-clojure-mode-hook)
-
-
-
+(global-set-key (kbd "<f3>") 'cider-eval-region)
 #+END_SRC
 ** Python
 # #+BEGIN_SRC emacs-lisp
@@ -1025,7 +964,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 ** Web-mode
 #+BEGIN_SRC emacs-lisp
-(use-package web-mode :ensure t)
+(use-package web-mode )
 (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
@@ -1044,24 +983,18 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 * RSS
 #+BEGIN_SRC emacs-lisp
-(use-package elfeed-org 
-  :ensure t)
-
+(use-package elfeed-org)
 (use-package elfeed
-  :ensure t
   :config
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/Dropbox/rss.org")))
-
-
 
 (global-set-key (kbd "C-x w") 'elfeed)
 (global-set-key (kbd "C-x w") 'elfeed)
 #+END_SRC
 * Save
 #+BEGIN_SRC emacs-lisp
-(use-package super-save
-  :ensure t
+(use-package super-save  
   :config
   (super-save-mode +1))
 #+END_SRC
@@ -1087,16 +1020,6 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 
 #+END_SRC
-* snippets
-#+BEGIN_SRC emacs-lisp
-;; (use-package yasnippet
-;;   :ensure t
-;;   :init
-;;   :config
-;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
-;; (use-package yasnippet-snippets
-;;   :ensure t)
-#+END_SRC
 * String
 #+BEGIN_SRC emacs-lisp
 (defun to-underscore () (interactive) (progn (replace-regexp "\\([A-Z]\\)" "_\\1" nil (region-beginning) (region-end)) (downcase-region (region-beginning) (region-end))) )
@@ -1111,8 +1034,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
        ;; File names ending with # or ~
        "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
-(use-package swiper    
-  :ensure t    
+(use-package swiper      
   :bind    
   (("C-s" . swiper)    
    ("M-x" . counsel-M-x)   
@@ -1134,11 +1056,9 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   (setq ivy-use-virtual-buffers t)    
   (setq ivy-count-format "(%d/%d) ")    
   (setq projectile-completion-system 'ivy)    
-  (setq magit-completing-read-function 'ivy-completing-read)
-  )
+  (setq magit-completing-read-function 'ivy-completing-read))
 
-(use-package ivy-rich
-  :ensure t)
+(use-package ivy-rich)
 (ivy-rich-mode 1)
 
 '(ivy-switch-buffer
@@ -1179,7 +1099,7 @@ https://github.com/fniessen/org-html-themes
 # * Undo Tree
 # #+BEGIN_SRC emacs-lisp
 # (use-package undo-tree
-#   :ensure t
+#   
 #   :init(global-undo-tree-mode))
 # #+END_SRC
 * My Functions
@@ -1204,29 +1124,16 @@ https://github.com/fniessen/org-html-themes
     (insert (concat (orgtbl-to-orgtbl result nil) "\n"))
     nil))
 #+end_src
-* GPG
-gpg --gen-key
-
-#+begin_src text
--*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
-#+end_src
-#+begin_src emacs-lisp
-(setq epg-gpg-home-directory "~/.gnupg")
-
-#+end_src
 * Replace
 #+begin_src emacs-lisp
-(use-package visual-regexp 
-  :ensure t)
-(setq dired-listing-switches "-al --group-directories-first")
-(define-key global-map (kbd "C-c r") 'vr/replace)
-(define-key global-map (kbd "C-c q") 'vr/query-replace)
-;; if you use multiple-cursors, this is for you:
-(define-key global-map (kbd "C-c m") 'vr/mc-mark)
+(use-package visual-regexp
+  :bind 
+  (("C-c r" . vr/replace)
+   ("C-c q" . vr/query-replace)))
+
+  (setq dired-listing-switches "-al --group-directories-first")
 #+end_src
 * Notes
 ** delete blank lines 
 M-x flush-lines RET ^$ RET
 <S>s
-
-
