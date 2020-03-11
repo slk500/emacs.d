@@ -163,6 +163,7 @@
 	  (lambda ()
             (dired-hide-details-mode)
             (dired-sort-toggle-or-edit)))
+(setq dired-listing-switches "-al --group-directories-first")
 
 (defun copy-full-path-to-kill-ring ()
   "copy buffer's full path to kill ring"
@@ -920,9 +921,9 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (use-package visual-regexp
   :bind 
-("C-c r" . vr/replace))
-(setq dired-listing-switches "-al --group-directories-first")
+  (("C-c r" . vr/replace)
+   ("C-c q" . vr/query-replace)))
 
-(define-key global-map (kbd "C-c q") 'vr/query-replace)
-;; if you use multiple-cursors, this is for you:
-(define-key global-map (kbd "C-c m") 'vr/mc-mark)
+;; (set-frame-font "DejaVu Sans Mono 20" nil t)
+(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 20" ))
+(set-face-attribute 'default t :font "DejaVu Sans Mono 20" )
