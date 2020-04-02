@@ -88,13 +88,6 @@
   (funcall symbol arg)
   (point))
 
-(defun copy-thing (begin-of-thing end-of-thing &optional arg)
-  "Copy thing between beg & end into kill ring."
-  (save-excursion
-    (let ((beg (get-point begin-of-thing 1))
-          (end (get-point end-of-thing arg)))
-      (copy-region-as-kill beg end))))
-
 (defun paste-to-mark (&optional arg)
   "Paste things to mark, or to the prompt in shell-mode."
   (unless (eq arg 1)
@@ -111,17 +104,20 @@
   )
 (global-set-key (kbd "C-c w") 'copy-word)
 
-(defun copy-line (&optional arg)
-  "Do a kill-line but copy rather than kill.  This function directly calls
-    kill-line, so see documentation of kill-line for how to use it including prefix
-    argument and relevant variables.  This function works by temporarily making the
-    buffer read-only."
-  (interactive "P")
-  (let ((buffer-read-only t)
-        (kill-read-only-ok t))
-    (kill-line arg)))
-;; optional key binding
-(global-set-key "\C-c\C-k" 'copy-line)
+(defun quick-copy-line ()
+  "Copy the whole line that point is on and move to the beginning of the next line.
+    Consecutive calls to this command append each line to the
+    kill-ring."
+  (interactive)
+  (let ((beg (line-beginning-position 1))
+        (end (line-beginning-position 2)))
+    (if (eq last-command 'quick-copy-line)
+        (kill-append (buffer-substring beg end) (< end beg))
+      (kill-new (buffer-substring beg end))))
+  (beginning-of-line 2))
+
+(global-set-key (kbd "C-c l") 'quick-copy-line)
+
 (setq x-select-enable-clipboard t)
 
 (dolist (command '(yank yank-pop))
@@ -138,12 +134,12 @@
                   (indent-region (region-beginning) (region-end) nil))))))
 
 (defun unfill-paragraph (&optional region)
-      "Takes a multi-line paragraph and makes it into a single line of text."
-      (interactive (progn (barf-if-buffer-read-only) '(t)))
-      (let ((fill-column (point-max))
-            ;; This would override `fill-column' if it's an integer.
-            (emacs-lisp-docstring-fill-column t))
-        (fill-paragraph nil region)))
+  "Takes a multi-line paragraph and makes it into a single line of text."
+  (interactive (progn (barf-if-buffer-read-only) '(t)))
+  (let ((fill-column (point-max))
+        ;; This would override `fill-column' if it's an integer.
+        (emacs-lisp-docstring-fill-column t))
+    (fill-paragraph nil region)))
 
 (setq debug-on-error t)
 
@@ -164,6 +160,11 @@
             (dired-hide-details-mode)
             (dired-sort-toggle-or-edit)))
 (setq dired-listing-switches "-al --group-directories-first")
+
+(use-package dired-subtree 
+:after dired
+:config
+(bind-key "<tab>" #'dired-subtree-toggle dired-mode-map))
 
 (defun copy-full-path-to-kill-ring ()
   "copy buffer's full path to kill ring"
@@ -528,6 +529,7 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
 
 ;;install org-pdfview
+(define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
 
 
 
@@ -549,8 +551,7 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 ;;   :init
 ;;   (global-flycheck-mode t))
 
-(use-package php-mode
-  )
+(use-package php-mode)
 
 (use-package phpunit )
 
@@ -924,6 +925,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
   (("C-c r" . vr/replace)
    ("C-c q" . vr/query-replace)))
 
-;; (set-frame-font "DejaVu Sans Mono 20" nil t)
 (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 20" ))
 (set-face-attribute 'default t :font "DejaVu Sans Mono 20" )
+(set-face-attribute 'mode-line nil  :height 120)
