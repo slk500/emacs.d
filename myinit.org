@@ -832,6 +832,14 @@ https://github.com/Abuelodelanada/pepe-emacs-config
 (use-package feature-mode
  )
 #+END_SRC
+** js
+#+begin_src  emacs-lisp
+(use-package js2-mode)
+(use-package skewer-mode)
+(add-hook 'js2-mode-hook 'skewer-mode)
+(add-hook 'css-mode-hook 'skewer-css-mode)
+(add-hook 'html-mode-hook 'skewer-html-mode)
+#+end_src>
 ** C++
 #+BEGIN_SRC emacs-lisp
     ;; Run C programs directly from within emacs
