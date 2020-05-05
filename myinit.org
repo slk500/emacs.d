@@ -1216,3 +1216,11 @@ M-x flush-lines RET ^$ RET
 #+begin_src emacs-lisp
 (setq org-link-file-path-type "relative")
 #+end_src
+* mode line
+#+begin_src emacs-lisp
+(use-package hide-mode-line)
+#+end_src
+* pomodor
+#+begin_src emacs-lisp
+(global-set-key (kbd "<f7>") 'tomatinho)
+#+end_src
