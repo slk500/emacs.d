@@ -661,12 +661,6 @@ gpg --gen-key
                              :store #'org-pdftools-store-link
                              :export #'org-pdftools-export)
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
-
-(use-package org-noter-pdftools
-  :after (org-noter))
-
-
-
 #+END_SRC
 ** epub
 #+begin_src emacs-lisp
