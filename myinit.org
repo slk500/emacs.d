@@ -1218,3 +1218,14 @@ M-x flush-lines RET ^$ RET
 #+begin_src emacs-lisp
 (global-set-key (kbd "<f7>") 'tomatinho)
 #+end_src
+* keys
+#+begin_src emacs-lisp
+(cua-mode t)
+(defun jpk/C-<return> (&optional arg)
+  (interactive "P")
+  (if (eq major-mode 'org-mode)
+      (org-insert-heading-respect-content arg)
+    (cua-rectangle-mark-mode arg)))
+
+(define-key cua-global-keymap (kbd "C-<return>") #'jpk/C-<return>)
+#+end_src
