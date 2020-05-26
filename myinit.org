@@ -451,7 +451,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
-:straight org-plus-contrib)
+:ensure org-plus-contrib)
 
 (require 'org-tempo);Org source block babel expansion stopped working
 (require 'org-checklist)
