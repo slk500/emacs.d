@@ -13,6 +13,15 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 #+end_src
+* preinstall
+#+begin_src emacs-lisp
+(use-package org-bullets)
+(use-package exec-path-from-shell)
+(use-package org-pdftools)
+(use-package nov)
+(use-package php-mode)
+(use-package phpunit)
+#+end_src
 * Audio
 #+BEGIN_SRC emacs-lisp
 (setq ring-bell-function 'ignore)
@@ -498,7 +507,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :ensure org-plus-contrib)
+:straight org-plus-contrib)
 
 (require 'org-tempo);Org source block babel expansion stopped working
 (require 'org-checklist)
@@ -927,18 +936,18 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 #+END_SRC
 *** Clojure
 #+BEGIN_SRC emacs-lisp
-(use-package cider)
-(use-package clojure-mode)
-(require 'ob-clojure)
+;; (use-package cider)
+;; (use-package clojure-mode)
+;; (require 'ob-clojure)
 
-(setq org-babel-clojure-backend 'cider)
-					; Let's have pretty source code blocks
-(setq org-edit-src-content-indentation 0
-      org-src-tab-acts-natively t
-      org-src-fontify-natively t
-      org-confirm-babel-evaluate nil)
+;; (setq org-babel-clojure-backend 'cider)
+;; 					; Let's have pretty source code blocks
+;; (setq org-edit-src-content-indentation 0
+;;       org-src-tab-acts-natively t
+;;       org-src-fontify-natively t
+;;       org-confirm-babel-evaluate nil)
 
-(global-set-key (kbd "<f3>") 'cider-eval-region)
+;; (global-set-key (kbd "<f3>") 'cider-eval-region)
 #+END_SRC
 ** Python
 # #+BEGIN_SRC emacs-lisp
