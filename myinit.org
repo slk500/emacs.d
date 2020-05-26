@@ -1,3 +1,18 @@
+* straight
+#+begin_src emacs-lisp
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+#+end_src
 * Audio
 #+BEGIN_SRC emacs-lisp
 (setq ring-bell-function 'ignore)
@@ -98,8 +113,7 @@ https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-s
 #+END_SRC
 ** center
 #+BEGIN_SRC emacs-lisp
-   (use-package centered-window 
-     )
+(use-package centered-window)
 #+END_SRC
 ** resize - have to chose shortcuts
 #+begin_src emacs-lisp
@@ -370,6 +384,14 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
 
+(use-package jetbrains-darcula-theme
+  :straight (:host github :repo "ianpan870102/jetbrains-darcula-emacs-theme")
+  :custom
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/straight/repos/jetbrains-darcula-emacs-theme/")
+  (load-theme 'jetbrains-darcula t))
+
+;;(enable-theme 'jetbrains-darcula)
+
  #+END_SRC
 ** others
  #+BEGIN_SRC emacs-lisp
@@ -605,52 +627,10 @@ gpg --gen-key
             #'TeX-revert-document-buffer))
 
 (add-hook 'pdf-view-mode-hook (lambda ()
-                                (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
+                                (pdf-view-midnight-minor-mode)))
 
-(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber profile as default (see below)
-
-(defun bms/pdf-no-filter ()
-  "View pdf without colour filter."
-  (interactive)
-  (pdf-view-midnight-minor-mode -1)
-  )
-
-;; change midnite mode colours functions
-(defun bms/pdf-midnite-original ()
-  "Set pdf-view-midnight-colors to original colours."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#839496" . "#002b36" )) ; original values
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-amber ()
-  "Set pdf-view-midnight-colors to amber on dark slate blue."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; amber
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-green ()
-  "Set pdf-view-midnight-colors to green on black."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#00B800" . "#000000" )) ; green 
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-colour-schemes ()
-  "Midnight mode colour schemes bound to keys"
-  (local-set-key (kbd "!") (quote bms/pdf-no-filter))
-  (local-set-key (kbd "@") (quote bms/pdf-midnite-amber)) 
-  (local-set-key (kbd "#") (quote bms/pdf-midnite-green))
-  (local-set-key (kbd "$") (quote bms/pdf-midnite-original))
-  )  
-
-(add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
-
-;;install org-pdfview
+;;(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber 
 (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
-
-
 
 (use-package org-pdftools
   :config (setq org-pdftools-root-dir "~/Dropbox/books")
