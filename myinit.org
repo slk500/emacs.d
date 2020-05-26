@@ -24,8 +24,8 @@
 * preinstall
 #+begin_src emacs-lisp
 (use-package org-bullets)
+(use-package htmlize)
 (use-package exec-path-from-shell)
-(use-package org-pdftools)
 (use-package nov)
 (use-package php-mode)
 (use-package phpunit)
@@ -565,7 +565,7 @@ gpg --gen-key
 #+end_src 
 ** export
 #+begin_src emacs-lisp
-(use-package htmlize)
+
 #+end_src
 * PATH
 #+BEGIN_SRC emacs-lisp
