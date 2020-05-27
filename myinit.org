@@ -270,8 +270,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
   (ido-mode 1)
 
   (defalias 'list-buffers 'ibuffer)
-  ;;(defalias 'list-buffers 'ibuffer-other-window
-  
   #+END_SRC
 ** Treemacs
 #+BEGIN_SRC emacs-lisp
@@ -382,26 +380,20 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 	   (split-window-horizontally)
 	 (split-window-vertically)) ; gives us a split with the other window twice
        (switch-to-buffer nil))) ; restore the original window in this part of the frame
-
-   ;;shift + arrows -> change frames -> dosent work in org mode
  #+END_SRC
 ** tinker 
 #+BEGIN_SRC emacs-lisp
 (blink-cursor-mode 0)
 #+END_SRC
 ** Delete
-*** hungry-delete
 #+BEGIN_SRC emacs-lisp
 (use-package hungry-delete  
   :config
   (global-hungry-delete-mode))
-
 #+END_SRC
-
 ** expand-region
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
-  
   :config
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
@@ -415,7 +407,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (use-package fast-scroll)
 (fast-scroll-config)
 (fast-scroll-mode 1)
-
 #+END_SRC
 ** move-line up/down
 #+BEGIN_SRC emacs-lisp
@@ -509,7 +500,6 @@ gpg --gen-key
 #+end_src
 #+begin_src emacs-lisp
 (setq epg-gpg-home-directory "~/.gnupg")
-
 #+end_src
 ** Babel
 #+begin_src emacs-lisp
@@ -517,8 +507,6 @@ gpg --gen-key
  'org-babel-load-languages 
  '((shell . t)
    (clojure . t)))
-
-;;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
 
 (defun org-begin-template ()
   "Make a template at point."
@@ -559,13 +547,7 @@ gpg --gen-key
               (insert "#+BEGIN_" choice "\n")
               (save-excursion (insert "#+END_" choice))))))))))
 
-;;bind to key
 (define-key org-mode-map (kbd "C-<") 'org-begin-template)
-
-#+end_src 
-** export
-#+begin_src emacs-lisp
-
 #+end_src
 * PATH
 #+BEGIN_SRC emacs-lisp
@@ -929,10 +911,6 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
   (:columns
    ((ivy-rich-candidate (:width 0.8)) ; return the candidate itself
     (ivy-rich-file-last-modified-time (:face font-lock-comment-face))))) ; return the last modified time of the file
-#+END_SRC
-* Terminal
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "<M-f12>") 'shell)
 #+END_SRC
 * things to try
 reveal.js - presentation in html
