@@ -193,15 +193,14 @@ https://oremacs.com/2015/05/22/define-word/
             (dired-sort-toggle-or-edit)))
 (setq dired-listing-switches "-al --group-directories-first")
 
-
-;;(define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-
-;;(define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
+;;make dired use the same buffer for viewing directory
+(define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+(define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
 
 (use-package dired-subtree 
-:after dired
-:config
-(bind-key "<tab>" #'dired-subtree-toggle dired-mode-map))
+  :after dired
+  :config
+  (bind-key "<tab>" #'dired-subtree-toggle dired-mode-map))
 
 #+END_SRC
 * Filename
@@ -434,6 +433,16 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (key-chord-mode 1)
 (key-chord-define-global "ww"     'transpose-windows)
 #+END_SRC
+** multiple cursors
+   #+begin_src emacs-lisp
+   (use-package multiple-cursors)
+
+   (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+
+   (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+   (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+   (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+   #+end_src>
 * irc 
 #+BEGIN_SRC emacs-lisp
 (setq erc-autojoin-channels-alist
@@ -574,7 +583,7 @@ gpg --gen-key
 (use-package org-pdftools
   :config (setq org-pdftools-root-dir "~/Dropbox/books")
   (with-eval-after-load 'org
-    (org-link-set-parameters "pdftools"
+    (org-link-set-parameters "pdf"
                              :follow #'org-pdftools-open
                              :complete #'org-pdftools-complete-link
                              :store #'org-pdftools-store-link
@@ -1034,3 +1043,7 @@ M-x flush-lines RET ^$ RET
 
 (define-key cua-global-keymap (kbd "C-<return>") #'jpk/C-<return>)
 #+end_src
+* bookmark
+  #+begin_src emacs-lisp
+(global-set-key (kbd "C-b") 'bookmark-jump)
+  #+end_src
