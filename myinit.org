@@ -189,8 +189,9 @@ https://oremacs.com/2015/05/22/define-word/
 #+BEGIN_SRC emacs-lisp
 (add-hook 'dired-mode-hook
 	  (lambda ()
-            (dired-hide-details-mode)
-            (dired-sort-toggle-or-edit)))
+	    (dired-hide-details-mode)
+	    (dired-sort-toggle-or-edit)))
+
 (setq dired-listing-switches "-al --group-directories-first")
 
 ;;make dired use the same buffer for viewing directory
@@ -825,12 +826,6 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 (global-set-key (kbd "C-x w") 'elfeed)
 (global-set-key (kbd "C-x w") 'elfeed)
 #+END_SRC
-* Save
-#+BEGIN_SRC emacs-lisp
-(use-package super-save  
-  :config
-  (super-save-mode +1))
-#+END_SRC
 * shortcuts
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<f8>") 'visual-line-mode)
@@ -1022,7 +1017,7 @@ M-x flush-lines RET ^$ RET
 #+end_src
 * new
 #+begin_src emacs-lisp
-(setq org-link-file-path-type "relative")
+;;(setq org-link-file-path-type "relative")
 #+end_src
 * mode line
 #+begin_src emacs-lisp
@@ -1047,3 +1042,18 @@ M-x flush-lines RET ^$ RET
   #+begin_src emacs-lisp
 (global-set-key (kbd "C-b") 'bookmark-jump)
   #+end_src
+* Automatically show diff before saving file
+  #+BEGIN_SRC emacs-lisp
+(defun my-diff ()
+  (let ((temp-file (make-temp-file "gpgdiff-"))
+	(contents (buffer-string))
+	(current-file (buffer-file-name)))
+    (with-temp-file temp-file
+      (insert contents))
+    (diff current-file temp-file))
+
+  (unless (y-or-n-p "Save buffer?")
+    (keyboard-quit)))
+
+(add-hook 'before-save-hook 'my-diff t t) 
+  #+END_SRC
