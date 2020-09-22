@@ -302,7 +302,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
           treemacs-show-hidden-files          t
           treemacs-silent-filewatch           nil
           treemacs-silent-refresh             nil
-          treemacs-sorting                    'alphabetic-desc
+          treemacs-sorting                    'alphabetic-asc
           treemacs-space-between-root-nodes   t
           treemacs-tag-follow-cleanup         t
           treemacs-tag-follow-delay           1.5
@@ -582,7 +582,7 @@ gpg --gen-key
 (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
 
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir "~/Dropbox/books")
+  :config ;;(setq org-pdftools-root-dir "~/Dropbox/books")
   (with-eval-after-load 'org
     (org-link-set-parameters "pdf"
                              :follow #'org-pdftools-open
@@ -1055,5 +1055,5 @@ M-x flush-lines RET ^$ RET
   (unless (y-or-n-p "Save buffer?")
     (keyboard-quit)))
 
-(add-hook 'before-save-hook 'my-diff t t) 
+(add-hook 'before-save-hook 'my-diff nil t)
   #+END_SRC
