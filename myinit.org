@@ -1,3 +1,5 @@
+
+https://github.com/dalanicolai/pdf-continuous-scroll-mode.el
 * Auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
@@ -588,7 +590,8 @@ gpg --gen-key
                              :follow #'org-pdftools-open
                              :complete #'org-pdftools-complete-link
                              :store #'org-pdftools-store-link
-                             :export #'org-pdftools-export)
+                            ;; :export #'org-pdftools-export
+)
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 #+END_SRC
 ** epub
@@ -1057,3 +1060,8 @@ M-x flush-lines RET ^$ RET
 
 (add-hook 'before-save-hook 'my-diff nil t)
   #+END_SRC
+* asks
+  All org-pdftools links exported to html are display as nils. But they are correct and working (I can click on them & open). 
+  I commented out 
+  `:export #'org-pdftools-export` 
+  and that helped a little - 

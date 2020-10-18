@@ -1,35 +1,28 @@
-(setq ring-bell-function 'ignore)
-
 (setq use-package-always-ensure t)
 
 (use-package restart-emacs)
 
-;; (use-package auto-package-update
-;;   
-;;   :config
-;;   (setq auto-package-update-delete-old-versions t
-;;         auto-package-update-interval 4)
-;;   (auto-package-update-maybe))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-;; (use-package auto-complete
-;;   
-;;   :init
-;;   (progn
-;;     (ac-config-default)
-;;     (global-auto-complete-mode t)
-;;     ))
+(use-package org-bullets)
+(use-package htmlize)
+(use-package exec-path-from-shell)
+(use-package nov)
+(use-package php-mode)
+(use-package phpunit)
 
-(use-package autoinsert
-  :init
-  ;; Don't want to be prompted before insertion:
-  (setq auto-insert-query nil)
-
-  (setq auto-insert-directory (locate-user-emacs-file "templates"))
-  (add-hook 'find-file-hook 'auto-insert)
-  (auto-insert-mode 1)
-
-  :config
-  (define-auto-insert "\\.html?$" "default-html.html"))
+(setq ring-bell-function 'ignore)
 
 (setq
  ;; Don't clobber symlinks
@@ -75,8 +68,7 @@
      (set-window-buffer w1 w2b)
      (set-window-buffer w2 w1b)))
 
-(use-package centered-window 
-  )
+(use-package centered-window)
 
 ;; (global-set-key (kbd "<C-up>") 'shrink-window)
 ;; (global-set-key (kbd "<C-down>") 'enlarge-window)
@@ -157,14 +149,19 @@
 
 (add-hook 'dired-mode-hook
 	  (lambda ()
-            (dired-hide-details-mode)
-            (dired-sort-toggle-or-edit)))
+	    (dired-hide-details-mode)
+	    (dired-sort-toggle-or-edit)))
+
 (setq dired-listing-switches "-al --group-directories-first")
 
+;;make dired use the same buffer for viewing directory
+(define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+(define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
+
 (use-package dired-subtree 
-:after dired
-:config
-(bind-key "<tab>" #'dired-subtree-toggle dired-mode-map))
+  :after dired
+  :config
+  (bind-key "<tab>" #'dired-subtree-toggle dired-mode-map))
 
 (defun copy-full-path-to-kill-ring ()
   "copy buffer's full path to kill ring"
@@ -222,7 +219,6 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 (ido-mode 1)
 
 (defalias 'list-buffers 'ibuffer)
-;;(defalias 'list-buffers 'ibuffer-other-window
 
 (use-package treemacs
   :defer t
@@ -253,7 +249,7 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
           treemacs-show-hidden-files          t
           treemacs-silent-filewatch           nil
           treemacs-silent-refresh             nil
-          treemacs-sorting                    'alphabetic-desc
+          treemacs-sorting                    'alphabetic-asc
           treemacs-space-between-root-nodes   t
           treemacs-tag-follow-cleanup         t
           treemacs-tag-follow-delay           1.5
@@ -298,6 +294,14 @@ https://github.com/abo-abo/org-download/commit/137c3d2aa083283a3fc853f9ecbbc0303
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
 
+;; (use-package jetbrains-darcula-theme
+;;   :straight (:host github :repo "ianpan870102/jetbrains-darcula-emacs-theme")
+;;   :custom
+;;   (add-to-list 'custom-theme-load-path "~/.emacs.d/straight/repos/jetbrains-darcula-emacs-theme/")
+;;   (load-theme 'jetbrains-darcula t))
+
+;;(enable-theme 'jetbrains-darcula)
+
 (setq inhibit-startup-message t)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -318,8 +322,6 @@ Assumes that the frame is only split into two."
       (split-window-vertically)) ; gives us a split with the other window twice
     (switch-to-buffer nil))) ; restore the original window in this part of the frame
 
-;;shift + arrows -> change frames -> dosent work in org mode
-
 (blink-cursor-mode 0)
 
 (use-package hungry-delete  
@@ -327,7 +329,6 @@ Assumes that the frame is only split into two."
   (global-hungry-delete-mode))
 
 (use-package expand-region
-  
   :config
   (global-set-key (kbd "C-=") 'er/expand-region)
   )
@@ -365,17 +366,8 @@ Assumes that the frame is only split into two."
 (setq erc-autojoin-channels-alist
       '(("freenode.net" "#emacs-pl" "#php")))
 
-(use-package flymake-json )
-(setenv "PATH" (concat (getenv "PATH") ":/usr/local/share/npm/bin"))
-(setq exec-path (append exec-path '("/usr/local/share/npm/bin")))
-
-(use-package yaml-mode)
-(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
-
-(use-package magit)
-
 (use-package org
-  :ensure org-plus-contrib)
+:ensure org-plus-contrib)
 
 (require 'org-tempo);Org source block babel expansion stopped working
 (require 'org-checklist)
@@ -430,8 +422,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
  '((shell . t)
    (clojure . t)))
 
-;;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
-
 (defun org-begin-template ()
   "Make a template at point."
   (interactive)
@@ -471,7 +461,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
               (insert "#+BEGIN_" choice "\n")
               (save-excursion (insert "#+END_" choice))))))))))
 
-;;bind to key
 (define-key org-mode-map (kbd "C-<") 'org-begin-template)
 
 (use-package  exec-path-from-shell)
@@ -486,70 +475,24 @@ This function can be used in `org-export-filter-parse-tree-functions'."
             #'TeX-revert-document-buffer))
 
 (add-hook 'pdf-view-mode-hook (lambda ()
-                                (pdf-view-midnight-minor-mode))) ; automatically turns on midnight-mode for pdfs
+                                (pdf-view-midnight-minor-mode)))
 
-(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber profile as default (see below)
-
-(defun bms/pdf-no-filter ()
-  "View pdf without colour filter."
-  (interactive)
-  (pdf-view-midnight-minor-mode -1)
-  )
-
-;; change midnite mode colours functions
-(defun bms/pdf-midnite-original ()
-  "Set pdf-view-midnight-colors to original colours."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#839496" . "#002b36" )) ; original values
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-amber ()
-  "Set pdf-view-midnight-colors to amber on dark slate blue."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; amber
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-green ()
-  "Set pdf-view-midnight-colors to green on black."
-  (interactive)
-  (setq pdf-view-midnight-colors '("#00B800" . "#000000" )) ; green 
-  (pdf-view-midnight-minor-mode)
-  )
-
-(defun bms/pdf-midnite-colour-schemes ()
-  "Midnight mode colour schemes bound to keys"
-  (local-set-key (kbd "!") (quote bms/pdf-no-filter))
-  (local-set-key (kbd "@") (quote bms/pdf-midnite-amber)) 
-  (local-set-key (kbd "#") (quote bms/pdf-midnite-green))
-  (local-set-key (kbd "$") (quote bms/pdf-midnite-original))
-  )  
-
-(add-hook 'pdf-view-mode-hook 'bms/pdf-midnite-colour-schemes)
-
-;;install org-pdfview
+;;(setq pdf-view-midnight-colors '("#ff9900" . "#0a0a12" )) ; set the amber 
 (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
 
-
-
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir "~/Dropbox/books")
+  :config ;;(setq org-pdftools-root-dir "~/Dropbox/books")
   (with-eval-after-load 'org
-    (org-link-set-parameters "pdftools"
+    (org-link-set-parameters "pdf"
                              :follow #'org-pdftools-open
                              :complete #'org-pdftools-complete-link
                              :store #'org-pdftools-store-link
-                             :export #'org-pdftools-export)
+                            ;; :export #'org-pdftools-export
+)
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 
-(use-package org-noter-pdftools
-  :after (org-noter))
-
-;; (use-package flycheck
-;;   
-;;   :init
-;;   (global-flycheck-mode t))
+(use-package nov)
+(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 
 (use-package php-mode)
 
@@ -680,58 +623,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (use-package feature-mode
  )
 
-;; Run C programs directly from within emacs
-(use-package cmake-mode)    
-
-(defun execute-c-program ()
-      (interactive)
-      (save-buffer)
-      (defvar foo)
-      (setq foo (concat "gcc " (buffer-name) " && ./a.out" ))
-      (shell-command foo))
-
-    (global-set-key [C-f1] 'execute-c-program)
-
-    ;; (defun ls ()
-    ;;   "Lists the contents of the current directory."
-    ;;   (interactive)
-    ;;   (save-buffer)
-    ;;   (shell-command "./run.sh"))
-    ;; (global-set-key (kbd "<f6>") 'ls);
-
-    (semantic-mode 1)
-
-    (use-package srefactor
-    )
-
-  ;; (add-hook 'c++-mode-hook
-  ;;           (lambda ()
-  ;; 	  (save-buffer)
-  ;;             (unless (file-exists-p "Makefile")
-  ;;               (set (make-local-variable 'compile-command)
-  ;;                    (let* ((file (file-name-nondirectory buffer-    file-name))
-  ;;                       (executable (convert-filename-to-executable file)))
-  ;;                  (concat "g++ -g -Wall -o "
-  ;;                          (file-name-sans-extension file)
-  ;;                          " "
-  ;;                          file
-  ;;                          " && "
-  ;;                          executable))))))
-
-  ;; (add-hook 'c-mode-hook
-  ;;       (lambda ()
-  ;;       (save-buffer)
-  ;;         (unless (file-exists-p "Makefile")
-  ;;           (set (make-local-variable 'compile-command)
-  ;;                (let* ((file (file-name-nondirectory buffer-file-name))
-  ;;                       (executable (convert-filename-to-executable file)))
-  ;;                  (concat "gcc -g -ansi -Wall -Wpedantic -Wextra -Wc++-compat -Wconversion -o "
-  ;;                          (file-name-sans-extension file)
-  ;;                          " "
-  ;;                          file
-  ;;                          " && "
-  ;;                          executable))))))
-
 (defun org-mode-<>-syntax-fix (start end)
   (when (eq major-mode 'org-mode)
     (save-excursion
@@ -772,36 +663,18 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 ;(setq slime-contribs '(slime-fancy))
 ;;(global-set-key (kbd "<f3>") 'slime-compile-and-load-file)
 
-(use-package cider)
-(use-package clojure-mode)
-(require 'ob-clojure)
+;; (use-package cider)
+;; (use-package clojure-mode)
+;; (require 'ob-clojure)
 
-(setq org-babel-clojure-backend 'cider)
-					; Let's have pretty source code blocks
-(setq org-edit-src-content-indentation 0
-      org-src-tab-acts-natively t
-      org-src-fontify-natively t
-      org-confirm-babel-evaluate nil)
+;; (setq org-babel-clojure-backend 'cider)
+;; 					; Let's have pretty source code blocks
+;; (setq org-edit-src-content-indentation 0
+;;       org-src-tab-acts-natively t
+;;       org-src-fontify-natively t
+;;       org-confirm-babel-evaluate nil)
 
-(global-set-key (kbd "<f3>") 'cider-eval-region)
-
-(setq sgml-quick-keys 'close)
-
-(use-package web-mode )
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-
-(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
-
-(electric-indent-mode +1)
-(setq org-src-tab-acts-natively t)
-(setq org-startup-indented t)
+;; (global-set-key (kbd "<f3>") 'cider-eval-region)
 
 (use-package elfeed-org)
 (use-package elfeed
@@ -811,10 +684,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 
 (global-set-key (kbd "C-x w") 'elfeed)
 (global-set-key (kbd "C-x w") 'elfeed)
-
-(use-package super-save  
-  :config
-  (super-save-mode +1))
 
 (global-set-key (kbd "<f8>") 'visual-line-mode)
 (global-set-key (kbd "<f5>") 'revert-buffer)
@@ -898,8 +767,6 @@ This function can be used in `org-export-filter-parse-tree-functions'."
    ((ivy-rich-candidate (:width 0.8)) ; return the candidate itself
     (ivy-rich-file-last-modified-time (:face font-lock-comment-face))))) ; return the last modified time of the file
 
-(global-set-key (kbd "<M-f12>") 'shell)
-
 (defun my-org-books-to-table ()
   "Generate a list of books and insert as org-table."
   (interactive)
@@ -928,3 +795,79 @@ This function can be used in `org-export-filter-parse-tree-functions'."
 (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 20" ))
 (set-face-attribute 'default t :font "DejaVu Sans Mono 20" )
 (set-face-attribute 'mode-line nil  :height 120)
+
+(defun message-send-and-exit-multiple ()
+  (interactive)
+  (let ((addresses 
+         (split-string 
+          (message-fetch-field "All")
+          " " t)))
+    (while addresses
+      (let ((address (car addresses)))
+        (setq addresses (cdr addresses))
+        (message-remove-header "To")
+        (message-add-header (format "To: %s" address))
+        (if address
+	    (message-send)
+          (message-send-and-exit))))))
+
+(defvar my-default-yes-no-answer nil
+  "Usage: (setq my-default-answer '(t . \"question1 pattern\"))")
+(defadvice y-or-n-p (around y-or-n-p-hack activate)
+  (let* ((prompt (car (ad-get-args 0))))
+    (message "prompt=%s" prompt)
+    (cond
+     ((and my-default-yes-no-answer
+           (consp my-default-yes-no-answer )
+           (string-match-p (cdr my-default-yes-no-answer) prompt))
+      (setq ad-return-value (car my-default-yes-no-answer)))
+     (t
+      ad-do-it))))
+
+(setq my-default-yes-no-answer '(t . "Already sent message via mail"))
+
+(setq mode-line-position
+       (append
+	mode-line-position
+	'((wc-mode
+	   (6 (:eval (if (use-region-p)
+			 (format " %d,%d,%d"
+				 (abs (- (point) (mark)))
+				 (count-words-region (point) (mark))
+				 (abs (- (line-number-at-pos (point))
+					 (line-number-at-pos (mark)))))
+		       (format " %d,%d,%d"
+			       (- (point-max) (point-min))
+			       (count-words-region (point-min) (point-max))
+			       (line-number-at-pos (point-max))))))
+	   nil))))
+
+;;(setq org-link-file-path-type "relative")
+
+(use-package hide-mode-line)
+
+(global-set-key (kbd "<f7>") 'tomatinho)
+
+(cua-mode t)
+(defun jpk/C-<return> (&optional arg)
+  (interactive "P")
+  (if (eq major-mode 'org-mode)
+      (org-insert-heading-respect-content arg)
+    (cua-rectangle-mark-mode arg)))
+
+(define-key cua-global-keymap (kbd "C-<return>") #'jpk/C-<return>)
+
+(global-set-key (kbd "C-b") 'bookmark-jump)
+
+(defun my-diff ()
+  (let ((temp-file (make-temp-file "gpgdiff-"))
+	(contents (buffer-string))
+	(current-file (buffer-file-name)))
+    (with-temp-file temp-file
+      (insert contents))
+    (diff current-file temp-file))
+
+  (unless (y-or-n-p "Save buffer?")
+    (keyboard-quit)))
+
+(add-hook 'before-save-hook 'my-diff nil t)
