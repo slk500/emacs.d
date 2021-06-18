@@ -3,9 +3,6 @@ https://github.com/dalanicolai/pdf-continuous-scroll-mode.el
 * Auto
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
-#+END_SRC
-** restart
-#+BEGIN_SRC emacs-lisp
 (use-package restart-emacs)
 #+END_SRC
 * straight
@@ -197,8 +194,8 @@ https://oremacs.com/2015/05/22/define-word/
 (setq dired-listing-switches "-al --group-directories-first")
 
 ;;make dired use the same buffer for viewing directory
-(define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-(define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
+;;(define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+;;(define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
 
 (use-package dired-subtree 
   :after dired
@@ -561,6 +558,25 @@ gpg --gen-key
 
 (define-key org-mode-map (kbd "C-<") 'org-begin-template)
 #+end_src
+** export
+   #+begin_src emacs-lisp
+(defun my-org-export-each-level-1-headline-to-html (&optional scope)
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (let* ((title (car (last (org-get-outline-path t))))
+            (dir (file-name-directory buffer-file-name))
+            (filename (concat dir title ".html")))
+       (org-narrow-to-subtree)
+       (org-html-export-as-html)
+       (write-file filename)
+       (kill-current-buffer)
+       (widen)))
+   "LEVEL=1" scope))
+
+(setq org-html-postamble "<p class=\"postamble\">Last Updated %T.</p>")
+(setq org-html-metadata-timestamp-format "%Y-%m-%d")
+   #+end_src
 * PATH
 #+BEGIN_SRC emacs-lisp
 (use-package  exec-path-from-shell)
@@ -846,7 +862,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 (global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/Dropbox/homepage/index.org")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/Dropbox/phprefactor/index.org")))
-(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life.gpg")))
+(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/Dropbox/life/life.org.gpg")))
 (global-set-key (kbd "C-c i") (lambda() (interactive)(find-file "~/.emacs.d/myinit.org")))
 
 
@@ -867,7 +883,7 @@ https://stackoverflow.com/questions/5298907/emacs-php-mode-and-paredit
 
 (use-package swiper      
   :bind    
-  (("C-s" . swiper)    
+  (("C-f" . swiper)    
    ("M-x" . counsel-M-x)   
    ("C-x b" . ivy-switch-buffer)  
    ("C-x C-f" . counsel-find-file)    
@@ -1065,3 +1081,47 @@ M-x flush-lines RET ^$ RET
   I commented out 
   `:export #'org-pdftools-export` 
   and that helped a little - 
+* table
+  #+begin_src emacs-lisp
+;; Use fixed width mode in tables.
+
+(set-face-attribute 'variable-pitch nil :family "DejaVu Serif")
+
+(set-face-attribute 'variable-pitch nil :slant 'italic)
+
+(set-face-attribute 'variable-pitch nil :height 120)
+
+
+(defun my-adjoin-to-list-or-symbol (element list-or-symbol)
+
+  (let ((list (if (not (listp list-or-symbol))
+
+		  (list list-or-symbol)
+
+		list-or-symbol)))
+
+    (require 'cl-lib)
+
+    (cl-adjoin element list)))
+
+(mapc
+
+ (lambda (face)
+
+   (set-face-attribute
+
+    face nil
+
+    :inherit
+
+    (my-adjoin-to-list-or-symbol
+
+     'fixed-pitch
+
+     (face-attribute face :inherit))))
+
+ (list 'org-code 'org-block 'org-table 'org-date
+
+       'org-link 'org-footnote))
+
+  #+end_src
