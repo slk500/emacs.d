@@ -1,4 +1,125 @@
 
+* undo
+#+begin_src elisp
+  (global-set-key (kbd "\C-z") 'undo-only)
+#+end_src
+* sort words
+#+begin_src elisp
+(defun sort-words (reverse beg end)
+      "Sort words in region alphabetically, in REVERSE if negative.
+    Prefixed with negative \\[universal-argument], sorts in reverse.
+  
+    The variable `sort-fold-case' determines whether alphabetic case
+    affects the sort order.
+  
+    See `sort-regexp-fields'."
+      (interactive "*P\nr")
+      (sort-regexp-fields reverse "\\w+" "\\&" beg end))
+#+end_src
+* magit
+#+begin_src elisp
+  (use-package magit)
+  (global-set-key (kbd "\C-x g") 'magit-status)
+  (setq native-comp-deferred-compilation-deny-list nil)
+  (setq straight-disable-native-compile t)
+#+end_src
+* comment
+#+begin_src elisp
+  (use-package evil-nerd-commenter)
+#+end_src
+* tetris
+#+begin_src elisp
+  (defun tetris ()
+    "A basic implementation of Tetris in Emacs Lisp."
+    (interactive)
+    (switch-to-buffer "*Tetris*")
+    (text-mode)
+    (let ((block-types '((?\[ . ((0 0) (0 1) (1 0) (1 1)))
+                         (?\_ . ((0 0) (0 1)))
+                         (?\| . ((0 0) (1 0) (2 0)))
+                         (?/ . ((0 1) (1 0) (1 1)))
+                         (?\\ . ((0 0) (1 0) (1 1)))
+                         (?\. . ((0 0)))
+                         (?^ . ((0 0) (0 1) (1 0)))
+                         (?> . ((0 0) (0 1) (0 2)))
+                         (?< . ((0 2) (0 1) (0 0)))
+                         (?v . ((0 0) (1 0) (2 0)))))
+          (block (cdr (assoc (aref block-types (random (length block-types)))
+                             block-types))))
+      (erase-buffer)
+      (dotimes (y 20)
+        (dotimes (x 10)
+          (insert (if (member (cons x y) block)
+                      ?\*
+                    ?\ ))))
+      (goto-char (point-min))))
+#+end_src
+* space
+#+begin_src elisp
+(defun remove-multiple-spaces ()
+  "Replace multiple spaces with a single space."
+  (interactive)
+  (while (re-search-forward "  +" nil t)
+    (replace-match " ")))
+
+(defun remove-multiple-spaces-in-region (start end)
+  "Replace multiple spaces in the selected region with a single space."
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      (goto-char (point-min))
+      (while (re-search-forward "  +" nil t)
+        (replace-match " ")))))
+
+#+end_src
+* replace+
+#+begin_src elisp
+(use-package replace+)
+#+end_src
+* indent
+#+begin_src elisp
+  (use-package aggressive-indent)
+  (setq aggressive-indent-sit-for-time 0.5)
+  (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+  (add-hook 'clojure-mode-hook #'aggressive-indent-mode)
+#+end_src
+* hungry-delete
+#+begin_src elisp
+  (use-package hungry-delete)
+  (setq hungry-delete-join-reluctantly t)
+  (global-hungry-delete-mode)
+  (add-hook 'minibuffer-setup-hook (lambda () (hungry-delete-mode -1)))
+#+end_src
+* rainbow
+#+begin_src elisp
+  (use-package rainbow-delimiters)
+  (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
+
+  (add-hook
+   'cider-repl-mode-hook
+   (lambda ()
+     (run-with-timer
+      0.5 nil
+      (lambda ()
+        (cider-switch-to-last-clojure-buffer)
+        (cider-repl-set-ns (cider-current-ns))))))
+#+end_src
+* windows resizing
+#+begin_src elisp
+(use-package windsize)
+(windsize-default-keybindings)
+;;https://github.com/grammati/windsize
+#+end_src
+* TODO LOOKING-FOR
+nie łapie tego stanu
+* tree-sitter
+#+begin_src elisp
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
+#+end_src
 * htmlize
 #+begin_src elisp
 (use-package htmlize)
@@ -79,9 +200,16 @@
   (require 'cider)  
   (setq org-babel-clojure-backend 'cider)
 
-  ;(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
-#+end_src
+  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
 
+  (use-package paredit)
+
+  (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  (add-hook 'cider-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'lsp-mode)
+
+#+end_src
 https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
 https://github.com/clojure-emacs/cider/issues/1819
 http://fgiasson.com/blog/index.php/2016/06/21/optimal-emacs-settings-for-org-mode-for-literate-programming/
@@ -96,6 +224,13 @@ Działa z value:
 `#+begin_src clojure :results value
 (inc 1)
 `#+end_src
+** lsp-mode
+#+begin_src elisp
+(use-package lsp-mode)
+(use-package lsp-treemacs)
+(use-package flycheck)
+(use-package company)
+#+end_src
 * yasnipet
 #+begin_src elisp
   (use-package yasnippet
@@ -351,7 +486,7 @@ clm/open-command-log-buffer
    :straight
    (:type built-in)
    :config
-   (setq-default org-catch-invisible-edits 'error) ;; prevent deleting invisible text
+   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
    (use-package org-bullets)
    (add-hook 'org-mode-hook 'org-bullets-mode)
    (add-hook 'org-mode-hook 'org-indent-mode)
@@ -409,74 +544,75 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (eval-when-compile (require 'cl)) ;; adds lexical-let
 
-        (defun cmp-date-property (prop)
-          "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
+  (defun cmp-date-property (prop)
+    "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
         If a is before b, return -1. If a is after b, return 1. If they
         are equal return nil.
       https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
-          (lexical-let ((prop prop))
-          #'(lambda (a b)
+    (lexical-let ((prop prop))
+      #'(lambda (a b)
 
-            (let* ((a-pos (get-text-property 0 'org-marker a))
-                   (b-pos (get-text-property 0 'org-marker b))
-                   (a-date (or (org-entry-get a-pos prop)
-                               (format "[%s]" (org-read-date t nil "now"))))
-                   (b-date (or (org-entry-get b-pos prop)
-                               (format "[%s]" (org-read-date t nil "now"))))
-                   (cmp (compare-strings a-date nil nil b-date nil nil))
-                   )
-              (if (eq cmp t) nil (signum cmp))
-              ))))
+          (let* ((a-pos (get-text-property 0 'org-marker a))
+                 (b-pos (get-text-property 0 'org-marker b))
+                 (a-date (or (org-entry-get a-pos prop)
+                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                 (b-date (or (org-entry-get b-pos prop)
+                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                 (cmp (compare-strings a-date nil nil b-date nil nil))
+                 )
+            (if (eq cmp t) nil (signum cmp))
+            ))))
 
-    (setq org-agenda-custom-commands
-          '(
-            ("b" "List of read books"
-                     tags "book/DONE|DOING"
-                     ((org-agenda-cmp-user-defined (cmp-date-property
-                                                    "CLOSED"))
-                      (org-agenda-sorting-strategy '(user-defined-down priority-down))
-                      (org-agenda-todo-keyword-format "%-2s")
-                      (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
-                      ))
-            ("g" "Get Things Done (GTD)"
-             ((agenda ""
-                      ((org-agenda-skip-function
-                        '(org-agenda-skip-entry-if 'deadline))
-                       (org-deadline-warning-days 0)))
-              (todo "NEXT"
+  (setq org-agenda-custom-commands
+        '(
+          ("b" "List of read books"
+           tags "book/DONE|DOING|CANCELED|STUCK"
+           ((org-agenda-cmp-user-defined (cmp-date-property
+                                          "CLOSED"))
+            (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
+            (org-agenda-todo-keyword-format "%-2s")
+            (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
+            )nil
+           ("~/aamystuff/mystuff/books.html"))
+          ("g" "Get Things Done (GTD)"
+           ((agenda ""
                     ((org-agenda-skip-function
                       '(org-agenda-skip-entry-if 'deadline))
-                     (org-agenda-prefix-format "  %i %-12:c [%e] ")
-                     (org-agenda-overriding-header "\nTasks\n")))))
-  ))
+                     (org-deadline-warning-days 0)))
+            (tags-todo "-book-video/DOING|TODO"
+                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
+                   (org-agenda-overriding-header "\nTasks\n")))
+            ))))
 
-    (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
+  (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
-    (global-set-key "\C-ca" 'org-agenda)
-    (setq org-agenda-skip-scheduled-if-done t)
+  (global-set-key "\C-ca" 'org-agenda)
+  (setq org-agenda-skip-scheduled-if-done t)
 
-                                (setq org-agenda-files '(
-                                                           "~/aamystuff/mystuff/index.org"
-                                                           "~/aamystuff/life/life.org.gpg"
-                                                           "~/aamystuff/phprefactor/phprefactor.org"
-                                                           "~/aamystuff/emacs/emacs.org"
-                                                           "~/aamystuff/clojure-examples/clojure-examples.org"
-                                                           ))
-                                  (add-hook 'org-agenda-finalize-hook
-                                            (lambda ()
-                                              (save-excursion
-                                                (goto-char (point-min))
-                                                (when (or (re-search-forward "Global lit of TODO items of type: [[:upper:]]*" nil t)
-                                                          (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t))
-                                                  (insert (propertize
-                                                           (format " (%s remaining)"
-                                                                   (- (count-lines (point-min) (point-max)) 2))
-                                                           'face 'font-lock-comment-face))))))
+  (setq org-agenda-files '(
+                           "~/aamystuff/mystuff/index.org"
+                           "~/aamystuff/mystuff/marketing.org"
+                           "~/aamystuff/life/life.org.gpg"
+                           "~/aamystuff/phprefactor/phprefactor.org"
+                           "~/aamystuff/emacs/emacs.org"
+                           "~/aamystuff/clojure-examples/clojure-examples.org"
+                           ))
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
+                          (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t)
+                          (re-search-forward "Tasks*" nil t))
+                  (insert (propertize
+                           (format " (%s remaining)"
+                                   (- (count-lines (point-min) (point-max)) 2))
+                           'face 'font-lock-comment-face))))))
 
-                            (setq org-agenda-sorting-strategy '(
-                                                                (todo todo-state-up priority-down)
-                                                                (tags todo-state-up priority-down)
-                                                                ))
+  (setq org-agenda-sorting-strategy '(
+                                      (todo todo-state-up priority-down)
+                                      (tags todo-state-up priority-down)
+                                      ))
 #+end_src
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
 ** todo
@@ -489,8 +625,8 @@ CLOCK: [2022-10-02 Sun 05:24]--[2022-10-02 Sun 05:35] =>  0:11
 #+begin_src elisp
     (setq org-todo-keywords
             '(
-              (sequence "REPEAT(r!)" "DOING(o!)" "TODO(t!)" "NEXT(n!)" "WAITING(w!)" "SOMEDAY(!s)" "LOOKING-FOR(!l)"
-                        "|" "CANCELED(c!)" "RECONSIDER(r!@)" "GIST(g!)" "STUCK(k!)" "DONE(d!)")
+              (sequence "REPEAT(r!)" "LOOKINGFOR(!l)" "STUCK(k!)" "DOING(o!)" "NEXT(n!)" "TODO(t!)" "WAITING(w!)" "SOMEDAY(!s)"
+                        "|" "CANCELED(c!)" "RECONSIDER(r!@)" "GIST(g!)" "DONE(d!)")
               ))
 
     (setq org-use-fast-todo-selection 'expert) ; todo selection appear in the smaller minibuffer via
@@ -545,7 +681,7 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+begin_src emacs-lisp
   (global-set-key (kbd "<f8>") 'visual-line-mode)
   (global-set-key (kbd "<f5>") 'revert-buffer)
-  (global-set-key (kbd "<f9>") 'centered-window-mode)
+  (global-set-key (kbd "<f9>") (lambda () (interactive) (org-agenda nil "g")))
   (global-set-key (kbd "C-x 5") 'toggle-frame-split)
   ; (global-unset-key (kbd "M-<space>"))
 #+END_SRC
@@ -614,8 +750,6 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 	      (org-export-string-as region 'md t '(:with-toc nil))))
 	(gui-set-selection 'CLIPBOARD markdown))))
   #+end_src
-* tags
-https://www.reddit.com/r/orgmode/comments/pk7q1z/how_to_remove_a_tag_from_a_headline_in_org/
 * copy/paste
 #+begin_src elisp
   (defun my-copy-to-next-window (b e)
@@ -746,16 +880,17 @@ https://www.reddit.com/r/orgmode/comments/pk7q1z/how_to_remove_a_tag_from_a_head
 #+end_src
 * movement
 #+begin_src elisp
-  (global-set-key (kbd "M-o") 'other-window)
+ ;; (global-set-key (kbd "M-o") 'other-window)
+  (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
 #+end_src
 * history for searching
 #+begin_src elisp
-  (use-package prescient
+   (use-package prescient
     :config
     (setq-default history-length 1000)
     (setq-default prescient-history-length 1000)
     (prescient-persist-mode +1))
-  
+
   (use-package ivy-prescient
     :after ivy
     :config
@@ -846,59 +981,61 @@ gpg --gen-key
 #+end_src
 * swiper
 #+begin_src elisp
-     (use-package counsel)
-     (use-package swiper      
-       :bind    
-       (
-        ("C-f" . swiper)    
-        ("M-x" . counsel-M-x)   
-        ("C-x b" . ivy-switch-buffer)  
-        ("C-x f" . counsel-find-file)    
-        ("C-h f" . counsel-describe-function)
-        ("C-h l" . counsel-find-library)
-        ("C-c C-r" . ivy-resume))
-       :config  
-       (ivy-mode 1)
-       (setq-default ivy-use-virtual-buffers t
-                     ivy-count-format "(%d/%d) "
-                     swiper-use-visual-line-p #'ignore)
+   (use-package counsel)
+   (use-package swiper
+     :straight (:host github :repo "abo-abo/swiper")
+     :bind    
+     (
+      ("C-f" . swiper)
+      ("M-x" . counsel-M-x)   
+      ("C-x b" . ivy-switch-buffer)  
+      ("C-x f" . counsel-find-file)    
+      ("C-h f" . counsel-describe-function)
+      ("C-h l" . counsel-find-library)
+      ("C-c C-r" . ivy-resume))
+     :config
+     (global-unset-key (kbd "C-x C-b"))
+     (ivy-mode 1)
+     (setq-default ivy-use-virtual-buffers t
+                   ivy-count-format "(%d/%d) "
+                   swiper-use-visual-line-p #'ignore)
 
-       (ivy-configure 'counsel-M-x
-         :initial-input "^"
-         :display-transformer-fn #'counsel-M-x-transformer))
+     (ivy-configure 'counsel-M-x
+       :initial-input "^"
+       :display-transformer-fn #'counsel-M-x-transformer))
 
-    (use-package ivy-rich)
-    (ivy-rich-mode 1)
-    (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (use-package ivy-rich)
+ ;; (ivy-rich-mode 1)
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
 #+end_src
 ** ivy slow buffer list
    #+begin_src elisp
-(eval-after-load 'ivy-rich
-  (progn
-    (defvar ek/ivy-rich-cache
-      (make-hash-table :test 'equal))
+     ;; (eval-after-load 'ivy-rich
+     ;;   (progn
+     ;;     (defvar ek/ivy-rich-cache
+     ;;       (make-hash-table :test 'equal))
 
-    (defun ek/ivy-rich-cache-lookup (delegate candidate)
-      (let ((result (gethash candidate ek/ivy-rich-cache)))
-        (unless result
-          (setq result (funcall delegate candidate))
-          (puthash candidate result ek/ivy-rich-cache))
-        result))
+     ;;     (defun ek/ivy-rich-cache-lookup (delegate candidate)
+     ;;       (let ((result (gethash candidate ek/ivy-rich-cache)))
+     ;;         (unless result
+     ;;           (setq result (funcall delegate candidate))
+     ;;           (puthash candidate result ek/ivy-rich-cache))
+     ;;         result))
 
-    (defun ek/ivy-rich-cache-reset ()
-      (clrhash ek/ivy-rich-cache))
+     ;;     (defun ek/ivy-rich-cache-reset ()
+     ;;       (clrhash ek/ivy-rich-cache))
 
-    (defun ek/ivy-rich-cache-rebuild ()
-      (mapc (lambda (buffer)
-              (ivy-rich--ivy-switch-buffer-transformer (buffer-name buffer)))
-            (buffer-list)))
+     ;;     (defun ek/ivy-rich-cache-rebuild ()
+     ;;       (mapc (lambda (buffer)
+     ;;               (ivy-rich--ivy-switch-buffer-transformer (buffer-name buffer)))
+     ;;             (buffer-list)))
 
-    (defun ek/ivy-rich-cache-rebuild-trigger ()
-      (ek/ivy-rich-cache-reset)
-      (run-with-idle-timer 1 nil 'ek/ivy-rich-cache-rebuild))
+     ;;     (defun ek/ivy-rich-cache-rebuild-trigger ()
+     ;;       (ek/ivy-rich-cache-reset)
+     ;;       (run-with-idle-timer 1 nil 'ek/ivy-rich-cache-rebuild))
 
-    (advice-add 'ivy-rich--ivy-switch-buffer-transformer :around 'ek/ivy-rich-cache-lookup)
-    (advice-add 'ivy-switch-buffer :after 'ek/ivy-rich-cache-rebuild-trigger)))
+     ;;     (advice-add 'ivy-rich--ivy-switch-buffer-transformer :around 'ek/ivy-rich-cache-lookup)
+     ;;     (advice-add 'ivy-switch-buffer :after 'ek/ivy-rich-cache-rebuild-trigger)))
    #+end_src
 * paste link
 #+begin_src elisp
