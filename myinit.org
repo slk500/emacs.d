@@ -56,12 +56,6 @@
 #+end_src
 * space
 #+begin_src elisp
-(defun remove-multiple-spaces ()
-  "Replace multiple spaces with a single space."
-  (interactive)
-  (while (re-search-forward "  +" nil t)
-    (replace-match " ")))
-
 (defun remove-multiple-spaces-in-region (start end)
   "Replace multiple spaces in the selected region with a single space."
   (interactive "r")
@@ -117,8 +111,8 @@
 nie łapie tego stanu
 * tree-sitter
 #+begin_src elisp
-(use-package tree-sitter)
-(use-package tree-sitter-langs)
+;(use-package tree-sitter)
+;(use-package tree-sitter-langs)
 #+end_src
 * htmlize
 #+begin_src elisp
@@ -364,7 +358,6 @@ Działa z value:
               (delete-char 1))
             (insert date)))))))
 #+end_src
-* TODO timer
 * modeline
 #+begin_src elisp
   ;; (setq-default mode-line-format '("%e" mode-line-front-space
@@ -377,18 +370,6 @@ Działa z value:
   ;;                                  (vc-mode vc-mode)
   ;;                                  " " mode-line-misc-info mode-line-end-spaces))
   (setq column-number-mode t)
-#+end_src
-* desktop-save-mode
-#+begin_src elisp
-  ;; (setq desktop-dirname             "~/.emacs.d/desktop/"
-  ;;    desktop-base-file-name      "emacs.desktop"
-  ;;    desktop-base-lock-name      "lock"
-  ;;    desktop-path                (list desktop-dirname)
-  ;;    desktop-save                t
-  ;;    desktop-files-not-to-save   "^$" ;reload tramp paths
-  ;;    desktop-load-locked-desktop nil
-  ;;    desktop-auto-save-timeout   30)
-  ;;    (desktop-save-mode 1)
 #+end_src
 * iso week
 #+begin_src elisp
@@ -424,22 +405,6 @@ Działa z value:
 * benchmark
 #+begin_src sh
 time emacs -nw -Q -eval '(kill-emacs)'
-#+end_src
-* buffer-local-keys
-#+begin_src elisp
-(defun buffer-local-set-key (key func)
-      (interactive "KSet key on this buffer: \naCommand: ")
-      (let ((name (format "%s-magic" (buffer-name))))
-        (eval
-         `(define-minor-mode ,(intern name)
-            "Automagically built minor mode to define buffer-local keys."))
-        (let* ((mapname (format "%s-map" name))
-               (map (intern mapname)))
-          (unless (boundp (intern mapname))
-            (set map (make-sparse-keymap)))
-          (eval
-           `(define-key ,map ,key func)))
-        (funcall (intern name) t)))
 #+end_src
 * command-log-mode
 global-commannd-log-mode
@@ -597,6 +562,7 @@ clm/open-command-log-buffer
                            "~/aamystuff/emacs/emacs.org"
                            "~/aamystuff/clojure-examples/clojure-examples.org"
                            ))
+
   (add-hook 'org-agenda-finalize-hook
             (lambda ()
               (save-excursion
@@ -714,7 +680,7 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 
   ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
   ;; may have their own settings.
-  (load-theme 'doom-one t)
+  (load-theme 'doom-ayu-dark t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -786,11 +752,6 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
                                    :channels ("#emacs")
                                    :port 6697
                                    :encryption tls)))
-#+end_src
-* simpleclip
-#+begin_src elisp
-;  (use-package simpleclip)
-;  (setq simpleclip-mode 1)
 #+end_src
 * dired
 #+begin_src elisp
@@ -864,15 +825,6 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
  ;; Use versioned backups
  version-control t)
 #+end_src
-* journal
-#+begin_src elisp
-  (setq org-capture-templates
-      '(("j" "journal" entry (file+datetree "~/aamystuff/life/journal.gpg")
-         "* %?\n%U\n  %i\n")
-      ("d" "dreams" entry (file+datetree "~/aamystuff/life/dreams.gpg")
-        "* %?\n%U\n  %i\n")))
-(global-set-key (kbd "C-c c") 'org-capture)
-#+end_src
 * calendar
 #+begin_src elisp
   (setq calendar-week-start-day 1)
@@ -880,7 +832,6 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+end_src
 * movement
 #+begin_src elisp
- ;; (global-set-key (kbd "M-o") 'other-window)
   (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
 #+end_src
 * history for searching
