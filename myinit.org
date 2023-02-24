@@ -1,4 +1,13 @@
 
+* hl-line-mode
+#+begin_src elisp
+(hl-line-mode t)
+#+end_src
+* repeat mode
+#+begin_src elisp
+(repeat-mode t)
+(use-package repeat-help-mode)
+#+end_src
 * undo
 #+begin_src elisp
   (global-set-key (kbd "\C-z") 'undo-only)
