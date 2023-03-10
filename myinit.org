@@ -1,12 +1,85 @@
 
+* wrap text in parenthesis
+#+begin_src elisp
+ (electric-pair-mode 1)
+#+end_src
+* Adding keymaps to src blocks via org-font-lock-hook
+https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/
+#+begin_src elisp
+  ;; (setq scimax-src-block-keymaps
+  ;;       `(("clojure" . ,(let ((map (make-composed-keymap
+  ;;                                   `(,clojure-mode-map)
+  ;;                                   org-mode-map)))
+  ;;                         map))
+  ;;         ("elisp" . ,(let ((map (make-composed-keymap `(
+  ;;                                                        ,emacs-lisp-mode-map
+  ;;                                                        ,outline-minor-mode-map)
+  ;;                                                      org-mode-map)))
+  ;;                       (define-key map (kbd "C-c C-c") 'org-ctrl-c-ctrl-c)
+  ;;                       map))))
+
+  ;; (defun scimax-add-keymap-to-src-blocks (limit)
+  ;;   "Add keymaps to src-blocks defined in `scimax-src-block-keymaps'."
+  ;;   (let ((case-fold-search t)
+  ;; 	lang)
+  ;;     (while (re-search-forward org-babel-src-block-regexp limit t)
+  ;;       (let ((lang (match-string 2))
+  ;; 	    (beg (match-beginning 0))
+  ;; 	    (end (match-end 0)))
+  ;; 	(if (assoc (org-no-properties lang) scimax-src-block-keymaps)
+  ;; 	    (progn
+  ;; 	      (add-text-properties
+  ;; 	       beg end `(local-map ,(cdr (assoc
+  ;; 					  (org-no-properties lang)
+  ;; 					  scimax-src-block-keymaps))))
+  ;; 	      (add-text-properties
+  ;; 	       beg end `(cursor-sensor-functions
+  ;; 			 ((lambda (win prev-pos sym)
+  ;; 			    ;; This simulates a mouse click and makes a menu change
+  ;; 			    (org-mouse-down-mouse nil)))))))))))
+
+
+  ;; (defun scimax-spoof-mode (orig-func &rest args)
+  ;;   "Advice function to spoof commands in org-mode src blocks.
+  ;; It is for commands that depend on the major mode. One example is
+  ;; `lispy--eval'."
+  ;;   (if (org-in-src-block-p)
+  ;;       (let ((major-mode (intern (format "%s-mode" (first (org-babel-get-src-block-info))))))
+  ;; 	(apply orig-func args))
+  ;;     (apply orig-func args)))
+
+  ;; (define-minor-mode scimax-src-keymap-mode
+  ;;   "Minor mode to add mode keymaps to src-blocks."
+  ;;   :init-value nil
+  ;;   (if scimax-src-keymap-mode
+  ;;       (progn
+  ;; 	(add-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks t)
+  ;; 	(add-to-list 'font-lock-extra-managed-props 'local-map)
+  ;; 	(add-to-list 'font-lock-extra-managed-props 'cursor-sensor-functions)
+  ;; 	(advice-add 'cider-eval-last-sexp :around 'scimax-spoof-mode)
+  ;; 	(cursor-sensor-mode +1))
+  ;;     (remove-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks)
+  ;;     (advice-remove ''cider-eval-last-sexp 'scimax-spoof-mode)
+  ;;     (cursor-sensor-mode -1))
+  ;;   (font-lock-fontify-buffer))
+
+  ;; (add-hook 'org-mode-hook (lambda ()
+  ;; 			   (scimax-src-keymap-mode +1)))
+#+end_src
+
+* defaults
+#+begin_src elisp
+  (setq-default
+        cursor-in-non-selected-windows nil)     ; Hide the cursor in inactive windows
+#+end_src
 * hl-line-mode
 #+begin_src elisp
-(hl-line-mode t)
+(global-hl-line-mode t)
 #+end_src
 * repeat mode
 #+begin_src elisp
 (repeat-mode t)
-(use-package repeat-help-mode)
+;(use-package repeat-help-mode)
 #+end_src
 * undo
 #+begin_src elisp
@@ -83,7 +156,7 @@
 * indent
 #+begin_src elisp
   (use-package aggressive-indent)
-  (setq aggressive-indent-sit-for-time 0.5)
+  (setq aggressive-indent-sit-for-time 100)
   (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
   (add-hook 'clojure-mode-hook #'aggressive-indent-mode)
 #+end_src
@@ -115,13 +188,14 @@
 (use-package windsize)
 (windsize-default-keybindings)
 ;;https://github.com/grammati/windsize
-#+end_src
+#+end_src 
 * TODO LOOKING-FOR
-nie łapie tego stanu
+https://lists.gnu.org/archive/html/emacs-orgmode/2010-08/msg00870.html
+Dashes are not valid in TODO keywords and tags, but you are right, properties do allow them. hmmm. I don't remember why I did allow hem - but surely enough I did. 
 * tree-sitter
 #+begin_src elisp
-;(use-package tree-sitter)
-;(use-package tree-sitter-langs)
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
 #+end_src
 * htmlize
 #+begin_src elisp
@@ -196,7 +270,18 @@ nie łapie tego stanu
 #+begin_src elisp
 (setq nobreak-char-display nil)
 #+end_src
-* clojure
+* lisp
+#+begin_src elisp
+  (use-package paredit)
+  (defun my-paredit-mode-hook ()
+    (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill))
+  (add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
+#+end_src
+** elisp
+#+begin_src elisp
+  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+#+end_src
+** clojure
 #+begin_src elisp
   (require 'ob-clojure)
   (use-package cider)
@@ -204,8 +289,9 @@ nie łapie tego stanu
   (setq org-babel-clojure-backend 'cider)
 
   (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
+  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
 
-  (use-package paredit)
+  (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
 
   (add-hook 'cider-repl-mode-hook #'paredit-mode)
   (add-hook 'cider-mode-hook #'paredit-mode)
@@ -216,7 +302,7 @@ nie łapie tego stanu
 https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
 https://github.com/clojure-emacs/cider/issues/1819
 http://fgiasson.com/blog/index.php/2016/06/21/optimal-emacs-settings-for-org-mode-for-literate-programming/
-** clojure :results output
+*** clojure :results output
 `#+begin_src clojure :results output
 (inc 1)
 `#+end_src
@@ -227,12 +313,18 @@ Działa z value:
 `#+begin_src clojure :results value
 (inc 1)
 `#+end_src
-** lsp-mode
+*** lsp-mode
 #+begin_src elisp
 (use-package lsp-mode)
 (use-package lsp-treemacs)
 (use-package flycheck)
 (use-package company)
+
+
+
+(add-hook 'clojure-mode-hook 'lsp)
+(add-hook 'clojurescript-mode-hook 'lsp)
+(add-hook 'clojurec-mode-hook 'lsp)
 #+end_src
 * yasnipet
 #+begin_src elisp
@@ -467,7 +559,8 @@ clm/open-command-log-buffer
    (add-hook 'org-mode-hook 'visual-line-mode)
    (use-package org-contrib)
    (setq org-startup-folded t)
- (setq org-log-done 'time)
+   (setq org-hide-emphasis-markers t)
+   (setq org-log-done 'time)
    (setq org-log-into-drawer t)
    (setq org-special-ctrl-a/e t) ;; ctrl a move to beginig of headline not line
    (setq org-treat-insert-todo-heading-as-state-change t)
@@ -476,8 +569,17 @@ clm/open-command-log-buffer
    (require 'org-expiry)
    (require 'org-eldoc)
    (global-eldoc-mode 1)
-   (setq org-src-tab-acts-natively t)
-   )
+   (setq org-src-tab-acts-natively t))
+
+(setq org-emphasis-alist   
+(quote (("*" bold)
+("/" italic)
+("_" underline)
+("=" (:foreground "yellow"))
+("~" org-verbatim verbatim)
+("+"
+(:strike-through t))
+))) 
 #+end_src
 ** babel
 #+begin_src elisp
@@ -516,78 +618,96 @@ clm/open-command-log-buffer
 #+END_SRC
 ** agenda
 #+begin_src elisp
-  (eval-when-compile (require 'cl)) ;; adds lexical-let
+      (eval-when-compile (require 'cl)) ;; adds lexical-let
+      (defadvice org-agenda (around split-vertically activate)
+        (let ((split-width-threshold 80))  ; or whatever width makes sense for you
+          ad-do-it))
 
-  (defun cmp-date-property (prop)
-    "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
-        If a is before b, return -1. If a is after b, return 1. If they
-        are equal return nil.
-      https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
-    (lexical-let ((prop prop))
-      #'(lambda (a b)
+    (defun cmp-date-property (prop)
+          "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
+              If a is before b, return -1. If a is after b, return 1. If they
+              are equal return nil.
+            https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
+          (lexical-let ((prop prop))
+            #'(lambda (a b)
 
-          (let* ((a-pos (get-text-property 0 'org-marker a))
-                 (b-pos (get-text-property 0 'org-marker b))
-                 (a-date (or (org-entry-get a-pos prop)
-                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
-                 (b-date (or (org-entry-get b-pos prop)
-                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
-                 (cmp (compare-strings a-date nil nil b-date nil nil))
-                 )
-            (if (eq cmp t) nil (signum cmp))
-            ))))
+                (let* ((a-pos (get-text-property 0 'org-marker a))
+                       (b-pos (get-text-property 0 'org-marker b))
+                       (a-date (or (org-entry-get a-pos prop)
+                                   (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                       (b-date (or (org-entry-get b-pos prop)
+                                   (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                       (cmp (compare-strings a-date nil nil b-date nil nil))
+                       )
+                  (if (eq cmp t) nil (signum cmp))
+                  ))))
 
-  (setq org-agenda-custom-commands
-        '(
-          ("b" "List of read books"
-           tags "book/DONE|DOING|CANCELED|STUCK"
-           ((org-agenda-cmp-user-defined (cmp-date-property
-                                          "CLOSED"))
-            (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
-            (org-agenda-todo-keyword-format "%-2s")
-            (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
-            )nil
-           ("~/aamystuff/mystuff/books.html"))
-          ("g" "Get Things Done (GTD)"
-           ((agenda ""
-                    ((org-agenda-skip-function
-                      '(org-agenda-skip-entry-if 'deadline))
-                     (org-deadline-warning-days 0)))
-            (tags-todo "-book-video/DOING|TODO"
-                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
-                   (org-agenda-overriding-header "\nTasks\n")))
-            ))))
+        (setq org-agenda-custom-commands
+              '(
+                ("b" "List of read books"
+                 tags "book/DONE|DOING|CANCELED|STUCK"
+                 ((org-agenda-cmp-user-defined (cmp-date-property
+                                                "CLOSED"))
+                  (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
+                  (org-agenda-todo-keyword-format "%-2s")
+                  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
+                  )nil
+                 ("~/aamystuff/mystuff/books.html"))
+                ("g" "Get Things Done (GTD)"
+                 ((agenda ""
+                          ((org-agenda-skip-function
+                            '(org-agenda-skip-entry-if 'deadline))
+                           (org-deadline-warning-days 0)))
+                  (tags-todo "-book-video/DOING|TODO"
+                        ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
+                         (org-agenda-overriding-header "\nTasks\n")))
+                  ))))
 
-  (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
+        (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
-  (global-set-key "\C-ca" 'org-agenda)
-  (setq org-agenda-skip-scheduled-if-done t)
+        (global-set-key "\C-ca" 'org-agenda)
+        (setq org-agenda-skip-scheduled-if-done t)
 
-  (setq org-agenda-files '(
-                           "~/aamystuff/mystuff/index.org"
-                           "~/aamystuff/mystuff/marketing.org"
-                           "~/aamystuff/life/life.org.gpg"
-                           "~/aamystuff/phprefactor/phprefactor.org"
-                           "~/aamystuff/emacs/emacs.org"
-                           "~/aamystuff/clojure-examples/clojure-examples.org"
-                           ))
+        (setq org-agenda-files '(
+                                 "~/aamystuff/mystuff/index.org"
+                                 "~/aamystuff/mystuff/complexity.org"
+                                 "~/aamystuff/mystuff/marketing.org"
+                                 "~/aamystuff/life/life.org.gpg"
+                                 "~/aamystuff/phprefactor/phprefactor.org"
+                                 "~/aamystuff/emacs/emacs.org"
+                                 "~/aamystuff/clojure-examples/clojure-examples.org"
+                                 ))
 
-  (add-hook 'org-agenda-finalize-hook
-            (lambda ()
-              (save-excursion
-                (goto-char (point-min))
-                (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
-                          (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t)
-                          (re-search-forward "Tasks*" nil t))
-                  (insert (propertize
-                           (format " (%s remaining)"
-                                   (- (count-lines (point-min) (point-max)) 2))
-                           'face 'font-lock-comment-face))))))
+      (setq org-agenda-prefix-format "%t %s")
 
-  (setq org-agenda-sorting-strategy '(
-                                      (todo todo-state-up priority-down)
-                                      (tags todo-state-up priority-down)
-                                      ))
+        (add-hook 'org-agenda-finalize-hook
+                  (lambda ()
+                    (save-excursion
+                      (goto-char (point-min))
+                      (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
+                                (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t))
+                        (insert (propertize
+                                 (format " (%s remaining)"
+                                         (- (count-lines (point-min) (point-max)) 2))
+                                 'face 'font-lock-comment-face))))))
+
+      (add-hook 'org-agenda-finalize-hook
+                (lambda ()
+                  (save-excursion
+                    (goto-char (point-min))
+                    (when (re-search-forward "Tasks*" nil t)
+                      (insert (propertize
+                               (format " (%s remaining)" (- (count-lines (point) (point-max) t) 2)))
+                              'face 'font-lock-comment-face)))))
+
+  (defun my/org-agenda-adjust-text-size ()
+    (if (= text-scale-mode-amount 0)
+      (text-scale-adjust -2)))
+
+  (add-hook 'org-agenda-finalize-hook #'my/org-agenda-adjust-text-size)
+
+  (setq org-agenda-sorting-strategy '((todo todo-state-up priority-down)
+                                            (tags todo-state-up priority-down)))
 #+end_src
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
 ** todo
@@ -654,11 +774,15 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+end_src
 * shortcuts
 #+begin_src emacs-lisp
-  (global-set-key (kbd "<f8>") 'visual-line-mode)
-  (global-set-key (kbd "<f5>") 'revert-buffer)
-  (global-set-key (kbd "<f9>") (lambda () (interactive) (org-agenda nil "g")))
-  (global-set-key (kbd "C-x 5") 'toggle-frame-split)
-  ; (global-unset-key (kbd "M-<space>"))
+
+  (defun my-gtd ()
+    (interactive) (org-agenda nil "g"))
+
+    (global-set-key (kbd "<f8>") 'visual-line-mode)
+    (global-set-key (kbd "<f5>") 'revert-buffer)
+    (global-set-key (kbd "<f9>") 'my-gtd)
+    (global-set-key (kbd "C-x 5") 'toggle-frame-split)
+    ; (global-unset-key (kbd "M-<space>"))
 #+END_SRC
 * center
 #+BEGIN_SRC emacs-lisp
@@ -669,7 +793,7 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
     (use-package bongo
     :ensure t :defer t
     :init (progn
-            (setq bongo-default-directory "/media/slk/disk/Music"
+            (setq bongo-default-directory "~/Music"
                   bongo-confirm-flush-playlist nil
                   bongo-insert-whole-directory-trees t
                   bongo-action-track-icon nil
@@ -682,28 +806,27 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+end_src
 * theme
 #+begin_src elisp
-  (use-package doom-themes)
+   (use-package doom-themes)
 
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+    (setq doom-themes-enable-bold t 
+          doom-themes-enable-italic t)
 
-  ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
-  ;; may have their own settings.
-  (load-theme 'doom-ayu-dark t)
+    (load-theme 'doom-ayu-dark t)
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
+    ;; Enable flashing mode-line on errors
+    (doom-themes-visual-bell-config)
 
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config)
-
-  ;; (use-package jetbrains-darcula-theme
-  ;;   :straight (:host github :repo "ianpan870102/jetbrains-darcula-emacs-theme")
-  ;;   :custom
-  ;;   (add-to-list 'custom-theme-load-path "~/.emacs.d/straight/repos/jetbrains-darcula-emacs-theme/")
-  ;;   (load-theme 'jetbrains-darcula t))
-
-  ;;(enable-theme 'jetbrains-darcula)
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config)
+#+end_src
+** improve
+#+begin_src elisp
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-scheduled-today ((t (:foreground "white smoke")))))
 #+end_src
 * cursor
 #+begin_src elisp

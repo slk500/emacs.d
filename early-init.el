@@ -46,7 +46,7 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq ring-bell-function 'ignore)
 
-;; disable git
+;; disable vc
 (setq vc-handled-backends nil)
 
 ;; needed for hotkey startup

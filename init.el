@@ -1,3 +1,4 @@
+(require 'package)
 (setq package-enable-at-startup nil)
 (defvar bootstrap-version)
 (defvar comp-deferred-compilation-deny-list ())
@@ -15,7 +16,6 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-(straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
 (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 20" ))
@@ -27,10 +27,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-;; '(custom-enabled-themes '(doom-one))
  '(custom-safe-themes
-   '("e9d47d6d41e42a8313c81995a60b2af6588e9f01a1cf19ca42669a7ffd5c2fde" "7a424478cb77a96af2c0f50cfb4e2a88647b3ccca225f8c650ed45b7f50d9525" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
- '(org-catch-invisible-edits 'error)
+   '("30ff9fb125a91788b693b53968cd661355f9fd77c057ffa160e17770aa26bae6" "aec7b55f2a13307a55517fdf08438863d694550565dee23181d2ebd973ebd6b8" "2e05569868dc11a52b08926b4c1a27da77580daa9321773d92822f7a639956ce" "944d52450c57b7cbba08f9b3d08095eb7a5541b0ecfb3a0a9ecd4a18f3c28948" "631c52620e2953e744f2b56d102eae503017047fb43d65ce028e88ef5846ea3b" "a138ec18a6b926ea9d66e61aac28f5ce99739cf38566876dc31e29ec8757f6e2" "2dd4951e967990396142ec54d376cced3f135810b2b69920e77103e0bcedfba9" "6945dadc749ac5cbd47012cad836f92aea9ebec9f504d32fe89a956260773ca4" "e9d47d6d41e42a8313c81995a60b2af6588e9f01a1cf19ca42669a7ffd5c2fde" "7a424478cb77a96af2c0f50cfb4e2a88647b3ccca225f8c650ed45b7f50d9525" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
+ '(org-fold-catch-invisible-edits 'error)
  '(package-selected-packages
    '(eev debbugs centered-window bongo diredfl simpleclip dired-subtree php-mode ivy-rich which-key counsel conunsel swiper org-plus-contrib use-package)))
 (custom-set-faces
@@ -38,5 +37,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(fringe ((t (:background "#282c34")))))
+ '(fringe ((t (:background "#0d1017"))))
+ '(org-checkbox-statistics-done ((t (:inherit org-todo)))) ;; set done to green
+ '(org-checkbox-statistics-todo ((t (:inherit org-done)))) ;; set done to green
+ '(org-scheduled-today ((t (:foreground "white smoke")))))
 (put 'dired-find-alternate-file 'disabled nil)
+(put 'narrow-to-region 'disabled nil)
