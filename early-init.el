@@ -46,8 +46,5 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq ring-bell-function 'ignore)
 
-;; disable vc
-(setq vc-handled-backends nil)
-
 ;; needed for hotkey startup
 (setq frame-title-format "emacs")

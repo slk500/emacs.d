@@ -280,6 +280,14 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
 ** elisp
 #+begin_src elisp
   (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+
+(defun mp-elisp-mode-eval-buffer ()
+  (interactive)
+  (message "Evaluated buffer")
+(eval-buffer))
+
+(define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
+(define-key lisp-interaction-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
 #+end_src
 ** clojure
 #+begin_src elisp

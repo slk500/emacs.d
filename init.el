@@ -38,8 +38,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(fringe ((t (:background "#0d1017"))))
- '(org-checkbox-statistics-done ((t (:inherit org-todo)))) ;; set done to green
- '(org-checkbox-statistics-todo ((t (:inherit org-done)))) ;; set done to green
- '(org-scheduled-today ((t (:foreground "white smoke")))))
+ '(org-checkbox-statistics-done ((t (:inherit org-todo))))
+ '(org-checkbox-statistics-todo ((t (:inherit org-done))))
+ '(org-scheduled-today ((t (:foreground "white smoke"))))
+ '(swiper-match-face-1 ((t (:foreground "#7fd962")))))
 (put 'dired-find-alternate-file 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
