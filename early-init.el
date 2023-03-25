@@ -32,7 +32,6 @@
 (global-set-key (kbd "C-c r") (lambda() (interactive)(find-file (expand-file-name "init.el" user-emacs-directory))))
 
 (blink-cursor-mode 0)
-(global-visual-line-mode)
 (setq org-hide-leading-stars t)
 
 ;; do not show the startup screen.

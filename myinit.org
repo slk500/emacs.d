@@ -518,8 +518,12 @@ clm/open-command-log-buffer
 * org
 ** column view
 #+begin_src elisp
-(set-face-attribute 'org-column-title nil
-                    :inherit 'default)
+  (set-face-attribute 'org-column-title nil
+                      :inherit 'default)
+
+  (defun org-columns-add-ellipses (string width)
+    "overwrite function to not do word wrap"
+    string)
 #+end_src
 ** log
 #+begin_src elisp
@@ -545,29 +549,29 @@ clm/open-command-log-buffer
 #+end_src
 ** settings
 #+begin_src elisp
-    (use-package org
-     :straight
-     (:type built-in)
-     :config
-     (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
-     (use-package org-bullets)
-     (add-hook 'org-mode-hook 'org-bullets-mode)
-     (add-hook 'org-mode-hook 'org-indent-mode)
-     (add-hook 'org-mode-hook 'visual-line-mode)
-     (use-package org-contrib)
-     (setq org-startup-folded t)
-     (setq org-hide-emphasis-markers t)
-     (setq org-log-done 'time)
-     (setq org-log-into-drawer t)
-     (setq org-special-ctrl-a/e t) ;; ctrl a move to beginig of headline not line
-     (setq org-treat-insert-todo-heading-as-state-change t)
-     (setq initial-major-mode 'org-mode)
-     (require 'org-tempo)
-     (require 'org-expiry)
-     (require 'org-eldoc)
-     (global-eldoc-mode 1)
-     (setq org-src-tab-acts-natively t))
-
+  (use-package org
+    :straight
+    (:type built-in)
+    :config
+    (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
+    (use-package org-bullets)
+    (add-hook 'org-mode-hook 'org-bullets-mode)
+    (add-hook 'org-mode-hook 'org-indent-mode)
+    (add-hook 'org-mode-hook 'visual-line-mode)
+    (use-package org-contrib)
+    (setq org-startup-folded t
+          org-hide-emphasis-markers t
+          org-log-done 'time
+          org-log-into-drawer t
+          org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
+          org-treat-insert-todo-heading-as-state-change t
+          initial-major-mode 'org-mode
+          org-src-tab-acts-natively t)
+    (require 'org-tempo)
+    (require 'org-expiry)
+    (require 'org-eldoc)
+    (global-eldoc-mode 1))
+  
   (setq org-emphasis-alist   
   (quote (("*" bold)
   ("/" italic)
