@@ -212,6 +212,10 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
     :straight (:host github :repo "xuchunyang/elisp-demos"))
 
 (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
+
+  (use-package helpful)
+  (setq counsel-describe-function-function #'helpful-callable)
+  (setq counsel-describe-variable-function #'helpful-variable)  
 #+end_src
 * books
 #+begin_src elisp
@@ -520,10 +524,6 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (set-face-attribute 'org-column-title nil
                       :inherit 'default)
-
-  (defun org-columns-add-ellipses (string width)
-    "overwrite function to not do word wrap"
-    string)
 #+end_src
 ** log
 #+begin_src elisp
@@ -557,21 +557,21 @@ clm/open-command-log-buffer
     (use-package org-bullets)
     (add-hook 'org-mode-hook 'org-bullets-mode)
     (add-hook 'org-mode-hook 'org-indent-mode)
-    (add-hook 'org-mode-hook 'visual-line-mode)
     (use-package org-contrib)
     (setq org-startup-folded t
-          org-hide-emphasis-markers t
-          org-log-done 'time
-          org-log-into-drawer t
-          org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
-          org-treat-insert-todo-heading-as-state-change t
-          initial-major-mode 'org-mode
-          org-src-tab-acts-natively t)
+	  org-hide-emphasis-markers t
+	  org-log-done 'time
+	  org-log-into-drawer t
+	  org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
+	  org-treat-insert-todo-heading-as-state-change t
+	  initial-major-mode 'org-mode
+	  org-ellipsis "⤵"
+	  org-src-tab-acts-natively t)
     (require 'org-tempo)
     (require 'org-expiry)
     (require 'org-eldoc)
     (global-eldoc-mode 1))
-  
+
   (setq org-emphasis-alist   
   (quote (("*" bold)
   ("/" italic)

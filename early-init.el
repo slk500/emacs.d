@@ -1,4 +1,4 @@
-;(setq native-comp-speed -1)
+(setq native-comp-speed -1)
 
 ;; completion
 (setq completion-styles '(substring))
