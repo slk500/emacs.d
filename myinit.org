@@ -491,13 +491,7 @@ Działa z value:
 #+end_src
 * smooth scroling
 #+BEGIN_SRC emacs-lisp
-  (setq
-   hscroll-step 1
-   scroll-conservatively 1000)
-
-  (use-package fast-scroll)
-  (fast-scroll-config)
-  (fast-scroll-mode 1)
+  (setq scroll-conservatively 1000)
 #+END_SRC
 * benchmark
 #+begin_src sh
