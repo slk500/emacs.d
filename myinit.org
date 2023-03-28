@@ -1,7 +1,15 @@
 
+* font
+#+begin_src elisp
+  (setq text-scale-mode-step 1.05)
+#+end_src
+* long lines, truncate, wrap
+#+begin_src elisp
+  (setq-default truncate-lines t)
+#+end_src
 * sudo
 #+begin_src elisp
-(use-package sudo-edit)
+  (use-package sudo-edit)
 #+end_src
 * regexp
 #+begin_src elisp
@@ -11,70 +19,18 @@
 #+begin_src elisp
  (electric-pair-mode 1)
 #+end_src
-* Adding keymaps to src blocks via org-font-lock-hook
+* adding keymaps to src blocks
 https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/
+
 #+begin_src elisp
-  ;; (setq scimax-src-block-keymaps
-  ;;       `(("clojure" . ,(let ((map (make-composed-keymap
-  ;;                                   `(,clojure-mode-map)
-  ;;                                   org-mode-map)))
-  ;;                         map))
-  ;;         ("elisp" . ,(let ((map (make-composed-keymap `(
-  ;;                                                        ,emacs-lisp-mode-map
-  ;;                                                        ,outline-minor-mode-map)
-  ;;                                                      org-mode-map)))
-  ;;                       (define-key map (kbd "C-c C-c") 'org-ctrl-c-ctrl-c)
-  ;;                       map))))
-
-  ;; (defun scimax-add-keymap-to-src-blocks (limit)
-  ;;   "Add keymaps to src-blocks defined in `scimax-src-block-keymaps'."
-  ;;   (let ((case-fold-search t)
-  ;; 	lang)
-  ;;     (while (re-search-forward org-babel-src-block-regexp limit t)
-  ;;       (let ((lang (match-string 2))
-  ;; 	    (beg (match-beginning 0))
-  ;; 	    (end (match-end 0)))
-  ;; 	(if (assoc (org-no-properties lang) scimax-src-block-keymaps)
-  ;; 	    (progn
-  ;; 	      (add-text-properties
-  ;; 	       beg end `(local-map ,(cdr (assoc
-  ;; 					  (org-no-properties lang)
-  ;; 					  scimax-src-block-keymaps))))
-  ;; 	      (add-text-properties
-  ;; 	       beg end `(cursor-sensor-functions
-  ;; 			 ((lambda (win prev-pos sym)
-  ;; 			    ;; This simulates a mouse click and makes a menu change
-  ;; 			    (org-mouse-down-mouse nil)))))))))))
-
-
-  ;; (defun scimax-spoof-mode (orig-func &rest args)
-  ;;   "Advice function to spoof commands in org-mode src blocks.
-  ;; It is for commands that depend on the major mode. One example is
-  ;; `lispy--eval'."
-  ;;   (if (org-in-src-block-p)
-  ;;       (let ((major-mode (intern (format "%s-mode" (first (org-babel-get-src-block-info))))))
-  ;; 	(apply orig-func args))
-  ;;     (apply orig-func args)))
-
-  ;; (define-minor-mode scimax-src-keymap-mode
-  ;;   "Minor mode to add mode keymaps to src-blocks."
-  ;;   :init-value nil
-  ;;   (if scimax-src-keymap-mode
-  ;;       (progn
-  ;; 	(add-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks t)
-  ;; 	(add-to-list 'font-lock-extra-managed-props 'local-map)
-  ;; 	(add-to-list 'font-lock-extra-managed-props 'cursor-sensor-functions)
-  ;; 	(advice-add 'cider-eval-last-sexp :around 'scimax-spoof-mode)
-  ;; 	(cursor-sensor-mode +1))
-  ;;     (remove-hook 'org-font-lock-hook #'scimax-add-keymap-to-src-blocks)
-  ;;     (advice-remove ''cider-eval-last-sexp 'scimax-spoof-mode)
-  ;;     (cursor-sensor-mode -1))
-  ;;   (font-lock-fontify-buffer))
-
-  ;; (add-hook 'org-mode-hook (lambda ()
-  ;; 			   (scimax-src-keymap-mode +1)))
+  (with-eval-after-load "org" (define-key org-mode-map (kbd "C-x C-e")
+                    (lambda () (interactive) 
+                      (if (org-in-src-block-p) 
+                          (let ((lang (nth 0 (org-babel-get-src-block-info))))
+                            (if (string= lang "clojure")
+                              (call-interactively 'cider-eval-last-sexp)  
+                              (call-interactively 'eval-last-sexp)))))))
 #+end_src
-
 * defaults
 #+begin_src elisp
   (setq-default
@@ -177,8 +133,8 @@ https://lists.gnu.org/archive/html/emacs-orgmode/2010-08/msg00870.html
 Dashes are not valid in TODO keywords and tags, but you are right, properties do allow them. hmmm. I don't remember why I did allow hem - but surely enough I did. 
 * tree-sitter
 #+begin_src elisp
-(use-package tree-sitter)
-(use-package tree-sitter-langs)
+;(use-package tree-sitter)
+;(use-package tree-sitter-langs)
 #+end_src
 * htmlize
 #+begin_src elisp
@@ -283,8 +239,8 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
   (require 'cider)  
   (setq org-babel-clojure-backend 'cider)
 
-  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
-  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
+;  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
+;  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
 
   (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
 
@@ -434,27 +390,6 @@ Działa z value:
   :keybinding "g")
 #+end_src
 * TODO https://github.com/danielsz/Palimpsest
-* TODO dates how to add days to date
-#+begin_src elisp
-(defun shift-date (date days)
-  (format-time-string
-   "%F"
-   (time-add (time-to-seconds (days-to-time days))
-             (time-to-seconds (org-time-string-to-time date)))))
-
-(defun shift-dates (days)
-  (interactive "nDays: ")
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (forward-char 1)
-      (when (looking-at iso8601--full-date-match)
-        (let ((date (shift-date (match-string 0) days)))
-          (save-excursion
-            (while (looking-at "[^\s\\|\n]")
-              (delete-char 1))
-            (insert date)))))))
-#+end_src
 * modeline
 #+begin_src elisp
   ;; (setq-default mode-line-format '("%e" mode-line-front-space
@@ -613,97 +548,94 @@ clm/open-command-log-buffer
 #+END_SRC
 ** agenda
 #+begin_src elisp
-      (eval-when-compile (require 'cl)) ;; adds lexical-let
-      (defadvice org-agenda (around split-vertically activate)
-        (let ((split-width-threshold 80))  ; or whatever width makes sense for you
-          ad-do-it))
+  (eval-when-compile (require 'cl)) ;; adds lexical-let
+  (defadvice org-agenda (around split-vertically activate)
+    (let ((split-width-threshold 80))  ; or whatever width makes sense for you
+      ad-do-it))
 
-    (defun cmp-date-property (prop)
-          "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
-              If a is before b, return -1. If a is after b, return 1. If they
-              are equal return nil.
-            https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
-          (lexical-let ((prop prop))
-            #'(lambda (a b)
+  (defun cmp-date-property (prop)
+    "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
+                If a is before b, return -1. If a is after b, return 1. If they
+                are equal return nil.
+              https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
+    (lexical-let ((prop prop))
+      #'(lambda (a b)
 
-                (let* ((a-pos (get-text-property 0 'org-marker a))
-                       (b-pos (get-text-property 0 'org-marker b))
-                       (a-date (or (org-entry-get a-pos prop)
-                                   (format "[%s]" (org-read-date t nil "1986-01-01"))))
-                       (b-date (or (org-entry-get b-pos prop)
-                                   (format "[%s]" (org-read-date t nil "1986-01-01"))))
-                       (cmp (compare-strings a-date nil nil b-date nil nil))
-                       )
-                  (if (eq cmp t) nil (signum cmp))
-                  ))))
+          (let* ((a-pos (get-text-property 0 'org-marker a))
+                 (b-pos (get-text-property 0 'org-marker b))
+                 (a-date (or (org-entry-get a-pos prop)
+                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                 (b-date (or (org-entry-get b-pos prop)
+                             (format "[%s]" (org-read-date t nil "1986-01-01"))))
+                 (cmp (compare-strings a-date nil nil b-date nil nil))
+                 )
+            (if (eq cmp t) nil (signum cmp))
+            ))))
 
-        (setq org-agenda-custom-commands
-              '(
-                ("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK"
-                 ((org-agenda-cmp-user-defined (cmp-date-property
-                                                "CLOSED"))
-                  (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
-                  (org-agenda-todo-keyword-format "%-2s")
-                  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
-                  )nil
-                 ("~/aamystuff/books.html"))
-                ("g" "Get Things Done (GTD)"
-                 ((agenda ""
-                          ((org-agenda-skip-function
-                            '(org-agenda-skip-entry-if 'deadline))
-                           (org-deadline-warning-days 0)))
-                  (tags-todo "-book-video/DOING|TODO"
-                        ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
-                         (org-agenda-overriding-header "\nTasks\n")))
-                  ))))
+  (setq org-agenda-custom-commands
+        '(
+          ("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK"
+           ((org-agenda-cmp-user-defined (cmp-date-property
+                                          "CLOSED"))
+            (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
+            (org-agenda-todo-keyword-format "%-2s")
+            (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
+            )nil
+           ("~/aamystuff/books.html"))
+          ("g" "Get Things Done (GTD)"
+           ((agenda ""
+                    ((org-agenda-skip-function
+                      '(org-agenda-skip-entry-if 'deadline))
+                     (org-deadline-warning-days 0)))
+            (tags-todo "-book-video/DOING|TODO"
+                       ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
+                        (org-agenda-overriding-header "\nTasks\n")))
+            ))))
 
-        (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
+  (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
-        (global-set-key "\C-ca" 'org-agenda)
-        (setq org-agenda-skip-scheduled-if-done t)
+  (global-set-key "\C-ca" 'org-agenda)
+  (setq org-agenda-skip-scheduled-if-done t)
 
-;;  (directory-files "~/aamystuff/mystuff")
-        (setq org-agenda-files '(
-                                 "~/aamystuff/mystuff/index.org"
-                                 "~/aamystuff/mystuff/complexity.org"
-                                 "~/aamystuff/mystuff/marketing.org"
-                                 "~/aamystuff/life/life.org.gpg"
-                                 "~/aamystuff/phprefactor/phprefactor.org"
-                                 "~/aamystuff/emacs/emacs.org"
-                                 "~/aamystuff/clojure/clojure-examples.org"
-                                 ))
+  (setq org-agenda-files (append (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")
+                                 '(
+                                   "~/aamystuff/life/life.org.gpg"
+                                   "~/aamystuff/phprefactor/phprefactor.org"
+                                   "~/aamystuff/emacs/emacs.org"
+                                   "~/aamystuff/clojure/clojure-examples.org"
+                                   )))
 
-      (setq org-agenda-prefix-format "%t %s")
+  (setq org-agenda-prefix-format "%t %s")
 
-        (add-hook 'org-agenda-finalize-hook
-                  (lambda ()
-                    (save-excursion
-                      (goto-char (point-min))
-                      (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
-                                (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t))
-                        (insert (propertize
-                                 (format " (%s remaining)"
-                                         (- (count-lines (point-min) (point-max)) 2))
-                                 'face 'font-lock-comment-face))))))
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
+                          (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t))
+                  (insert (propertize
+                           (format " (%s remaining)"
+                                   (- (count-lines (point-min) (point-max)) 2))
+                           'face 'font-lock-comment-face))))))
 
-      (add-hook 'org-agenda-finalize-hook
-                (lambda ()
-                  (save-excursion
-                    (goto-char (point-min))
-                    (when (re-search-forward "Tasks*" nil t)
-                      (insert (propertize
-                               (format " (%s remaining)" (- (count-lines (point) (point-max) t) 2)))
-                              'face 'font-lock-comment-face)))))
-  
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (when (re-search-forward "Tasks*" nil t)
+                  (insert (propertize
+                           (format " (%s remaining)" (- (count-lines (point) (point-max) t) 2)))
+                          'face 'font-lock-comment-face)))))
+
   (setq org-agenda-show-future-repeats nil)
   (defun my/org-agenda-adjust-text-size ()
     (if (= text-scale-mode-amount 0)
-      (text-scale-adjust -2)))
+        (text-scale-adjust -2)))
 
   (add-hook 'org-agenda-finalize-hook #'my/org-agenda-adjust-text-size)
 
   (setq org-agenda-sorting-strategy '((todo todo-state-up priority-down)
-                                            (tags todo-state-up priority-down)))
+                                      (tags todo-state-up priority-down)))
 #+end_src
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
 ** todo
