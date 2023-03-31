@@ -1,4 +1,5 @@
 (setq native-comp-speed -1)
+(setq native-comp-async-report-warnings-errors nil)
 
 ;; completion
 (setq completion-styles '(substring))

@@ -165,9 +165,9 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
 * help system
 #+begin_src elisp
   (use-package elisp-demos
-    :straight (:host github :repo "xuchunyang/elisp-demos"))
-
-(advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
+    :straight (:host github :repo "xuchunyang/elisp-demos")
+    :config
+    (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
   (use-package helpful)
   (setq counsel-describe-function-function #'helpful-callable)
@@ -824,7 +824,7 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
     :custom ((dired-listing-switches "-alFh --group-directories-first")
              (dired-dwim-target t)
              (delete-by-moving-to-trash t)
-             (dired-do-revert-buffer wdt)
+;;             (dired-do-revert-buffer wdt) Error (use-package): dired-filter/:catch: Symbol’s value as variable is void: wdt
              (dired-free-space nil)))
 
   ;; Auto refresh buffers
