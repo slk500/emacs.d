@@ -18,7 +18,7 @@
 
 (setq straight-use-package-by-default t)
 
-(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 20" ))
+(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14" ))
 
 (org-babel-load-file (expand-file-name "myinit.org" user-emacs-directory))
 

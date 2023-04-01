@@ -1,4 +1,9 @@
 
+* colview
+#+begin_src elisp
+;;(use-package org-colviewx :straight (:host github :repo "orgtre/org-colviewx"))
+#+end_src
+* TODO https://github.com/emacsfodder/move-text
 * font
 #+begin_src elisp
   (setq text-scale-mode-step 1.05)
@@ -24,12 +29,12 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 
 #+begin_src elisp
   (with-eval-after-load "org" (define-key org-mode-map (kbd "C-x C-e")
-                    (lambda () (interactive) 
-                      (if (org-in-src-block-p) 
-                          (let ((lang (nth 0 (org-babel-get-src-block-info))))
-                            (if (string= lang "clojure")
-                              (call-interactively 'cider-eval-last-sexp)  
-                              (call-interactively 'eval-last-sexp)))))))
+                                          (lambda () (interactive)
+                                            (let ((lang (nth 0 (org-babel-get-src-block-info))))
+                                              (if (and (org-in-src-block-p) (string= lang "clojure"))
+                                                  (call-interactively 'cider-eval-last-sexp)
+                                                (call-interactively 'eval-last-sexp)
+                                                )))))
 #+end_src
 * defaults
 #+begin_src elisp
