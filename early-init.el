@@ -1,5 +1,7 @@
 (setq native-comp-speed -1)
 (setq native-comp-async-report-warnings-errors nil)
+(setq native-comp-deferred-compilation-deny-list nil)
+(setq straight-disable-native-compile t)
 
 ;; completion
 (setq completion-styles '(substring))
@@ -13,6 +15,12 @@
 (global-set-key (kbd "C-w") 'kill-this-buffer)
 (global-set-key (kbd "C-f") 'isearch)
 (global-set-key (kbd "C-s") 'save-buffer)
+(bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
+(global-set-key (kbd "C-<delete>") 'org-kill-line)
+(global-set-key (kbd "<f8>") 'visual-line-mode)
+(global-set-key (kbd "<f5>") 'revert-buffer)
+(global-set-key (kbd "C-x 5") 'toggle-frame-split)
+(keymap-global-set "C-z" 'undo-only)
 
 (add-hook 'window-setup-hook 'toggle-frame-maximized t)
 (load-theme 'modus-vivendi t)

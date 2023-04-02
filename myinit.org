@@ -36,12 +36,11 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
                                                 (call-interactively 'eval-last-sexp)
                                                 )))))
 #+end_src
-* defaults
+* ui
 #+begin_src elisp
   (setq-default
         cursor-in-non-selected-windows nil)     ; Hide the cursor in inactive windows
 #+end_src
-
 * hl-line-mode
 #+begin_src elisp
 (global-hl-line-mode t)
@@ -49,11 +48,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 * repeat mode
 #+begin_src elisp
 (repeat-mode t)
-;(use-package repeat-help-mode)
-#+end_src
-* undo
-#+begin_src elisp
-  (keymap-global-set "C-z" 'undo-only)
 #+end_src
 * sort words
 #+begin_src elisp
@@ -72,12 +66,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+begin_src elisp
   (use-package magit)
   (keymap-global-set "C-x g" #'magit-status)
-  (setq native-comp-deferred-compilation-deny-list nil)
-  (setq straight-disable-native-compile t)
-#+end_src
-* comment
-#+begin_src elisp
-  (use-package evil-nerd-commenter)
 #+end_src
 * space
 #+begin_src elisp
@@ -96,36 +84,12 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+begin_src elisp
 (use-package replace+)
 #+end_src
-* indent
-#+begin_src elisp
-  (use-package aggressive-indent)
-  (setq aggressive-indent-sit-for-time 100)
-  (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
-  (add-hook 'clojure-mode-hook #'aggressive-indent-mode)
-#+end_src
-
 * hungry-delete
 #+begin_src elisp
   (use-package hungry-delete)
   (setq hungry-delete-join-reluctantly t)
   (global-hungry-delete-mode)
   (add-hook 'minibuffer-setup-hook (lambda () (hungry-delete-mode -1)))
-#+end_src
-* rainbow
-#+begin_src elisp
-  (use-package rainbow-delimiters)
-  (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
-
-  (add-hook
-   'cider-repl-mode-hook
-   (lambda ()
-     (run-with-timer
-      0.5 nil
-      (lambda ()
-        (cider-switch-to-last-clojure-buffer)
-        (cider-repl-set-ns (cider-current-ns))))))
 #+end_src
 * windows resizing
 #+begin_src elisp
@@ -158,14 +122,6 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
                       (split-string (buffer-substring start
                                                       end))
                       :key #'string-to-number)))
-#+end_src
-* narrow & widen with auto-fill-mode
-#+begin_src elisp
-  ;; (advice-add 'org-narrow-to-subtree :after (lambda
-  ;;             (&rest _) (auto-fill-mode)))
-
-  ;; (advice-add 'widen :after (lambda
-  ;;             (&rest _) (auto-fill-mode 'toggle)))
 #+end_src
 * help system
 #+begin_src elisp
@@ -236,6 +192,22 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
 (define-key lisp-interaction-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
+#+end_src
+** rainbow
+#+begin_src elisp
+  (use-package rainbow-delimiters)
+  (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
+
+  (add-hook
+   'cider-repl-mode-hook
+   (lambda ()
+     (run-with-timer
+      0.5 nil
+      (lambda ()
+        (cider-switch-to-last-clojure-buffer)
+        (cider-repl-set-ns (cider-current-ns))))))
 #+end_src
 ** clojure
 #+begin_src elisp
@@ -367,13 +339,6 @@ Działa z value:
 #+begin_src elisp
   (global-set-key "\C-cw" 'compare-windows)
 #+end_src
-* count number of headings
-#+begin_src elisp
- (defun my-no-of-headings ()
-    (interactive)
-    (save-excursion
-      (length (org-map-entries t t 'tree))))
-#+end_src
 * back to last edit
 #+begin_src elisp
 (defun mu-back-to-last-edit ()
@@ -397,15 +362,6 @@ Działa z value:
 * TODO https://github.com/danielsz/Palimpsest
 * modeline
 #+begin_src elisp
-  ;; (setq-default mode-line-format '("%e" mode-line-front-space
-  ;;                                  (:propertize
-  ;;                                   ("" mode-line-mule-info mode-line-client mode-line-modified mode-line-remote)
-  ;;                                   display
-  ;;                                   (min-width
-  ;;                                    (4.0)))
-  ;;                                  mode-line-frame-identification mode-line-buffer-identification " " mode-line-position
-  ;;                                  (vc-mode vc-mode)
-  ;;                                  " " mode-line-misc-info mode-line-end-spaces))
   (setq column-number-mode t)
 #+end_src
 * iso week
@@ -424,7 +380,7 @@ Działa z value:
                   (calendar-absolute-from-gregorian (list month day year)))))
         'font-lock-face 'calendar-iso-week-face))
 #+end_src
-* cleanup
+* unbind commands
 #+begin_src elisp
   (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
   (global-unset-key (kbd "C-h g")) ; describe-gnu-project
@@ -644,12 +600,6 @@ clm/open-command-log-buffer
 #+end_src
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
 ** todo
-:LOGBOOK:
-CLOCK: [2022-10-02 Sun 05:35]--[2022-10-02 Sun 05:36] =>  0:01
-CLOCK: [2022-10-02 Sun 05:24]--[2022-10-02 Sun 05:35] =>  0:11
-- State "NEXT"       from "TODO"       [2022-10-02 Sun 05:24]
-- State "TODO"       from              [2022-10-02 Sun 05:24]
-:END:
 #+begin_src elisp
     (setq org-todo-keywords
             '(
@@ -711,12 +661,7 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
   (defun my-gtd ()
     (interactive) (org-agenda nil "g"))
 
-    (global-set-key (kbd "<f8>") 'visual-line-mode)
-    (global-set-key (kbd "<f5>") 'revert-buffer)
     (global-set-key (kbd "<f9>") 'my-gtd)
-    (global-set-key (kbd "C-x 5") 'toggle-frame-split)
-    (global-set-key (kbd "C-<delete>") 'org-kill-line)
-    ; (global-unset-key (kbd "M-<space>"))
 #+END_SRC
 * center
 #+BEGIN_SRC emacs-lisp
@@ -809,18 +754,18 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
   (require 'erc-services)
   (erc-services-mode 1)
   (setq erc-prompt-for-nickserv-password nil)
-  
+
   (setq erc-autojoin-channels-alist
-        '(( "#emacs" "#systemcrafters")))
+	'(( "#emacs" "#systemcrafters")))
 
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
   (setq rcirc-default-nick "slk500")
   (setq rcirc-server-alist '((
-                                   "irc.libera.chat"
-                                   :channels ("#emacs")
-                                   :port 6697
-                                   :encryption tls)))
+				   "irc.libera.chat"
+				   :channels ("#emacs")
+				   :port 6697
+				   :encryption tls)))
 #+end_src
 * dired
 #+begin_src elisp
@@ -896,10 +841,6 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+begin_src elisp
   (setq calendar-week-start-day 1)
   (defalias 'cc 'calendar)
-#+end_src
-* movement
-#+begin_src elisp
-  (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
 #+end_src
 * history for searching
 #+begin_src elisp
@@ -1030,7 +971,7 @@ gpg --gen-key
   (defun youtube-link-insert ()
   (interactive)
   (let* ((link (read-from-minibuffer "Youtube-Link:"))
-         (title (string-trim (shell-command-to-string (format "youtube-dl --get-title '%s' 2>/dev/null" link))))
+         (title (string-trim (shell-command-to-string (format "yt-dlp --get-title '%s' 2>/dev/null" link))))
 	 (save-excursion
 	   (insert (format "[[%s][%s]]" link title))
 	   ))))
