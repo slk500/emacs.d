@@ -2,6 +2,28 @@
 * colview
 #+begin_src elisp
 ;;(use-package org-colviewx :straight (:host github :repo "orgtre/org-colviewx"))
+  (defun org-columns--move-row (&optional up)
+    "Calls `org-move-subtree-down' or `org-move-subtree-up'"
+    (let ((inhibit-read-only t)
+          (col (current-column)))
+      (if up (org-move-subtree-up)
+        (org-move-subtree-down))
+      (let ((org-columns-inhibit-recalculation t))
+        (org-columns-redo)
+        (move-to-column col))))
+
+  (defun org-columns-move-row-down ()
+    "Move table row (subtree) down."
+    (interactive)
+    (org-columns--move-row))
+
+  (defun org-columns-move-row-up ()
+    "Move table row (subtree) up."
+    (interactive)
+    (org-columns--move-row 'up))
+
+;  (org-defkey org-columns-map [(meta down)]  #'org-columns-move-row-down)
+;  (org-defkey org-columns-map [(meta up)]  #'org-columns-move-row-up)
 #+end_src
 * TODO https://github.com/emacsfodder/move-text
 * font
@@ -255,13 +277,6 @@ Działa z value:
 (add-hook 'clojurescript-mode-hook 'lsp)
 (add-hook 'clojurec-mode-hook 'lsp)
 #+end_src
-* yasnipet
-#+begin_src elisp
-  (use-package yasnippet
-  :config
-  (setq yas-snippet-dirs `("~/aamystuff/emacs/snippets"))
-  (yas-global-mode 1))
-#+end_src
 * php
 ** phpunit
    #+BEGIN_SRC emacs-lisp 
@@ -360,10 +375,6 @@ Działa z value:
   :keybinding "g")
 #+end_src
 * TODO https://github.com/danielsz/Palimpsest
-* modeline
-#+begin_src elisp
-  (setq column-number-mode t)
-#+end_src
 * iso week
 #+begin_src elisp
 (copy-face font-lock-constant-face 'calendar-iso-week-face)
@@ -460,7 +471,8 @@ clm/open-command-log-buffer
     (require 'org-tempo)
     (require 'org-expiry)
     (require 'org-eldoc)
-    (global-eldoc-mode 1))
+    (global-eldoc-mode 1)
+)
 
   (setq org-emphasis-alist   
   (quote (("*" bold)
@@ -613,9 +625,17 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (add-to-list 'org-log-note-headings '(note . "%t"))
 #+end_src
+* modeline
+#+begin_src elisp
+  (setq column-number-mode t)
+  (use-package delight)
+  (delight 'eldoc-mode nil "eldoc")
+  (delight 'ivy-mode nil "ivy")
+#+end_src
 * display ^l glyphs as horizontal lines
 #+begin_src elisp
-  (use-package form-feed)
+  (use-package form-feed
+    :delight)
   (global-form-feed-mode)
 #+end_src
 * writing
@@ -769,59 +789,60 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 #+end_src
 * dired
 #+begin_src elisp
-  (use-package dired
-    :straight (:type built-in)
-    :custom ((dired-listing-switches "-alFh --group-directories-first")
-             (dired-dwim-target t)
-             (delete-by-moving-to-trash t)
-;;             (dired-do-revert-buffer wdt) Error (use-package): dired-filter/:catch: Symbol’s value as variable is void: wdt
-             (dired-free-space nil)))
+   (use-package dired
+     :straight (:type built-in)
+     :custom ((dired-listing-switches "-alFh --group-directories-first")
+              (dired-dwim-target t)
+              (delete-by-moving-to-trash t)
+              (dired-free-space nil)))
 
-  ;; Auto refresh buffers
-  (global-auto-revert-mode 1)
-  ;; Also auto refresh dired, but be quiet about it
-  (setq global-auto-revert-non-file-buffers t)
-  (setq auto-revert-verbose nil)
+   ;; Auto refresh buffers
+   (global-auto-revert-mode 1)
+   ;; Also auto refresh dired, but be quiet about it
+   (setq global-auto-revert-non-file-buffers t)
+   (setq auto-revert-verbose nil)
 
-  (setq split-width-threshold nil) ;If this is an integer, split-window-sensibly may split a window horizontally only if it has at least this many columns. 
- ;; Was 80 but moved back to nil -> because agenda view
+   (setq split-width-threshold nil) ;If this is an integer, split-window-sensibly may split a window horizontally only if it has at least this many columns. 
+  ;; Was 80 but moved back to nil -> because agenda view
 
-  (use-package peep-dired
-    :ensure t
-    :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-    :bind (:map dired-mode-map
-                ("P" . peep-dired)))
+   (use-package peep-dired
+     :ensure t
+     :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+     :config 
+     (setq peep-dired-cleanup-eagerly t)
+     :bind (:map dired-mode-map
+                 ("P" . peep-dired)))
 
-  (use-package dired-subtree
-    :after dired
-      :bind (:map dired-mode-map
-                  ("<tab>" . dired-subtree-toggle)
-                  ("<C-tab>" . dired-subtree-cycle)
-                  ("<S-iso-lefttab>" . dired-subtree-remove)))
+   (use-package dired-subtree
+     :after dired
+       :bind (:map dired-mode-map
+                   ("<tab>" . dired-subtree-toggle)
+                   ("<C-tab>" . dired-subtree-cycle)
+                   ("<S-iso-lefttab>" . dired-subtree-remove)))
 
-  (use-package dired-filter)
+   (use-package dired-filter)
 
-    ;; Colourful columns
-      (use-package diredfl
-        :config
-        (diredfl-global-mode 1))
+     ;; Colourful columns
+       (use-package diredfl
+         :config
+         (diredfl-global-mode 1))
 
-      (require 'dired-x)
-      (add-hook 'dired-mode-hook  #'dired-omit-mode)
+       (require 'dired-x)
+       (add-hook 'dired-mode-hook  #'dired-omit-mode)
 
-  (setq dired-omit-files
-                      (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
-                              (seq bol "." (not (any "."))) ;; dot-files
-                              (seq "~" eol)                 ;; backup-files
-                              (seq bol "CVS" eol)           ;; CVS dirs
-                              )))
+   (setq dired-omit-files
+                       (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
+                               (seq bol "." (not (any "."))) ;; dot-files
+                               (seq "~" eol)                 ;; backup-files
+                               (seq bol "CVS" eol)           ;; CVS dirs
+                               )))
 
-                      (add-hook 'dired-mode-hook
-                                (lambda ()
-                                  (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
-                                  (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-                                  (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
-                                  ))
+                       (add-hook 'dired-mode-hook
+                                 (lambda ()
+                                   (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
+                                   (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+                                   (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
+                                   ))
 #+end_src
 * backup
 #+begin_src elisp
@@ -920,7 +941,8 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 * auto
 #+begin_src  elisp
   (use-package which-key
-    :config (which-key-mode))
+    :config (which-key-mode)
+    :delight)
 #+end_src
 * gpg
 gpg --gen-key
