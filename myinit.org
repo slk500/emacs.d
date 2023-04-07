@@ -1,29 +1,49 @@
 
+* Legacy define-key and global-set-key in Emacs
+https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.html
+* mail
+https://myaccount.google.com/apppasswords
+#+begin_src elisp
+  (setq message-send-mail-function 'smtpmail-send-it
+        user-mail-address "slawomir.grochowski@gmail.com"
+        user-full-name "Sławomir Grochowski"
+        smtpmail-stream-type 'ssl
+        smtpmail-default-smtp-server "smtp.gmail.com"
+        smtpmail-smtp-server "smtp.gmail.com"
+        smtpmail-smtp-service 465
+        smtpmail-debug-info t)
+
+    (setq auth-source-debug t)
+    (setq auth-sources
+          '((:source "~/aamystuff/.authinfo.gpg")))
+  (setq auth-source-debug t)
+  (setq auth-source-do-cache nil)
+#+end_src
 * colview
 #+begin_src elisp
-;;(use-package org-colviewx :straight (:host github :repo "orgtre/org-colviewx"))
-  (defun org-columns--move-row (&optional up)
-    "Calls `org-move-subtree-down' or `org-move-subtree-up'"
-    (let ((inhibit-read-only t)
-          (col (current-column)))
-      (if up (org-move-subtree-up)
-        (org-move-subtree-down))
-      (let ((org-columns-inhibit-recalculation t))
-        (org-columns-redo)
-        (move-to-column col))))
+  ;;(use-package org-colviewx :straight (:host github :repo "orgtre/org-colviewx"))
+    (defun org-columns--move-row (&optional up)
+      "Move table row. Calls `org-move-subtree-down' or `org-move-subtree-up'."
+      (let ((inhibit-read-only t)
+            (col (current-column)))
+        (if up (org-move-subtree-up)
+          (org-move-subtree-down))
+        (let ((org-columns-inhibit-recalculation t))
+          (org-columns-redo)
+          (move-to-column col))))
 
-  (defun org-columns-move-row-down ()
-    "Move table row (subtree) down."
-    (interactive)
-    (org-columns--move-row))
+    (defun org-columns-move-row-down ()
+      "Move table row (subtree) down."
+      (interactive)
+      (org-columns--move-row))
 
-  (defun org-columns-move-row-up ()
-    "Move table row (subtree) up."
-    (interactive)
-    (org-columns--move-row 'up))
+    (defun org-columns-move-row-up ()
+      "Move table row (subtree) up."
+      (interactive)
+      (org-columns--move-row 'up))
 
-;  (org-defkey org-columns-map [(meta down)]  #'org-columns-move-row-down)
-;  (org-defkey org-columns-map [(meta up)]  #'org-columns-move-row-up)
+ ; (keymap-set org-columns-map "M-<down>" #'org-columns-move-row-down)
+ ; (keymap-set org-columns-map "M-<up>" #'org-columns-move-row-up)
 #+end_src
 * TODO https://github.com/emacsfodder/move-text
 * font
@@ -456,7 +476,7 @@ clm/open-command-log-buffer
     :config
     (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
     (use-package org-bullets)
-    (add-hook 'org-mode-hook 'org-bullets-mode)
+    ;;(add-hook 'org-mode-hook 'org-bullets-mode)
     (add-hook 'org-mode-hook 'org-indent-mode)
     (use-package org-contrib)
     (setq org-startup-folded t
@@ -953,12 +973,6 @@ gpg --gen-key
 
 #+begin_src emacs-lisp
 (setq epg-gpg-home-directory "~/.gnupg")
-#+end_src
-** authinfo
-#+begin_src elisp
-  (setq auth-source-debug t)
-  (setq auth-sources
-        '((:source "~/aamystuff/.authinfo.gpg")))
 #+end_src
 * swiper
 #+begin_src elisp
