@@ -22,6 +22,8 @@
 
 (org-babel-load-file (expand-file-name "myinit.org" user-emacs-directory))
 
+(mapc 'load (file-expand-wildcards "~/.emacs.d/lisp/*.el"))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -32,8 +34,9 @@
  '(org-fold-catch-invisible-edits 'error)
  '(package-selected-packages
    '(eev debbugs centered-window bongo diredfl simpleclip dired-subtree php-mode ivy-rich which-key counsel conunsel swiper org-plus-contrib use-package))
- '(smtpmail-smtp-server "smtp.gmail.com")
- '(smtpmail-smtp-service 587))
+ '(smtpmail-smtp-server "smtp.gmail.com" t)
+ '(smtpmail-smtp-service 587 t)
+ '(treemacs-no-png-images t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
