@@ -1,4 +1,26 @@
 
+* pulsar
+#+begin_src elisp
+(use-package pulsar)
+
+(setq pulsar-pulse t)
+(setq pulsar-delay 0.2)
+(setq pulsar-iterations 10)
+(setq pulsar-face 'pulsar-cyan)
+(setq pulsar-highlight-face 'pulsar-yellow)
+
+(pulsar-global-mode 1)
+
+;; OR use the local mode for select mode hooks
+
+(dolist (hook '(org-mode-hook emacs-lisp-mode-hook))
+  (add-hook hook #'pulsar-mode))
+
+#+end_src
+* hide lines
+#+begin_src elisp
+(use-package hide-lines)
+#+end_src
 * highlight-indent-guides
 #+begin_src elisp
 (use-package highlight-indent-guides)
@@ -55,15 +77,6 @@
                           (keymap-set hs-minor-mode-map "C-S-<iso-lefttab>" #'hs-global-cycle))
 
   (add-hook 'emacs-lisp-mode-hook 'hs-minor-mode)
-#+end_src
-* outshine
-#+begin_src elisp
-(use-package outshine
-  :straight (:host github :repo "alphapapa/outshine"))
-
-(keymap-set outshine-mode-map "M-<up>" nil)
-(keymap-set outshine-mode-map "M-<down>" nil)
-(add-hook 'emacs-lisp-mode-hook 'outshine-mode)
 #+end_src
 * ielm
 https://www.n16f.net/blog/making-ielm-more-comfortable/
@@ -138,7 +151,7 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
                                             (let ((lang (nth 0 (org-babel-get-src-block-info))))
                                               (if (and (org-in-src-block-p) (string= lang "clojure"))
                                                   (call-interactively 'cider-eval-last-sexp)
-                                                (call-interactively 'eval-last-sexp)
+                                                (call-interactively 'eros-eval-last-sexp)
                                                 )))))
 #+end_src
 * ui
@@ -171,6 +184,16 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+begin_src elisp
   (use-package magit)
   (keymap-global-set "C-x g" #'magit-status)
+
+  (defun copy-diff-region ()
+    "Copy diff region without + or - markers."
+    (interactive)
+    (deactivate-mark)
+    (let ((text (buffer-substring-no-properties
+                 (region-beginning) (region-end))))
+      (kill-new (replace-regexp-in-string "^[\\+\\-]" "" text))))
+
+  (setq magit-branch-read-upstream-first 'fallback)
 #+end_src
 * space
 #+begin_src elisp
@@ -281,38 +304,18 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
 #+end_src
 * lisp
 #+begin_src elisp
-  (use-package paredit)
-  (defun my-paredit-mode-hook ()
-    (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill))
-  (add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
-#+end_src
-** elisp
-#+begin_src elisp
-  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+  ;; (use-package paredit)
+  ;; (defun my-paredit-mode-hook ()
+  ;;     (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill)
+  ;;     (keymap-set paredit-mode-map "M-/" #'xref-find-references))
 
-(defun mp-elisp-mode-eval-buffer ()
-  (interactive)
-  (message "Evaluated buffer")
-(eval-buffer))
+  ;; (add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
 
-(define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
-(define-key lisp-interaction-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
-#+end_src
-** rainbow
-#+begin_src elisp
-  (use-package rainbow-delimiters)
-  (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
-
-  (add-hook
-   'cider-repl-mode-hook
-   (lambda ()
-     (run-with-timer
-      0.5 nil
-      (lambda ()
-        (cider-switch-to-last-clojure-buffer)
-        (cider-repl-set-ns (cider-current-ns))))))
+  (use-package nameless
+    :hook
+    (emacs-lisp-mode . nameless-mode)
+    :config
+    (setq nameless-prefix "-"))
 #+end_src
 ** clojure
 #+begin_src elisp
@@ -359,6 +362,12 @@ Działa z value:
 (add-hook 'clojure-mode-hook 'lsp)
 (add-hook 'clojurescript-mode-hook 'lsp)
 (add-hook 'clojurec-mode-hook 'lsp)
+#+end_src
+** xhref
+#+begin_src elisp
+(keymap-global-unset "M-/")
+(keymap-set xref--xref-buffer-mode-map "<up>" #'xref-prev-line)
+(keymap-set xref--xref-buffer-mode-map "<down>" #'xref-next-line)
 #+end_src
 * php
 ** phpunit
@@ -439,7 +448,7 @@ Działa z value:
 #+end_src
 * back to last edit
 #+begin_src elisp
-(defun mu-back-to-last-edit ()
+(defun my-back-to-last-edit ()
   "Jump back to the last change in the current buffer."
   (interactive)
   (ignore-errors
@@ -458,22 +467,6 @@ Działa z value:
   :keybinding "g")
 #+end_src
 * TODO https://github.com/danielsz/Palimpsest
-* iso week
-#+begin_src elisp
-(copy-face font-lock-constant-face 'calendar-iso-week-face)
-(set-face-attribute 'calendar-iso-week-face nil
-                    :height 0.7)
-(set-face-attribute 'calendar-iso-week-face nil
-                    :height 1.0 :foreground "salmon")
-
-(setq calendar-intermonth-text
-      '(propertize
-        (format "W%02d "
-                (car
-                 (calendar-iso-from-absolute
-                  (calendar-absolute-from-gregorian (list month day year)))))
-        'font-lock-face 'calendar-iso-week-face))
-#+end_src
 * unbind commands
 #+begin_src elisp
   (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
@@ -481,7 +474,7 @@ Działa z value:
 #+end_src
 * smooth scroling
 #+BEGIN_SRC emacs-lisp
-  (setq scroll-conservatively 1000)
+  (setq scroll-conservatively 500)
 #+END_SRC
 * benchmark
 #+begin_src sh
@@ -533,39 +526,30 @@ clm/open-command-log-buffer
 #+end_src
 ** settings
 #+begin_src elisp
-  (use-package org
-    :straight
-    (:type built-in)
-    :config
-    (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
-    (use-package org-bullets)
-    ;;(add-hook 'org-mode-hook 'org-bullets-mode)
-    (add-hook 'org-mode-hook 'org-indent-mode)
-    (use-package org-contrib)
-    (setq org-startup-folded t
-	  org-hide-emphasis-markers t
-	  org-log-done 'time
-	  org-log-into-drawer t
-	  org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
-	  org-treat-insert-todo-heading-as-state-change t
-	  initial-major-mode 'org-mode
-	  org-ellipsis "⤵"
-	  org-src-tab-acts-natively t)
-    (require 'org-tempo)
-    (require 'org-expiry)
-    (require 'org-eldoc)
-    (global-eldoc-mode 1)
-)
-
-  (setq org-emphasis-alist   
-  (quote (("*" bold)
-  ("/" italic)
-  ("_" underline)
-  ("=" (:foreground "yellow"))
-  ("~" org-verbatim verbatim)
-  ("+"
-  (:strike-through t))
-  ))) 
+    (use-package org
+      :straight
+      (:type built-in)
+      :config
+      (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
+      (use-package org-bullets)
+      ;;(add-hook 'org-mode-hook 'org-bullets-mode)
+      (add-hook 'org-mode-hook 'org-indent-mode)
+      (use-package org-contrib)
+      (setq org-startup-folded t
+            org-hide-emphasis-markers t
+            org-log-done 'time
+            org-log-into-drawer t
+            org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
+            org-treat-insert-todo-heading-as-state-change t
+            initial-major-mode 'org-mode
+            org-ellipsis "⤵"
+            org-fold-core-style 'overlays
+            org-src-tab-acts-natively t)
+      (require 'org-tempo)
+      (require 'org-expiry)
+      (require 'org-eldoc)
+      (global-eldoc-mode 1)
+  )
 #+end_src
 ** babel
 #+begin_src elisp
@@ -739,21 +723,6 @@ https://www.emacswiki.org/emacs/synonyms.el
  ;; (require 'synonyms)
  ;; (setq synonyms-file (concat user-emacs-directory "dictionary/mthesaur.txt"))
 #+end_src
-* dictionary
-https://oremacs.com/2015/05/22/define-word/
-https://github.com/SqrtMinusOne/reverso.el
-https://www.masteringemacs.org/article/wordsmithing-in-emacs
-#+begin_src emacs-lisp
-(use-package define-word)
-(global-set-key (kbd "C-c d") 'define-word-at-point)
-(global-set-key (kbd "C-c D") 'define-word)
-#+end_src
-** TODO https://github.com/agzam/mw-thesaurus.el
-#+begin_src elisp
-  (use-package reverso
-    :straight (:host github :repo "SqrtMinusOne/reverso.el"))
-(setq reverso-languages '(english polish))
-#+end_src
 * bug tracker
 #+begin_src elisp
 (use-package debbugs)
@@ -870,97 +839,10 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
 				   :port 6697
 				   :encryption tls)))
 #+end_src
-* dired
-#+begin_src elisp
-   (use-package dired
-     :straight (:type built-in)
-     :custom ((dired-listing-switches "-alFh --group-directories-first")
-              (dired-dwim-target t)
-              (delete-by-moving-to-trash t)
-              (dired-free-space nil)))
-
-   ;; Auto refresh buffers
-   (global-auto-revert-mode 1)
-   ;; Also auto refresh dired, but be quiet about it
-   (setq global-auto-revert-non-file-buffers t)
-   (setq auto-revert-verbose nil)
-
-   (setq split-width-threshold nil) ;If this is an integer, split-window-sensibly may split a window horizontally only if it has at least this many columns. 
-  ;; Was 80 but moved back to nil -> because agenda view
-
-   (use-package peep-dired
-     :ensure t
-     :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-     :config 
-     (setq peep-dired-cleanup-eagerly t)
-     :bind (:map dired-mode-map
-                 ("P" . peep-dired)))
-
-   (use-package dired-subtree
-     :after dired
-       :bind (:map dired-mode-map
-                   ("<tab>" . dired-subtree-toggle)
-                   ("<C-tab>" . dired-subtree-cycle)
-                   ("<S-iso-lefttab>" . dired-subtree-remove)))
-
-   (use-package dired-filter)
-
-     ;; Colourful columns
-       (use-package diredfl
-         :config
-         (diredfl-global-mode 1))
-
-       (require 'dired-x)
-       (add-hook 'dired-mode-hook  #'dired-omit-mode)
-
-   (setq dired-omit-files
-                       (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
-                               (seq bol "." (not (any "."))) ;; dot-files
-                               (seq "~" eol)                 ;; backup-files
-                               (seq bol "CVS" eol)           ;; CVS dirs
-                               )))
-
-                       (add-hook 'dired-mode-hook
-                                 (lambda ()
-                                   (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
-                                   (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-                                   (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
-                                   ))
-#+end_src
-* backup
-#+begin_src elisp
-  (setq
- ;; Don't clobber symlinks
- backup-by-copying t
- backup-directory-alist
- ;; Don't litter my fs tree
- '(("." . "~/.backups"))
- delete-old-versions t
- kept-new-versions 6
- kept-old-versions 2
- ;; Use versioned backups
- version-control t)
-#+end_src
 * calendar
 #+begin_src elisp
   (setq calendar-week-start-day 1)
   (defalias 'cc 'calendar)
-#+end_src
-* history for searching
-#+begin_src elisp
-   (use-package prescient
-    :config
-    (setq-default history-length 1000)
-    (setq-default prescient-history-length 1000)
-    (prescient-persist-mode +1))
-
-  (use-package ivy-prescient
-    :after ivy
-    :config
-    ;; don't prescient sort these commands
-    (dolist (command '(org-ql-view counsel-find-file fontaine-set-preset))
-      (setq ivy-prescient-sort-commands (append ivy-prescient-sort-commands (list command))))
-    (ivy-prescient-mode +1))
 #+end_src
 * treemacs
 #+begin_src elisp
@@ -1026,106 +908,4 @@ https://www.masteringemacs.org/article/wordsmithing-in-emacs
   (use-package which-key
     :config (which-key-mode)
     :delight)
-#+end_src
-* gpg
-gpg --gen-key
-
-#+begin_src text
--*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
-#+end_src
-
-#+begin_src emacs-lisp
-(setq epg-gpg-home-directory "~/.gnupg")
-#+end_src
-* swiper
-#+begin_src elisp
-   (use-package counsel)
-   (use-package swiper
-     :straight (:host github :repo "abo-abo/swiper")
-     :bind    
-     (("C-f" . swiper)
-      ("M-x" . counsel-M-x)   
-      ("C-x f" . counsel-find-file)    
-      ("C-h f" . counsel-describe-function)
-      ("C-h l" . counsel-find-library)
-      ("C-h v" . counsel-describe-variable)
-      ("C-c C-r" . ivy-resume))
-     :config
-     (global-unset-key (kbd "C-x C-b"))
-     (ivy-mode 1)
-     (setq-default ivy-use-virtual-buffers t
-                   ivy-count-format "(%d/%d) "
-                   swiper-use-visual-line-p #'ignore)
-
-     (ivy-configure 'counsel-M-x
-       :initial-input "^"
-       :display-transformer-fn #'counsel-M-x-transformer))
-
-  (use-package ivy-rich)
-  ;;(ivy-rich-mode 1) ivy-switch-buffer doesn't work with this
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-#+end_src
-* paste link
-#+begin_src elisp
-  (defun youtube-link-insert ()
-  (interactive)
-  (let* ((link (read-from-minibuffer "Youtube-Link:"))
-         (title (string-trim (shell-command-to-string (format "yt-dlp --get-title '%s' 2>/dev/null" link))))
-	 (save-excursion
-	   (insert (format "[[%s][%s]]" link title))
-	   ))))
-#+end_src
-** TODO add uploded date
-:LOGBOOK:
-- State "TODO"       from              [2022-10-07 Fri 01:59]
-:END:
-** addign timestamp
-#+begin_src elisp
-(require 'thingatpt)
-
-(defun yt-set-time (time)
-  "Set TIME in the YouTube link at point.
-TIME is number of seconds if called from Lisp, and a string if
-called interactively. Supported formats:
-- seconds
-- minutes:seconds
-- number of seconds with the \"s\" suffix."
-  (interactive (list
-                (if current-prefix-arg
-                    (prefix-numeric-value current-prefix-arg)
-                  (read-string "Time: "))))
-  (let ((url (thing-at-point-url-at-point)))
-    (if (and url
-             (string-match
-              (format "^%s"
-                      (regexp-opt
-                       '("https://www.youtube.com/"
-                         "https://youtu.be/")
-                       "\\(?:"))
-              url))
-        (let* ((bounds (thing-at-point-bounds-of-url-at-point))
-               (time-present-p (string-match "t=[0-9]+" url))
-               (question-mark-present-p (string-search "?" url))
-               (seconds (cond
-                         ((numberp time)
-                          time)
-                         ((string-match
-                           "^\\([0-9]+\\):\\([0-9]\\{2\\}\\)$" time)
-                          (+ (* 60 (string-to-number
-                                    (match-string 1 time)))
-                             (string-to-number (match-string 2 time))))
-                         ((string-match "^\\([0-9]+\\)s?$" time)
-                          (string-to-number (match-string 1 time)))
-                         (t (error "Wrong argument format"))))
-               (new-url (if time-present-p
-                            (replace-regexp-in-string
-                             "t=[0-9]+"
-                             (format "t=%i" seconds)
-                             url)
-                          (concat url
-                                  (if question-mark-present-p "&" "?")
-                                  (format "t=%i" seconds)))))
-          (delete-region (car bounds) (cdr bounds))
-          (insert new-url))
-      (error "Not on a Youtube link"))))
 #+end_src

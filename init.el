@@ -20,6 +20,8 @@
 
 (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14" ))
 
+(load (expand-file-name "my-new-init.el" user-emacs-directory))
+
 (org-babel-load-file (expand-file-name "myinit.org" user-emacs-directory))
 
 (mapc 'load (file-expand-wildcards "~/.emacs.d/lisp/*.el"))
@@ -34,9 +36,15 @@
  '(org-fold-catch-invisible-edits 'error)
  '(package-selected-packages
    '(eev debbugs centered-window bongo diredfl simpleclip dired-subtree php-mode ivy-rich which-key counsel conunsel swiper org-plus-contrib use-package))
+ '(pulsar-pulse-functions
+   '(recenter-top-bottom move-to-window-line-top-bottom reposition-window bookmark-jump other-window delete-window delete-other-windows forward-page backward-page scroll-up-command scroll-down-command next-buffer previous-buffer windmove-right windmove-left windmove-up windmove-down windmove-swap-states-right windmove-swap-states-left windmove-swap-states-up windmove-swap-states-down tab-new tab-close tab-next org-next-visible-heading org-previous-visible-heading org-forward-heading-same-level org-backward-heading-same-level outline-backward-same-level outline-forward-same-level outline-next-visible-heading outline-previous-visible-heading outline-up-heading xref-pulse-momentarily pop-global-mark))
+ '(safe-local-variable-values
+   '((nameless-separator . "/")
+     (nameless-current-name . "org-columns")))
  '(smtpmail-smtp-server "smtp.gmail.com" t)
  '(smtpmail-smtp-service 587 t)
- '(treemacs-no-png-images t))
+ '(treemacs-no-png-images t)
+ '(xref-after-jump-hook '(recenter xref-pulse-momentarily pulsar-pulse-line)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

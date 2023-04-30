@@ -13,7 +13,7 @@
 (global-unset-key (kbd "C-x C-s"))
 (global-unset-key (kbd "C-x C-z"))
 (global-set-key (kbd "C-w") 'kill-this-buffer)
-(global-set-key (kbd "C-f") 'isearch)
+(global-set-key (kbd "C-f") 'isearch-forward)
 (global-set-key (kbd "C-s") 'save-buffer)
 (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
 (global-set-key (kbd "C-<delete>") 'org-kill-line)
@@ -53,8 +53,11 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
-(fset 'yes-or-no-p 'y-or-n-p)
-(setq ring-bell-function 'ignore)
-
-;; needed for hotkey startup
-(setq frame-title-format "emacs")
+(setq 
+ ;; needed for hotkey startup
+ frame-title-format "emacs"
+ ring-bell-function 'ignore
+ use-short-answers t
+ ;; prefer newer elisp files
+ load-prefer-newer t
+ gc-cons-threshold 100000000)
