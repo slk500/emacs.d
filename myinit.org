@@ -524,33 +524,6 @@ clm/open-command-log-buffer
 #+begin_src elisp
 (setq org-tag-alist '(("book" . ?b)))
 #+end_src
-** settings
-#+begin_src elisp
-    (use-package org
-      :straight
-      (:type built-in)
-      :config
-      (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
-      (use-package org-bullets)
-      ;;(add-hook 'org-mode-hook 'org-bullets-mode)
-      (add-hook 'org-mode-hook 'org-indent-mode)
-      (use-package org-contrib)
-      (setq org-startup-folded t
-            org-hide-emphasis-markers t
-            org-log-done 'time
-            org-log-into-drawer t
-            org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
-            org-treat-insert-todo-heading-as-state-change t
-            initial-major-mode 'org-mode
-            org-ellipsis "⤵"
-            org-fold-core-style 'overlays
-            org-src-tab-acts-natively t)
-      (require 'org-tempo)
-      (require 'org-expiry)
-      (require 'org-eldoc)
-      (global-eldoc-mode 1)
-  )
-#+end_src
 ** babel
 #+begin_src elisp
    (setq org-confirm-babel-evaluate nil)
