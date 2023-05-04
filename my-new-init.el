@@ -1,7 +1,77 @@
+;;; centered-cursor-mode
+(use-package centered-cursor-mode)
+
+(define-global-minor-mode my-global-centered-cursor-mode centered-cursor-mode
+  (lambda ()
+    (when (not (memq major-mode
+                     (list 'Info-mode 'term-mode 'eshell-mode 'shell-mode 'erc-mode)))
+      (centered-cursor-mode))))
+(my-global-centered-cursor-mode 1)
+
+
+;;; crux
+
+(use-package crux)
+
+;;; openwith
+
+(use-package openwith)
+
+(openwith-mode t)
+(setq openwith-associations '(("\\.pdf\\'" "evince" (file))))
+
+;;; palimpset
+
+(use-package palimpsest)
+
 ;;; whitespace
     (use-package whitespace-cleanup-mode
       :config
       (global-whitespace-cleanup-mode +1))
+;;; cape
+
+;; Add extensions
+(use-package cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; NOTE: The order matters!
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
+
+;;; corfu
+
+(use-package corfu
+  :ensure t
+  :hook (on-first-buffer . global-corfu-mode))
+
 ;;; orderless
 
 (use-package orderless
@@ -205,8 +275,6 @@
 (keymap-global-set "M-#" #'dictionary-lookup-definition)
 (setq dictionary-server "localhost")
 
-;;; imenu
-(keymap-global-set "M-g i" #'counsel-imenu)
 ;;; elisp
   ;(require 'hi-var)
   ;(add-hook 'emacs-lisp-mode-hook 'hi-var-mode 'APPEND)
@@ -356,7 +424,7 @@
                   (calendar-absolute-from-gregorian (list month day year)))))
         'font-lock-face 'calendar-iso-week-face))
 ;;; org
-
+;;;; org
 (use-package org
   :straight
   (:type built-in)
@@ -379,3 +447,92 @@
   (require 'org-expiry)
   (require 'org-eldoc)
   (global-eldoc-mode 1))
+;;;; agenda
+(eval-when-compile (require 'cl)) ;; adds lexical-let
+(defadvice org-agenda (around split-vertically activate)
+  (let ((split-width-threshold 80))  ; or whatever width makes sense for you
+    ad-do-it))
+
+(defun cmp-date-property (prop)
+  "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
+                If a is before b, return -1. If a is after b, return 1. If they
+                are equal return nil.
+              https://emacs.stackexchange.com/questions/26351/custom-sorting-for-agenda"
+  (lexical-let ((prop prop))
+    #'(lambda (a b)
+
+        (let* ((a-pos (get-text-property 0 'org-marker a))
+               (b-pos (get-text-property 0 'org-marker b))
+               (a-date (or (org-entry-get a-pos prop)
+                           (format "[%s]" (org-read-date t nil "1986-01-01"))))
+               (b-date (or (org-entry-get b-pos prop)
+                           (format "[%s]" (org-read-date t nil "1986-01-01"))))
+               (cmp (compare-strings a-date nil nil b-date nil nil))
+               )
+          (if (eq cmp t) nil (signum cmp))
+          ))))
+
+(setq org-agenda-custom-commands
+      '(
+        ("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK"
+         ((org-agenda-cmp-user-defined (cmp-date-property
+                                        "CLOSED"))
+          (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
+          (org-agenda-todo-keyword-format "%-2s")
+          (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
+          )nil
+         ("~/aamystuff/books.html"))
+        ("g" "Get Things Done (GTD)"
+         ((agenda ""
+                  ((org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'deadline))
+                   (org-deadline-warning-days 0)))
+          (tags-todo "-book-video/DOING|TODO"
+                     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
+                      (org-agenda-overriding-header "\nTasks\n")))
+          ))))
+
+(setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
+
+(global-set-key "\C-ca" 'org-agenda)
+(setq org-agenda-skip-scheduled-if-done t)
+
+(setq org-agenda-files (append (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")
+                               '(
+                                 "~/aamystuff/life/life.org.gpg"
+                                 "~/aamystuff/phprefactor/phprefactor.org"
+                                 "~/aamystuff/emacs/emacs.org"
+                                 "~/aamystuff/clojure/clojure-examples.org"
+                                 )))
+
+(setq org-agenda-prefix-format "%t %s")
+
+(add-hook 'org-agenda-finalize-hook
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (when (or (re-search-forward "Global list of TODO items of type: [[:upper:]]*" nil t)
+                        (re-search-forward "Headlines with TAGS match: [[:upper:]]*" nil t))
+                (insert (propertize
+                         (format " (%s remaining)"
+                                 (- (count-lines (point-min) (point-max)) 2))
+                         'face 'font-lock-comment-face))))))
+
+(add-hook 'org-agenda-finalize-hook
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (when (re-search-forward "Tasks*" nil t)
+                (insert (propertize
+                         (format " (%s remaining)" (- (count-lines (point) (point-max) t) 2)))
+                        'face 'font-lock-comment-face)))))
+
+(setq org-agenda-show-future-repeats nil)
+(defun my/org-agenda-adjust-text-size ()
+  (if (= text-scale-mode-amount 0)
+      (text-scale-adjust -2)))
+
+(add-hook 'org-agenda-finalize-hook #'my/org-agenda-adjust-text-size)
+
+(setq org-agenda-sorting-strategy '((todo todo-state-up priority-down)
+                                    (tags todo-state-up priority-down)))

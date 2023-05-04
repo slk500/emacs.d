@@ -35,7 +35,7 @@
 (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/life/life.org.gpg")))
 (global-set-key (kbd "C-c 4") (lambda() (interactive)(find-file "~/aamystuff/emacs/emacs.org")))
 (global-set-key (kbd "C-c 5") (lambda() (interactive)(find-file "~/aamystuff/clojure/clojure-examples.org")))
-(global-set-key (kbd "C-c 6") (lambda() (interactive)(find-file "~/aamystuff/clojure/clojure-clean.org")))
+(global-set-key (kbd "C-c 6") (lambda() (interactive)(find-file "~/aamystuff/clojure/clojure-collections-comparison/clojure-collections-comparison.org")))
 (global-set-key (kbd "C-c i") (lambda() (interactive)(find-file (expand-file-name "my-new-init.el" user-emacs-directory))))
 (global-set-key (kbd "C-c e") (lambda() (interactive)(find-file (expand-file-name "early-init.el" user-emacs-directory))))
 (global-set-key (kbd "C-c r") (lambda() (interactive)(find-file (expand-file-name "init.el" user-emacs-directory))))
