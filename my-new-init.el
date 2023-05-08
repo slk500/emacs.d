@@ -1,4 +1,90 @@
+
+
+;;; savehist
+
+(savehist-mode 1)
+
+;;; point mode
+(use-package show-point-mode)
+;;; ws-butler
+
+(use-package ws-butler)
+(add-hook 'prog-mode-hook #'ws-butler-mode)
+
+;;; copy word
+
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+          (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
+
+(defun copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg))
+
+(defun beginning-of-string (&optional arg)
+  (when (re-search-backward "[ \t]" (line-beginning-position) :noerror 1)
+    (forward-char 1)))
+
+(defun end-of-string (&optional arg)
+  (when (re-search-forward "[ \t]" (line-end-position) :noerror arg)
+    (backward-char 1)))
+
+(defun thing-copy-string-to-mark(&optional arg)
+  " Try to copy a string and paste it to the mark
+     When used in shell-mode, it will paste string on shell prompt by default "
+  (interactive "P")
+  (copy-thing 'beginning-of-string 'end-of-string arg))
+
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point))
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "Copy thing between beg & end into kill ring."
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+          (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end))))
+
+(defun paste-to-mark (&optional arg)
+  "Paste things to mark, or to the prompt in shell-mode."
+  (unless (eq arg 1)
+    (if (string= "shell-mode" major-mode)
+        (comint-next-prompt 25535)
+      (goto-char (mark)))
+    (yank)))
+
+(keymap-global-set "C-c w" #'copy-word)
+
+(global-set-key (kbd "C-c s")
+   (lambda ()
+      (interactive)
+      (kill-new (thing-at-point 'symbol))))
+
+;;; pulsar
+
+  (use-package pulsar
+    :config
+    (setq pulsar-pulse t
+	  pulsar-delay 0.2
+	  pulsar-iterations 10
+	  pulsar-face 'pulsar-cyan
+	  pulsar-highlight-face 'pulsar-yellow))
+
+  (pulsar-global-mode 1)
+
 ;;; centered-cursor-mode
+
 (use-package centered-cursor-mode)
 
 (define-global-minor-mode my-global-centered-cursor-mode centered-cursor-mode
@@ -7,7 +93,6 @@
                      (list 'Info-mode 'term-mode 'eshell-mode 'shell-mode 'erc-mode)))
       (centered-cursor-mode))))
 (my-global-centered-cursor-mode 1)
-
 
 ;;; crux
 
@@ -69,8 +154,8 @@
 ;;; corfu
 
 (use-package corfu
-  :ensure t
-  :hook (on-first-buffer . global-corfu-mode))
+  :init
+  (global-corfu-mode))
 
 ;;; orderless
 
@@ -258,11 +343,13 @@
 (use-package outshine
   :straight 
   (:host github :repo "alphapapa/outshine")
-  :config
-  (setq outshine-startup-folded-p t))
+  :bind (:map outshine-mode-map
+	      ("<backtab>" . outshine-cycle-buffer)
+	      ("M-<up>" . nil)
+	      ("M-<down>" . nil)))
 
-(keymap-set outshine-mode-map "M-<up>" nil)
-(keymap-set outshine-mode-map "M-<down>" nil)
+;; <backtab> behaviour should be same as in org-mode be here we have to be on one of the heading
+
 (add-hook 'emacs-lisp-mode-hook 'outshine-mode)
 ;;; dictionary
 ; https://github.com/SqrtMinusOne/reverso.el
@@ -276,10 +363,26 @@
 (setq dictionary-server "localhost")
 
 ;;; elisp
-  ;(require 'hi-var)
-  ;(add-hook 'emacs-lisp-mode-hook 'hi-var-mode 'APPEND)
+
+;;;; highlight
+
+(use-package idle-highlight-mode
+  :config (setq idle-highlight-idle-time 0.2)
+
+  :hook ((emacs-lisp-mode) . idle-highlight-mode))
+
+;;;; refactor
+
+(use-package emr)
+(keymap-set emacs-lisp-mode-map "M-RET" 'emr-show-refactor-menu)
+
+;;;; others
 
 (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+
+(add-hook 'emacs-lisp-mode-hook 
+          (lambda () 
+             (add-hook 'before-save-hook 'eval-buffer nil 'make-it-local)))
 
 (defun mp-elisp-mode-eval-buffer ()
   (interactive)
@@ -295,9 +398,22 @@
 
 (use-package eros)
 (eros-mode 1)
-;;; smart scan
-(use-package smartscan)
-;(global-smartscan-mode 1)
+
+;;; moving around code
+;;;; smart scan
+(use-package smartscan
+  :bind (:map smartscan-map
+	      ("M-n" . nil)
+	      ("M-p" . nil)
+	      ("C-." . 'smartscan-symbol-go-forward)
+	      ("C-," . 'smartscan-symbol-go-backward)))
+
+(global-smartscan-mode 1)
+
+;;;; which function cursor is at?
+
+(which-function-mode 1)
+
 ;;; overlay
 (defun highlight-line ()
   (interactive)
@@ -442,6 +558,7 @@
         org-treat-insert-todo-heading-as-state-change t
         initial-major-mode 'org-mode
         org-ellipsis "⤵"
+	org-agenda-span 14
         org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)

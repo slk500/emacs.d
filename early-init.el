@@ -12,6 +12,8 @@
 (define-key cua-global-keymap [C-return] nil)
 (global-unset-key (kbd "C-x C-s"))
 (global-unset-key (kbd "C-x C-z"))
+(global-unset-key (kbd "C-x C-f"))
+(global-set-key (kbd "C-x f") 'find-file)
 (global-set-key (kbd "C-w") 'kill-this-buffer)
 (global-set-key (kbd "C-f") 'isearch-forward)
 (global-set-key (kbd "C-s") 'save-buffer)

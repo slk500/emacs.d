@@ -31,6 +31,82 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(connection-local-criteria-alist
+   '(((:application tramp)
+      tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)))
+ '(connection-local-profile-alist
+   '((tramp-connection-local-darwin-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . tramp-ps-time)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-busybox-ps-profile
+      (tramp-process-attributes-ps-args "-o" "pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "stat=abcde" "-o" "ppid,pgid,tty,time,nice,etime,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (user . string)
+       (group . string)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (ttname . string)
+       (time . tramp-ps-time)
+       (nice . number)
+       (etime . tramp-ps-time)
+       (args)))
+     (tramp-connection-local-bsd-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (group . string)
+       (comm . 52)
+       (state . string)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . number)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-default-shell-profile
+      (shell-file-name . "/bin/sh")
+      (shell-command-switch . "-c"))
+     (tramp-connection-local-default-system-profile
+      (path-separator . ":")
+      (null-device . "/dev/null"))))
  '(custom-safe-themes
    '("e7d20d1848605f119537171fa445c5bb51a6b152de4af46e571a7a2a61a15ee5" "30ff9fb125a91788b693b53968cd661355f9fd77c057ffa160e17770aa26bae6" "aec7b55f2a13307a55517fdf08438863d694550565dee23181d2ebd973ebd6b8" "2e05569868dc11a52b08926b4c1a27da77580daa9321773d92822f7a639956ce" "944d52450c57b7cbba08f9b3d08095eb7a5541b0ecfb3a0a9ecd4a18f3c28948" "631c52620e2953e744f2b56d102eae503017047fb43d65ce028e88ef5846ea3b" "a138ec18a6b926ea9d66e61aac28f5ce99739cf38566876dc31e29ec8757f6e2" "2dd4951e967990396142ec54d376cced3f135810b2b69920e77103e0bcedfba9" "6945dadc749ac5cbd47012cad836f92aea9ebec9f504d32fe89a956260773ca4" "e9d47d6d41e42a8313c81995a60b2af6588e9f01a1cf19ca42669a7ffd5c2fde" "7a424478cb77a96af2c0f50cfb4e2a88647b3ccca225f8c650ed45b7f50d9525" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
  '(marginalia-annotator-registry
@@ -61,9 +137,22 @@
  '(package-selected-packages
    '(eev debbugs centered-window bongo diredfl simpleclip dired-subtree php-mode ivy-rich which-key counsel conunsel swiper org-plus-contrib use-package))
  '(pulsar-pulse-functions
-   '(recenter-top-bottom move-to-window-line-top-bottom reposition-window bookmark-jump other-window delete-window delete-other-windows forward-page backward-page scroll-up-command scroll-down-command next-buffer previous-buffer windmove-right windmove-left windmove-up windmove-down windmove-swap-states-right windmove-swap-states-left windmove-swap-states-up windmove-swap-states-down tab-new tab-close tab-next org-next-visible-heading org-previous-visible-heading org-forward-heading-same-level org-backward-heading-same-level outline-backward-same-level outline-forward-same-level outline-next-visible-heading outline-previous-visible-heading outline-up-heading xref-pulse-momentarily pop-global-mark))
+   '(smartscan-symbol-go-forward smartscan-symbol-go-backward recenter-top-bottom move-to-window-line-top-bottom reposition-window bookmark-jump other-window delete-window delete-other-windows forward-page backward-page scroll-up-command scroll-down-command next-buffer previous-buffer windmove-right windmove-left windmove-up windmove-down windmove-swap-states-right windmove-swap-states-left windmove-swap-states-up windmove-swap-states-down tab-new tab-close tab-next org-next-visible-heading org-previous-visible-heading org-forward-heading-same-level org-backward-heading-same-level outline-backward-same-level outline-forward-same-level outline-next-visible-heading outline-previous-visible-heading outline-up-heading xref-pulse-momentarily pop-global-mark))
  '(safe-local-variable-values
-   '((nameless-separator . "/")
+   '((eval defun sober-in-this-year nil
+	   (interactive)
+	   (message
+	    (format "%f"
+		    (* 100
+		       (/
+			(-
+			 (time-to-day-in-year
+			  (current-time))
+			 7)
+			(float
+			 (time-to-day-in-year
+			  (current-time))))))))
+     (nameless-separator . "/")
      (nameless-current-name . "org-columns")))
  '(smtpmail-smtp-server "smtp.gmail.com" t)
  '(smtpmail-smtp-service 587 t)
