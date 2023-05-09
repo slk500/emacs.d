@@ -1,22 +1,24 @@
 
-* pulsar
+* remove duplicates
+
 #+begin_src elisp
-(use-package pulsar)
-
-(setq pulsar-pulse t)
-(setq pulsar-delay 0.2)
-(setq pulsar-iterations 10)
-(setq pulsar-face 'pulsar-cyan)
-(setq pulsar-highlight-face 'pulsar-yellow)
-
-(pulsar-global-mode 1)
-
-;; OR use the local mode for select mode hooks
-
-(dolist (hook '(org-mode-hook emacs-lisp-mode-hook))
-  (add-hook hook #'pulsar-mode))
-
-#+end_src
+(defun mir-org-uniq ()
+  "Remove duplicate subheadings, preserving order."
+  (interactive)
+  (let ((seen (make-hash-table :test 'equal))
+        (removed 0))
+    (save-excursion
+      (org-map-entries (lambda ()
+                         (let ((heading (org-get-heading t t t t)))
+                           (if (not (gethash heading seen))
+                               (puthash heading t seen)
+                             (org-cut-subtree)
+                             (org-backward-heading-same-level 1)
+                             (setq removed (1+ removed)))))
+                       (format "LEVEL=%s" (1+ (org-current-level)))
+                       'tree))
+    (message "Removed %d duplicates" removed)))
+#+end_src>
 * hide lines
 #+begin_src elisp
 (use-package hide-lines)
@@ -217,7 +219,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
   (use-package hungry-delete)
   (setq hungry-delete-join-reluctantly t)
   (global-hungry-delete-mode)
-  (add-hook 'minibuffer-setup-hook (lambda () (hungry-delete-mode -1)))
 #+end_src
 * windows resizing
 #+begin_src elisp
@@ -366,6 +367,12 @@ Działa z value:
 (add-hook 'clojurec-mode-hook 'lsp)
 #+end_src
 ** xhref
+By default, xref in Emacs Lisp mode only finds symbols that are
+already bound in the current session, so you need to load the files in
+order for their symbols to be found. For files that are loaded (or are
+part of Emacs itself), tags tables are not used at all.  If you want
+to find definitions without loading files, you need to turn on
+xref-etags-mode, then xref will use tags tables.
 #+begin_src elisp
 (keymap-global-unset "M-/")
 (keymap-set xref--xref-buffer-mode-map "<up>" #'xref-prev-line)
@@ -446,7 +453,11 @@ Działa z value:
 #+END_SRC
 * compare windows
 #+begin_src elisp
-  (global-set-key "\C-cw" 'compare-windows)
+;;  (global-set-key "\C-cw" 'compare-windows)
+#+end_src
+https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.html
+#+begin_src elisp
+  (keymap-global-set "M-p" #'ace-swap-window)
 #+end_src
 * back to last edit
 #+begin_src elisp

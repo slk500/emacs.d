@@ -1,5 +1,4 @@
 
-
 ;;; savehist
 
 (savehist-mode 1)
@@ -339,19 +338,8 @@
              '("\\*cider-repl\\*" my-display-buffer-pop-up-same-width-window))
 ;;; focus
 (use-package focus)
-;;; outshine
-(use-package outshine
-  :straight 
-  (:host github :repo "alphapapa/outshine")
-  :bind (:map outshine-mode-map
-	      ("<backtab>" . outshine-cycle-buffer)
-	      ("M-<up>" . nil)
-	      ("M-<down>" . nil)))
-
-;; <backtab> behaviour should be same as in org-mode be here we have to be on one of the heading
-
-(add-hook 'emacs-lisp-mode-hook 'outshine-mode)
 ;;; dictionary
+
 ; https://github.com/SqrtMinusOne/reverso.el
 ; https://www.masteringemacs.org/article/wordsmithing-in-emacs
 ; https://github.com/agzam/mw-thesaurus.el
@@ -363,7 +351,18 @@
 (setq dictionary-server "localhost")
 
 ;;; elisp
+;;;; outshine
+(use-package outshine
+  :straight
+  (:host github :repo "alphapapa/outshine")
+  :bind (:map outshine-mode-map
+	      ("<backtab>" . outshine-cycle-buffer)
+	      ("M-<up>" . nil)
+	      ("M-<down>" . nil)))
 
+
+
+(add-hook 'emacs-lisp-mode-hook 'outshine-mode)
 ;;;; highlight
 
 (use-package idle-highlight-mode
@@ -380,8 +379,8 @@
 
 (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
 
-(add-hook 'emacs-lisp-mode-hook 
-          (lambda () 
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
              (add-hook 'before-save-hook 'eval-buffer nil 'make-it-local)))
 
 (defun mp-elisp-mode-eval-buffer ()
@@ -390,7 +389,6 @@
   (eval-buffer))
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
-(define-key lisp-interaction-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
 
 (use-package highlight-defined
   :hook
@@ -465,8 +463,8 @@
 ;; -*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
 ;;; backup
 ;; https://blog.sumtypeofway.com/posts/emacs-config.html
-;; Emacs is super fond of littering filesystems with backups and autosaves, 
-;; since it was built with the assumption that multiple users could be using the same Emacs instance on the same filesystem. 
+;; Emacs is super fond of littering filesystems with backups and autosaves,
+;; since it was built with the assumption that multiple users could be using the same Emacs instance on the same filesystem.
 ;; This was valid in 1980. It is no longer the case.
 (setq
  make-backup-files nil
@@ -489,7 +487,7 @@
    (use-package peep-dired
      :ensure t
      :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-     :config 
+     :config
      (setq peep-dired-cleanup-eagerly t)
      :bind (:map dired-mode-map
                  ("P" . peep-dired)))
