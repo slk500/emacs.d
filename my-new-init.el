@@ -4,7 +4,9 @@
 (savehist-mode 1)
 
 ;;; point mode
+
 (use-package show-point-mode)
+
 ;;; ws-butler
 
 (use-package ws-butler)
@@ -104,14 +106,12 @@
 (openwith-mode t)
 (setq openwith-associations '(("\\.pdf\\'" "evince" (file))))
 
-;;; palimpset
-
-(use-package palimpsest)
-
 ;;; whitespace
+
     (use-package whitespace-cleanup-mode
       :config
       (global-whitespace-cleanup-mode +1))
+
 ;;; cape
 
 ;; Add extensions
@@ -165,6 +165,7 @@
   (completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;;; vertico, consult
+
 (setq read-extended-command-predicate
           #'command-completion-default-include-p)
 
@@ -313,7 +314,9 @@
     ;;;; 5. No project support
     ;; (setq consult-project-function nil)
   )
+
 ;;; marginalia
+
 (use-package marginalia
   ;; Either bind `marginalia-cycle' globally or only in the minibuffer
   :bind (("M-A" . marginalia-cycle)
@@ -325,8 +328,9 @@
   ;; Must be in the :init section of use-package such that the mode gets
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
-;;; column view
+
 ;;; horizontal split
+
 (defun my-display-buffer-pop-up-same-width-window (buffer alist)
   "A `display-buffer' ACTION forcing a vertical window split.
     See `split-window-sensibly' and `display-buffer-pop-up-window'."
@@ -336,8 +340,11 @@
 
 (add-to-list 'display-buffer-alist
              '("\\*cider-repl\\*" my-display-buffer-pop-up-same-width-window))
+
 ;;; focus
+
 (use-package focus)
+
 ;;; dictionary
 
 ; https://github.com/SqrtMinusOne/reverso.el
@@ -352,6 +359,7 @@
 
 ;;; elisp
 ;;;; outshine
+
 (use-package outshine
   :straight
   (:host github :repo "alphapapa/outshine")
@@ -363,6 +371,7 @@
 
 
 (add-hook 'emacs-lisp-mode-hook 'outshine-mode)
+
 ;;;; highlight
 
 (use-package idle-highlight-mode
@@ -399,6 +408,7 @@
 
 ;;; moving around code
 ;;;; smart scan
+
 (use-package smartscan
   :bind (:map smartscan-map
 	      ("M-n" . nil)
@@ -413,6 +423,7 @@
 (which-function-mode 1)
 
 ;;; overlay
+
 (defun highlight-line ()
   (interactive)
   (overlay-put
@@ -421,47 +432,54 @@
 (defun highlight-line-remove ()
   (interactive)
   (remove-overlays (line-beginning-position) (line-end-position)))
-;;; toggle window split
-  (defun toggle-window-split ()
-    (interactive)
-    (if (= (count-windows) 2)
-        (let* ((this-win-buffer (window-buffer))
-               (next-win-buffer (window-buffer (next-window)))
-               (this-win-edges (window-edges (selected-window)))
-               (next-win-edges (window-edges (next-window)))
-               (this-win-2nd (not (and (<= (car this-win-edges)
-                                           (car next-win-edges))
-                                       (<= (cadr this-win-edges)
-                                           (cadr next-win-edges)))))
-               (splitter
-                (if (= (car this-win-edges)
-                       (car (window-edges (next-window))))
-                    'split-window-horizontally
-                  'split-window-vertically)))
-          (delete-other-windows)
-          (let ((first-win (selected-window)))
-            (funcall splitter)
-            (if this-win-2nd (other-window 1))
-            (set-window-buffer (selected-window) this-win-buffer)
-            (set-window-buffer (next-window) next-win-buffer)
-            (select-window first-win)
-            (if this-win-2nd (other-window 1))))))
 
-  (define-key ctl-x-4-map "t" 'toggle-window-split)
+;;; toggle window split
+
+(defun toggle-window-split ()
+  (interactive)
+  (if (= (count-windows) 2)
+      (let* ((this-win-buffer (window-buffer))
+             (next-win-buffer (window-buffer (next-window)))
+             (this-win-edges (window-edges (selected-window)))
+             (next-win-edges (window-edges (next-window)))
+             (this-win-2nd (not (and (<= (car this-win-edges)
+                                         (car next-win-edges))
+                                     (<= (cadr this-win-edges)
+                                         (cadr next-win-edges)))))
+             (splitter
+              (if (= (car this-win-edges)
+                     (car (window-edges (next-window))))
+                  'split-window-horizontally
+                'split-window-vertically)))
+        (delete-other-windows)
+        (let ((first-win (selected-window)))
+          (funcall splitter)
+          (if this-win-2nd (other-window 1))
+          (set-window-buffer (selected-window) this-win-buffer)
+          (set-window-buffer (next-window) next-win-buffer)
+          (select-window first-win)
+          (if this-win-2nd (other-window 1))))))
+
+(define-key ctl-x-4-map "t" 'toggle-window-split)
+
 ;;; paste youtube link
-  (defun youtube-link-insert ()
+
+(defun youtube-link-insert ()
   (interactive)
   (let* ((link (read-from-minibuffer "Youtube-Link:"))
          (title (string-trim (shell-command-to-string (format "yt-dlp --get-title '%s' 2>/dev/null" link))))
 	 (save-excursion
-	   (insert (format "[[%s][%s]]" link title))
-	   ))))
+	   (insert (format "[[%s][%s]]" link title))))))
+
 ;;; gpg
+
 (setq epg-gpg-home-directory "~/.gnupg")
 
 ;; gpg --gen-key
 ;; -*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
+
 ;;; backup
+
 ;; https://blog.sumtypeofway.com/posts/emacs-config.html
 ;; Emacs is super fond of littering filesystems with backups and autosaves,
 ;; since it was built with the assumption that multiple users could be using the same Emacs instance on the same filesystem.
@@ -470,7 +488,9 @@
  make-backup-files nil
  auto-save-default nil
  create-lockfiles nil)
+
 ;;; dired
+
    (use-package dired
      :straight (:type built-in)
      :custom ((dired-listing-switches "-alFh --group-directories-first")
@@ -520,8 +540,8 @@
                                  (lambda ()
                                    (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
                                    (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-                                   (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))  ; was dired-up-directory
-                                   ))
+                                   (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))))
+
 ;;; calendar
 
 (copy-face font-lock-constant-face 'calendar-iso-week-face)
@@ -537,8 +557,10 @@
                  (calendar-iso-from-absolute
                   (calendar-absolute-from-gregorian (list month day year)))))
         'font-lock-face 'calendar-iso-week-face))
+
 ;;; org
 ;;;; org
+
 (use-package org
   :straight
   (:type built-in)
@@ -562,7 +584,9 @@
   (require 'org-expiry)
   (require 'org-eldoc)
   (global-eldoc-mode 1))
+
 ;;;; agenda
+
 (eval-when-compile (require 'cl)) ;; adds lexical-let
 (defadvice org-agenda (around split-vertically activate)
   (let ((split-width-threshold 80))  ; or whatever width makes sense for you
