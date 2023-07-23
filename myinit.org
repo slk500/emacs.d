@@ -199,16 +199,17 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+end_src
 * space
 #+begin_src elisp
-(defun remove-multiple-spaces-in-region (start end)
-  "Replace multiple spaces in the selected region with a single space."
-  (interactive "r")
-  (save-excursion
-    (save-restriction
-      (narrow-to-region start end)
-      (goto-char (point-min))
-      (while (re-search-forward "  +" nil t)
-        (replace-match " ")))))
-
+    (defun remove-multiple-spaces-in-region (start end)
+      "Replace multiple spaces in the selected region with a single space."
+      (iqnteractive "r")
+      (save-excursion
+        (save-restriction
+          (narrow-to-region start end)
+          (goto-char (point-min))
+          (while (re-search-forward "  +" nil t)
+            (replace-match " ")))))
+    (+ 1 1)
+  (+ 1 1)
 #+end_src
 * replace+
 #+begin_src elisp
@@ -485,10 +486,6 @@ https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.htm
   (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
   (global-unset-key (kbd "C-h g")) ; describe-gnu-project
 #+end_src
-* smooth scroling
-#+BEGIN_SRC emacs-lisp
-  (setq scroll-conservatively 500)
-#+END_SRC
 * benchmark
 #+begin_src sh
 time emacs -nw -Q -eval '(kill-emacs)'
@@ -519,10 +516,6 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (setq org-log-reschedule 'note)
-#+end_src
-** checkboxes
-#+begin_src elisp
-(setq org-checkbox-hierarchical-statistics nil)
 #+end_src
 ** pomodoro
 #+begin_src elisp

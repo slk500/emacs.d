@@ -139,7 +139,20 @@
  '(pulsar-pulse-functions
    '(smartscan-symbol-go-forward smartscan-symbol-go-backward recenter-top-bottom move-to-window-line-top-bottom reposition-window bookmark-jump other-window delete-window delete-other-windows forward-page backward-page scroll-up-command scroll-down-command next-buffer previous-buffer windmove-right windmove-left windmove-up windmove-down windmove-swap-states-right windmove-swap-states-left windmove-swap-states-up windmove-swap-states-down tab-new tab-close tab-next org-next-visible-heading org-previous-visible-heading org-forward-heading-same-level org-backward-heading-same-level outline-backward-same-level outline-forward-same-level outline-next-visible-heading outline-previous-visible-heading outline-up-heading xref-pulse-momentarily pop-global-mark))
  '(safe-local-variable-values
-   '((eval defun sober-in-this-year nil
+   '((eval defun clearhead-in-this-year nil
+	   (interactive)
+	   (message
+	    (format "%f"
+		    (* 100
+		       (/
+			(-
+			 (time-to-day-in-year
+			  (current-time))
+			 7)
+			(float
+			 (time-to-day-in-year
+			  (current-time))))))))
+     (eval defun sober-in-this-year nil
 	   (interactive)
 	   (message
 	    (format "%f"
@@ -166,7 +179,6 @@
  '(font-lock-comment-face ((t (:foreground "dim gray"))))
  '(font-lock-string-face ((t (:foreground "#6C8A56"))))
  '(fringe ((t (:background "#0d1017"))))
- '(lsp-face-highlight-textual ((t (:background "SeaGreen1" :foreground "#565b66"))))
  '(org-agenda-done ((t (:inherit org-special-keyword))))
  '(org-checkbox-statistics-done ((t (:inherit org-todo))))
  '(org-checkbox-statistics-todo ((t (:inherit org-done))))

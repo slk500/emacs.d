@@ -12,7 +12,7 @@
 (define-key cua-global-keymap [C-return] nil)
 (global-unset-key (kbd "C-x C-s"))
 (global-unset-key (kbd "C-x C-z"))
-(global-unset-key (kbd "C-x C-f"))
+(global-unset-key (kbd "C-x C-n"))
 (global-set-key (kbd "C-x f") 'find-file)
 (global-set-key (kbd "C-w") 'kill-this-buffer)
 (global-set-key (kbd "C-f") 'isearch-forward)
@@ -32,7 +32,7 @@
   "Clear existing theme settings instead of layering them"
   (mapc #'disable-theme custom-enabled-themes))
 
-(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/mystuff/index.org")))
+(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/job/molecular.gpg")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/aamystuff/phprefactor/phprefactor.org")))
 (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/life/life.org.gpg")))
 (global-set-key (kbd "C-c 4") (lambda() (interactive)(find-file "~/aamystuff/emacs/emacs.org")))
