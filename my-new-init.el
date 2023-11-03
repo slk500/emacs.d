@@ -1,8 +1,169 @@
+;;; kill ring
+
+(use-package browse-kill-ring
+  :ensure t)
+
+;;; sql
+
+(add-hook 'sql-mode-hook 'lsp)
+(setq lsp-sqls-workspace-config-path nil)
+(setq lsp-sqls-connections
+    '(((driver . "mysql") (dataSourceName . "test:test@tcp(localhost:3306)/test"))
+      ((driver . "mssql") (dataSourceName . "Server=localhost;Database=sammy;User Id=yyoncho;Password=hunter2;"))
+      ))
+
+;;; tempo 
+
+(defun tempo-complete (prompt completions require-match &optional save-name no-insert)
+      "Like `tempo-insert-prompt', but use completing-read."
+      (cl-flet ((read-string (prompt)
+               (completing-read prompt completions (lambda (s) t) require-match)))
+        (tempo-insert-prompt prompt save-name no-insert)))
+
+ ;; (tempo-define-template "begin-environment"
+ ;;    '("* "
+ ;;      '(tempo-complete "Day: " (org-timestamp-inactive) 'environment) > n
+ ;;      (s environment)))
+
+(require 'tempo)
+    (setq tempo-interactive t)
+
+;;; tempel
+
+;; Configure Tempel
+(use-package tempel
+  ;; Require trigger prefix before template name when completing.
+  ;; :custom
+  ;; (tempel-trigger-prefix "<")
+
+  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+         ("M-*" . tempel-insert))
+
+  :init
+
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+                (cons #'tempel-expand
+                      completion-at-point-functions)))
+
+  (add-hook 'conf-mode-hook 'tempel-setup-capf)
+  (add-hook 'prog-mode-hook 'tempel-setup-capf)
+  (add-hook 'text-mode-hook 'tempel-setup-capf)
+
+;;  (setq tempel-path)
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+  ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  ;; (global-tempel-abbrev-mode)
+)
+
+;; Optional: Add tempel-collection.
+;; The package is young and doesn't have comprehensive coverage.
+(use-package tempel-collection)
+
+;;; code compas
+(use-package async)
+(use-package dash)
+(use-package f)
+(use-package s)
+(use-package simple-httpd)
+
+(use-package code-compass
+  :load-path "~/.emacs.d/lisp")
+;;; narrow
+
+(defun narrow-or-widen-dwim (p)
+  "Widen if buffer is narrowed, narrow-dwim otherwise.
+Dwim means: region, org-src-block, org-subtree, or
+defun, whichever applies first. Narrowing to
+org-src-block actually calls `org-edit-src-code'.
+
+With prefix P, don't widen, just narrow even if buffer
+is already narrowed."
+  (interactive "P")
+  (declare (interactive-only))
+  (cond ((and (buffer-narrowed-p) (not p)) (widen))
+        ((region-active-p)
+         (narrow-to-region (region-beginning)
+                           (region-end)))
+        ((derived-mode-p 'org-mode)
+         ;; `org-edit-src-code' is not a real narrowing
+         ;; command. Remove this first conditional if
+         ;; you don't want it.
+         (cond ((ignore-errors (org-edit-src-code) t)
+                (delete-other-windows))
+               ((ignore-errors (org-narrow-to-block) t))
+               (t (org-narrow-to-subtree))))
+        ((derived-mode-p 'latex-mode)
+         (LaTeX-narrow-to-environment))
+        (t (narrow-to-defun))))
+
+;; (define-key endless/toggle-map "n"
+;;   #'narrow-or-widen-dwim)
+;; ;; This line actually replaces Emacs' entire narrowing
+;; ;; keymap, that's how much I like this command. Only
+;; ;; copy it if that's what you want.
+;; (define-key ctl-x-map "n" #'narrow-or-widen-dwim)
+;; (add-hook 'LaTeX-mode-hook
+;;           (lambda ()
+;;             (define-key LaTeX-mode-map "\C-xn"
+;;               nil)))
+
+;;; clojure
+
+  (require 'ob-clojure)
+  (use-package cider)
+  (require 'cider)  
+  (setq org-babel-clojure-backend 'cider)
+
+;  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
+;  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
+
+  (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
+
+  (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  (add-hook 'cider-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'lsp-mode)
+
+;;; time
+(setq display-time-format "%H:%M")
+(setq display-time-default-load-average nil)
+(display-time-mode 1)   
+;;; treesitter
+
+(require 'treesit)
+
+(add-to-list
+  'treesit-language-source-alist
+  '(php "https://github.com/tree-sitter/tree-sitter-php.git")
+  '(clojure "http://github.com/sogaiu/tree-sitter-clojure.git") 
+  '(bash "https://github.com/tree-sitter/tree-sitter-bash.git"))
+
+(setq treesit-load-name-override-list '((clojure "libtree-sitter-clojure" "libtree-sitter-clojure")))
+							
+(add-to-list 'major-mode-remap-alist
+	     '(php-mode . php-ts-mode)
+	     '(sh-mode . bash-ts-mode))
+
+(use-package clojure-ts-mode
+    :straight (:host github :repo "clojure-emacs/clojure-ts-mode"))
+
+(use-package php-ts-mode
+    :straight (:host github :repo "emacs-php/php-ts-mode"))
+
 ;;; org
 ;;;; org
 
 (use-package org
-  :straight (:host github :repo "emacs-straight/org-mode")
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   ;; (use-package org-bullets)
@@ -23,17 +184,9 @@
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
-  (require 'org-eldoc)
-  (global-eldoc-mode 1))
-
-(setq org-emphasis-alist '(("*" (:foreground "green"))
-			   ("/" italic)
-			   ("_" (:foreground "red"))
-			   ("=" org-verbatim verbatim)
-			   ("~" org-code verbatim)
-			   ("+"
-			    (:strike-through t))))
-
+;;  (require 'org-eldoc) turned off after update to emacs 29 - error 
+;;  (global-eldoc-mode 1)
+  )
 ;;;; agenda
 
 (eval-when-compile (require 'cl)) ;; adds lexical-let
@@ -61,7 +214,8 @@
 	  ))))
 
 (setq org-agenda-custom-commands
-      '(
+      '(("w" "work"
+	 ((todo "TODO" ((org-agenda-files '("~/aamystuff/job/molecular.gpg"))))))
 	("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK"
 	 ((org-agenda-cmp-user-defined (cmp-date-property
 					"CLOSED"))
@@ -120,18 +274,7 @@
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
-		(insert (format "free lungs %d" (* -1 (org-time-stamp-to-now "2023-05-09"))))
-		(insert "\n")
-		(insert "clearhead in year ")
- 		(insert (concat (format "%.2f" (* 100 (/ (- (time-to-day-in-year (current-time)) 7) (float (time-to-day-in-year (current-time)))))) "%"))
-		(insert "\n")
-		(insert (format "clearhead for days %d" (* -1 (org-time-stamp-to-now "2023-04-27"))))
-		(insert "\n")
-		(insert (format "continence for days %d" (* -1 (org-time-stamp-to-now "2023-07-04"))))
-		(insert "\n")
-		(insert (format "no coffe for days %d" (* -1 (org-time-stamp-to-now "2023-07-12"))))
-		(insert "\n")
-))))
+		(insert (format "free lungs %d" (* -1 (org-time-stamp-to-now "2023-05-09"))))))))
 
 
 (setq org-agenda-show-future-repeats nil)
@@ -146,15 +289,44 @@
 
 ;;;; day counter
 ;; https://www.reddit.com/r/orgmode/comments/13fgc09/orgagenda_elapsed_dayscounter_of_days/
+;;;; created 
+
+;(require 'org-expiry)
+;(org-expiry-insinuate)
+;(setq org-expiry-created-property-name "CREATED")
+
+;;;; imenu
+
+(setq org-imenu-depth 6)
+(setq org-goto-interface 'outline-path-completionp)
+(setq org-outline-path-complete-in-steps nil)
+
+;;;; export to markdown
+
+(use-package ox-gfm)
+
+(eval-after-load "org"
+  '(require 'ox-gfm nil t))
+
+;;;; org-capture
+
+(global-set-key (kbd "<f6>") 'org-capture)
+
+
+
 ;;; shell here
 
 (use-package shell-here)
 (define-key (current-global-map) "\C-c!" 'shell-here)
 
 ;;; spelling
+
 (use-package jinx
   :bind (("M-$" . jinx-correct)
          ("C-M-$" . jinx-languages)))
+
+(setq jinx-languages "en_US pl_PL")
+
 ;;; skip system buffers when cycling
 
 (set-frame-parameter (selected-frame) 'buffer-predicate
@@ -459,7 +631,7 @@ from elsewhere."
 	   ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
 	   ("M-g m" . consult-mark)
 	   ("M-g k" . consult-global-mark)
-	   ("M-g i" . consult-imenu)
+	   ("M-i" . consult-imenu)
 	   ("M-g I" . consult-imenu-multi)
 	   ;; M-s bindings in `search-map'
 	   ("M-s d" . consult-find)
@@ -743,56 +915,59 @@ from elsewhere."
 
 ;;; dired
 
-   (use-package dired
-     :straight (:type built-in)
-     :custom ((dired-listing-switches "-alFh --group-directories-first")
-	      (dired-dwim-target t)
-	      (delete-by-moving-to-trash t)
-	      (dired-free-space nil)))
+(use-package dired
+  :straight (:type built-in)
+  :custom ((dired-listing-switches "-alFh --group-directories-first")
+	   (dired-dwim-target t)
+	   (delete-by-moving-to-trash t)
+	   (dired-free-space nil)))
 
-   ;; Auto refresh buffers
-   (global-auto-revert-mode 1)
-   ;; Also auto refresh dired, but be quiet about it
-   (setq global-auto-revert-non-file-buffers t)
-   (setq auto-revert-verbose nil)
+;; Auto refresh buffers
+(global-auto-revert-mode 1)
+;; Also auto refresh dired, but be quiet about it
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
 
-   (use-package peep-dired
-     :ensure t
-     :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-     :config
-     (setq peep-dired-cleanup-eagerly t)
-     :bind (:map dired-mode-map
-		 ("P" . peep-dired)))
+(use-package dired-du)
 
-   (use-package dired-subtree
-     :after dired
-       :bind (:map dired-mode-map
-		   ("<tab>" . dired-subtree-toggle)
-		   ("<C-tab>" . dired-subtree-cycle)
-		   ("<S-iso-lefttab>" . dired-subtree-remove)))
 
-   (use-package dired-filter)
+(use-package peep-dired
+  :ensure t
+  :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+  :config
+  (setq peep-dired-cleanup-eagerly t)
+  :bind (:map dired-mode-map
+	      ("P" . peep-dired)))
 
-     ;; Colourful columns
-       (use-package diredfl
-	 :config
-	 (diredfl-global-mode 1))
+(use-package dired-subtree
+  :after dired
+  :bind (:map dired-mode-map
+	      ("<tab>" . dired-subtree-toggle)
+	      ("<C-tab>" . dired-subtree-cycle)
+	      ("<S-iso-lefttab>" . dired-subtree-remove)))
 
-       (require 'dired-x)
-       (add-hook 'dired-mode-hook  #'dired-omit-mode)
+(use-package dired-filter)
 
-   (setq dired-omit-files
-		       (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
-			       (seq bol "." (not (any "."))) ;; dot-files
-			       (seq "~" eol)                 ;; backup-files
-			       (seq bol "CVS" eol)           ;; CVS dirs
-			       )))
+;; Colourful columns
+(use-package diredfl
+  :config
+  (diredfl-global-mode 1))
 
-		       (add-hook 'dired-mode-hook
-				 (lambda ()
-				   (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
-				   (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-				   (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))))
+(require 'dired-x)
+(add-hook 'dired-mode-hook  #'dired-omit-mode)
+
+(setq dired-omit-files
+      (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
+	      (seq bol "." (not (any "."))) ;; dot-files
+	      (seq "~" eol)                 ;; backup-files
+	      (seq bol "CVS" eol)           ;; CVS dirs
+	      )))
+
+(add-hook 'dired-mode-hook
+	  (lambda ()
+	    (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
+	    (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+	    (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))))
 
 ;;; calendar
 
@@ -810,3 +985,325 @@ from elsewhere."
 		  (calendar-absolute-from-gregorian (list month day year)))))
 	'font-lock-face 'calendar-iso-week-face))
 
+;;; colview
+(defun my/org-columns--summary-checkbox-count (check-boxes _)
+  "Summarize CHECK-BOXES with a check-box cookie."
+  (let ((completed 0)
+	(total 0))
+    (dolist (b check-boxes)
+      (cond
+       ((equal b "[X]")
+	(setq completed (+ completed 1))
+	(setq total (+ total 1)))
+       ((string-match "\\[\\([0-9]+\\)/\\([0-9]+\\)\\]" b)
+	(setq completed (+ completed (string-to-number (match-string 1 b))))
+	(setq total (+ total (string-to-number (match-string 2 b)))))
+       (t (setq total (+ total 1)))))
+    (format "[%d/%d]" completed total)))
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns--summary-checkbox-count :override 'my/org-columns--summary-checkbox-count))
+
+
+(defun my/org-columns--overlay-text (value fmt width property original)
+  "Return decorated VALUE string for columns overlay display.
+FMT is a format string.  WIDTH is the width of the column, as an
+integer.  PROPERTY is the property being displayed, as a string.
+ORIGINAL is the real string, i.e., before it is modified by
+`org-columns--displayed-value'."
+  (format fmt
+	  (let ((v (org-columns-add-ellipses value width)))
+	    (pcase property
+	      ("PRIORITY"
+	       (propertize v 'face (org-get-priority-face original)))
+	      ("TAGS"
+	       (if (not org-tags-special-faces-re)
+		   (propertize v 'face 'org-tag)
+		 (replace-regexp-in-string
+		  org-tags-special-faces-re
+		  (lambda (m) (propertize m 'face (org-get-tag-face m)))
+		  v nil nil 1)))
+	      ("TODO" (propertize v 'face (org-get-todo-face original)))
+	      (_ (if (string-match "\\[\\([1-9][0-9]*\\)/\\([1-9][0-9]*\\)\\]" v)
+		     (let* ((first-number (string-to-number (match-string 1 v)))
+			    (second-number (string-to-number (match-string 2 v))))
+		       (if (= first-number second-number)
+			   (propertize v 'face (org-get-todo-face original))
+			 v))
+		   (if (string-match "\\[X\\]" v)
+		       (propertize v 'face (org-get-todo-face original))
+		     v)))))))
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns--overlay-text :override 'my/org-columns--overlay-text))
+
+(defun my/org-columns-toggle-or-columns-quit ()
+  "Toggle checkbox at point, or quit column view."
+  (interactive)
+  (org-columns--toggle))
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns-toggle-or-columns-quit :override 'my/org-columns-toggle-or-columns-quit))
+
+
+(defun my/org-ctrl-c-ctrl-c (&optional arg)
+  "Set tags in headline, or update according to changed information at point.
+
+This command does many different things, depending on context:
+
+- If column view is active, in agenda or org buffers, quit it.
+
+- If there are highlights, remove them.
+
+- If a function in `org-ctrl-c-ctrl-c-hook' recognizes this location,
+  this is what we do.
+
+- If the cursor is on a statistics cookie, update it.
+
+- If the cursor is in a headline, in an agenda or an org buffer,
+  prompt for tags and insert them into the current line, aligned
+  to `org-tags-column'.  When called with prefix arg, realign all
+  tags in the current buffer.
+
+- If the cursor is in one of the special #+KEYWORD lines, this
+  triggers scanning the buffer for these lines and updating the
+  information.
+
+- If the cursor is inside a table, realign the table.  This command
+  works even if the automatic table editor has been turned off.
+
+- If the cursor is on a #+TBLFM line, re-apply the formulas to
+  the entire table.
+
+- If the cursor is at a footnote reference or definition, jump to
+  the corresponding definition or references, respectively.
+
+- If the cursor is a the beginning of a dynamic block, update it.
+
+- If the current buffer is a capture buffer, close note and file it.
+
+- If the cursor is on a <<<target>>>, update radio targets and
+  corresponding links in this buffer.
+
+- If the cursor is on a numbered item in a plain list, renumber the
+  ordered list.
+
+- If the cursor is on a checkbox, toggle it.
+
+- If the cursor is on a code block, evaluate it.  The variable
+  `org-confirm-babel-evaluate' can be used to control prompting
+  before code block evaluation, by default every code block
+  evaluation requires confirmation.  Code block evaluation can be
+  inhibited by setting `org-babel-no-eval-on-ctrl-c-ctrl-c'."
+  (interactive "P")
+  (cond
+    ((or (bound-and-true-p org-clock-overlays) org-occur-highlights)
+    (when (boundp 'org-clock-overlays) (org-clock-remove-overlays))
+    (org-remove-occur-highlights)
+    (message "Temporary highlights/overlays removed from current buffer"))
+   ((and (local-variable-p 'org-finish-function)
+	 (fboundp org-finish-function))
+    (funcall org-finish-function))
+   ((org-babel-hash-at-point))
+   ((run-hook-with-args-until-success 'org-ctrl-c-ctrl-c-hook))
+   (t
+    (let* ((context
+	    (org-element-lineage
+	     (org-element-context)
+	     ;; Limit to supported contexts.
+	     '(babel-call clock dynamic-block footnote-definition
+			  footnote-reference inline-babel-call inline-src-block
+			  inlinetask item keyword node-property paragraph
+			  plain-list planning property-drawer radio-target
+			  src-block statistics-cookie table table-cell table-row
+			  timestamp)
+	     t))
+	   (radio-list-p (org-at-radio-list-p))
+	   (type (org-element-type context)))
+      ;; For convenience: at the first line of a paragraph on the same
+      ;; line as an item, apply function on that item instead.
+      (when (eq type 'paragraph)
+	(let ((parent (org-element-parent context)))
+	  (when (and (org-element-type-p parent 'item)
+		     (= (line-beginning-position)
+			(org-element-begin parent)))
+	    (setq context parent)
+	    (setq type 'item))))
+      ;; Act according to type of element or object at point.
+      ;;
+      ;; Do nothing on a blank line, except if it is contained in
+      ;; a source block.  Hence, we first check if point is in such
+      ;; a block and then if it is at a blank line.
+      (pcase type
+	((or `inline-src-block `src-block)
+	 (unless org-babel-no-eval-on-ctrl-c-ctrl-c
+	   (org-babel-eval-wipe-error-buffer)
+	   (org-babel-execute-src-block
+	    current-prefix-arg (org-babel-get-src-block-info nil context))))
+	((guard (org-match-line "[ \t]*$"))
+	 (or (run-hook-with-args-until-success 'org-ctrl-c-ctrl-c-final-hook)
+	     (user-error
+	      (substitute-command-keys
+	       "`\\[org-ctrl-c-ctrl-c]' can do nothing useful here"))))
+	((or `babel-call `inline-babel-call)
+	 (let ((info (org-babel-lob-get-info context)))
+	   (when info (org-babel-execute-src-block nil info nil type))))
+	(`clock
+         (if (org-at-timestamp-p 'lax)
+             ;; Update the timestamp as well.  `org-timestamp-change'
+             ;; will call `org-clock-update-time-maybe'.
+             (org-timestamp-change 0 'day)
+           (org-clock-update-time-maybe)))
+	(`dynamic-block
+	 (save-excursion
+	   (goto-char (org-element-post-affiliated context))
+	   (org-update-dblock)))
+	(`footnote-definition
+	 (goto-char (org-element-post-affiliated context))
+	 (call-interactively 'org-footnote-action))
+	(`footnote-reference (call-interactively #'org-footnote-action))
+	((or `headline `inlinetask)
+	 (save-excursion (goto-char (org-element-begin context))
+			 (call-interactively #'org-set-tags-command)))
+	(`item
+	 ;; At an item: `C-u C-u' sets checkbox to "[-]"
+	 ;; unconditionally, whereas `C-u' will toggle its presence.
+	 ;; Without a universal argument, if the item has a checkbox,
+	 ;; toggle it.  Otherwise repair the list.
+	 (if (or radio-list-p
+		 (and (boundp org-list-checkbox-radio-mode)
+		      org-list-checkbox-radio-mode))
+	     (org-toggle-radio-button arg)
+	   (let* ((box (org-element-property :checkbox context))
+		  (struct (org-element-property :structure context))
+		  (old-struct (copy-tree struct))
+		  (parents (org-list-parents-alist struct))
+		  (prevs (org-list-prevs-alist struct))
+		  (orderedp (org-not-nil (org-entry-get nil "ORDERED"))))
+	     (org-list-set-checkbox
+	      (org-element-begin context) struct
+	      (cond ((equal arg '(16)) "[-]")
+		    ((and (not box) (equal arg '(4))) "[ ]")
+		    ((or (not box) (equal arg '(4))) nil)
+		    ((eq box 'on) "[ ]")
+		    (t "[X]")))
+	     ;; Mimic `org-list-write-struct' but with grabbing a return
+	     ;; value from `org-list-struct-fix-box'.
+	     (org-list-struct-fix-ind struct parents 2)
+	     (org-list-struct-fix-item-end struct)
+	     (org-list-struct-fix-bul struct prevs)
+	     (org-list-struct-fix-ind struct parents)
+	     (let ((block-item
+		    (org-list-struct-fix-box struct parents prevs orderedp)))
+	       (if (and box (equal struct old-struct))
+		   (if (equal arg '(16))
+		       (message "Checkboxes already reset")
+		     (user-error "Cannot toggle this checkbox: %s"
+				 (if (eq box 'on)
+				     "all subitems checked"
+				   "unchecked subitems")))
+		 (org-list-struct-apply-struct struct old-struct)
+		 (org-update-checkbox-count-maybe))
+	       (when block-item
+		 (message "Checkboxes were removed due to empty box at line %d"
+			  (org-current-line block-item)))))))
+	(`plain-list
+	 ;; At a plain list, with a double C-u argument, set
+	 ;; checkboxes of each item to "[-]", whereas a single one
+	 ;; will toggle their presence according to the state of the
+	 ;; first item in the list.  Without an argument, repair the
+	 ;; list.
+	 (if (or radio-list-p
+		 (and (boundp org-list-checkbox-radio-mode)
+		      org-list-checkbox-radio-mode))
+	     (org-toggle-radio-button arg)
+	   (let* ((begin (org-element-contents-begin context))
+		  (struct (org-element-property :structure context))
+		  (old-struct (copy-tree struct))
+		  (first-box (save-excursion
+			       (goto-char begin)
+			       (looking-at org-list-full-item-re)
+			       (match-string-no-properties 3)))
+		  (new-box (cond ((equal arg '(16)) "[-]")
+				 ((equal arg '(4)) (unless first-box "[ ]"))
+				 ((equal first-box "[X]") "[ ]")
+				 (t "[X]"))))
+	     (cond
+	      (arg
+	       (dolist (pos
+			(org-list-get-all-items
+			 begin struct (org-list-prevs-alist struct)))
+		 (org-list-set-checkbox pos struct new-box)))
+	      ((and first-box (eq (point) begin))
+	       ;; For convenience, when point is at bol on the first
+	       ;; item of the list and no argument is provided, simply
+	       ;; toggle checkbox of that item, if any.
+	       (org-list-set-checkbox begin struct new-box)))
+	     (when (equal
+		    (org-list-write-struct
+		     struct (org-list-parents-alist struct) old-struct)
+		    old-struct)
+	       (message "Cannot update this checkbox"))
+	     (org-update-checkbox-count-maybe))))
+	(`keyword
+	 (let ((org-inhibit-startup-visibility-stuff t)
+	       (org-startup-align-all-tables nil))
+	   (when (boundp 'org-table-coordinate-overlays)
+	     (mapc #'delete-overlay org-table-coordinate-overlays)
+	     (setq org-table-coordinate-overlays nil))
+	   (org-save-outline-visibility 'use-markers (org-mode-restart)))
+	 (message "Local setup has been refreshed"))
+	((or `property-drawer `node-property)
+	 (call-interactively #'org-property-action))
+	(`radio-target
+	 (call-interactively #'org-update-radio-target-regexp))
+	(`statistics-cookie
+	 (call-interactively #'org-update-statistics-cookies))
+	((or `table `table-cell `table-row)
+	 ;; At a table, generate a plot if on the #+plot line,
+         ;; recalculate every field and align it otherwise.  Also
+	 ;; send the table if necessary.
+         (cond
+          ((and (org-match-line "[ \t]*#\\+plot:")
+                (< (point) (org-element-post-affiliated context)))
+           (org-plot/gnuplot))
+          ;; If the table has a `table.el' type, just give up.
+          ((eq (org-element-property :type context) 'table.el)
+           (message "%s" (substitute-command-keys "\\<org-mode-map>\
+Use `\\[org-edit-special]' to edit table.el tables")))
+          ;; At a table row or cell, maybe recalculate line but always
+	  ;; align table.
+          ((or (eq type 'table)
+               ;; Check if point is at a TBLFM line.
+               (and (eq type 'table-row)
+                    (= (point) (org-element-end context))))
+           (save-excursion
+             (if (org-at-TBLFM-p)
+                 (progn (require 'org-table)
+                        (org-table-calc-current-TBLFM))
+               (goto-char (org-element-contents-begin context))
+               (org-call-with-arg 'org-table-recalculate (or arg t))
+               (orgtbl-send-table 'maybe))))
+          (t
+           (org-table-maybe-eval-formula)
+           (cond (arg (call-interactively #'org-table-recalculate))
+                 ((org-table-maybe-recalculate-line))
+                 (t (org-table-align))))))
+	((or `timestamp (and `planning (guard (org-at-timestamp-p 'lax))))
+	 (org-timestamp-change 0 'day))
+	((and `nil (guard (org-at-heading-p)))
+	 ;; When point is on an unsupported object type, we can miss
+	 ;; the fact that it also is at a heading.  Handle it here.
+	 (call-interactively #'org-set-tags-command))
+	((guard
+	  (run-hook-with-args-until-success 'org-ctrl-c-ctrl-c-final-hook)))
+	(_
+	 (user-error
+	  (substitute-command-keys
+	   "`\\[org-ctrl-c-ctrl-c]' can do nothing useful here")))))))
+
+  (set-face-attribute 'org-column-title nil
+		      :inherit 'default))
+
+(with-eval-after-load 'org
+  (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c)) 

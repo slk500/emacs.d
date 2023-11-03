@@ -22,9 +22,11 @@
 (global-set-key (kbd "<f8>") 'visual-line-mode)
 (global-set-key (kbd "<f5>") 'revert-buffer)
 (global-set-key (kbd "C-x 5") 'toggle-frame-split)
-(keymap-global-set "C-z" 'undo-only)
+(keymap-global-set "C-z" #'undo-only)
+(keymap-global-set "M-p" #'ace-swap-window)
 
-(add-hook 'window-setup-hook 'toggle-frame-maximized t)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 (load-theme 'modus-vivendi t)
 
 (setq custom-theme-allow-multiple-selections nil)
@@ -32,7 +34,7 @@
   "Clear existing theme settings instead of layering them"
   (mapc #'disable-theme custom-enabled-themes))
 
-(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/job/molecular.gpg")))
+(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/mystuff/software.org")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/aamystuff/phprefactor/phprefactor.org")))
 (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/life/life.org.gpg")))
 (global-set-key (kbd "C-c 4") (lambda() (interactive)(find-file "~/aamystuff/emacs/emacs.org")))
@@ -46,15 +48,16 @@
 (setq org-hide-leading-stars t)
 
 ;; do not show the startup screen.
-(setq inhibit-startup-message t)
+(setq inhibit-startup-message t
+      initial-scratch-message nil)
 
 ;; always select the help window
 (setq help-window-select t)
 
 ;; disable
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
+(tool-bar-mode  0)
+(menu-bar-mode 0)
+(scroll-bar-mode 0)
 (setq 
  ;; needed for hotkey startup
  frame-title-format "emacs"

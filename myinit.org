@@ -87,9 +87,6 @@ https://www.n16f.net/blog/making-ielm-more-comfortable/
 #+end_src
 * legacy define-key and global-set-key in Emacs
 https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.html
-#+begin_src elisp
-  (keymap-global-set "M-p" #'ace-swap-window)
-#+end_src
 * mail
 https://myaccount.google.com/apppasswords
 #+begin_src elisp
@@ -216,6 +213,9 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 (use-package replace+)
 #+end_src
 * hungry-delete
+
+backward-delete-char-untabify-method a to nie jest to samo?
+
 #+begin_src elisp
   (use-package hungry-delete)
   (setq hungry-delete-join-reluctantly t)
@@ -230,11 +230,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 * TODO LOOKING-FOR
 https://lists.gnu.org/archive/html/emacs-orgmode/2010-08/msg00870.html
 Dashes are not valid in TODO keywords and tags, but you are right, properties do allow them. hmmm. I don't remember why I did allow hem - but surely enough I did. 
-* tree-sitter
-#+begin_src elisp
-;(use-package tree-sitter)
-;(use-package tree-sitter-langs)
-#+end_src
 * htmlize
 #+begin_src elisp
 (use-package htmlize)
@@ -322,37 +317,9 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
     (setq nameless-prefix "-"))
 #+end_src
 ** clojure
-#+begin_src elisp
-  (require 'ob-clojure)
-  (use-package cider)
-  (require 'cider)  
-  (setq org-babel-clojure-backend 'cider)
-
-;  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
-;  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
-
-  (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
-
-  (add-hook 'cider-repl-mode-hook #'paredit-mode)
-  (add-hook 'cider-mode-hook #'paredit-mode)
-  (add-hook 'clojure-mode-hook #'paredit-mode)
-  (add-hook 'clojure-mode-hook #'lsp-mode)
-
-#+end_src
 https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
 https://github.com/clojure-emacs/cider/issues/1819
 http://fgiasson.com/blog/index.php/2016/06/21/optimal-emacs-settings-for-org-mode-for-literate-programming/
-*** clojure :results output
-`#+begin_src clojure :results output
-(inc 1)
-`#+end_src
-Wrong type argument: arrayp, nil
-
-Czemu jest błąd? 
-Działa z value:
-`#+begin_src clojure :results value
-(inc 1)
-`#+end_src
 *** lsp-mode
 #+begin_src elisp
 (use-package lsp-mode)
@@ -507,11 +474,6 @@ clm/open-command-log-buffer
   (setq electric-indent-mode nil)
 #+end_src
 * org
-** column view
-#+begin_src elisp
-  (set-face-attribute 'org-column-title nil
-                      :inherit 'default)
-#+end_src
 ** log
 #+begin_src elisp
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
@@ -524,8 +486,7 @@ clm/open-command-log-buffer
      (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
 
   (setq org-pomodoro-format "%s")
-  (global-set-key (kbd "<f6>") 'org-pomodoro)
-#+end_src
+ #+end_src
 ** tags
 #+begin_src elisp
 (setq org-tag-alist '(("book" . ?b)))
@@ -534,19 +495,22 @@ clm/open-command-log-buffer
 #+begin_src elisp
    (setq org-confirm-babel-evaluate nil)
    (setq org-babel-default-header-args
-         (cons '(:results . "output silent")
+         (cons '(:results . "output replace")
                (assq-delete-all :results org-babel-default-header-args)))
    (setq org-structure-template-alist (assoc-delete-all "e" org-structure-template-alist))
    (setq org-structure-template-alist (assoc-delete-all "c" org-structure-template-alist))
+   (setq org-structure-template-alist (assoc-delete-all "s" org-structure-template-alist))
    (add-to-list 'org-structure-template-alist '("e" . "src elisp"))
    (add-to-list 'org-structure-template-alist '("c" . "src clojure"))
-   (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+   (add-to-list 'org-structure-template-alist '("b" . "src bash"))
+   (add-to-list 'org-structure-template-alist '("s" . "src sql"))
+   (add-to-list 'org-structure-template-alist '("t" . "src text"))
 
   (org-babel-do-load-languages
    'org-babel-load-languages 
    '((shell . t)
+     (sql . t)
      (clojure . t)))
-
 #+end_src
 
 *** php
@@ -676,20 +640,6 @@ https://www.emacswiki.org/emacs/synonyms.el
   (add-hook 'after-init-hook
             (lambda () (run-with-timer 1 nil #'set-cursor-color "#FDDA0D")))
 #+end_src
-* markdown
-  #+begin_src elisp
-(defun org-copy-region-as-markdown ()
-  "Copy the region (in Org) to the system clipboard as Markdown."
-  (interactive)
-  (if (use-region-p)
-      (let* ((region
-	      (buffer-substring-no-properties
-		      (region-beginning)
-		      (region-end)))
-	     (markdown
-	      (org-export-string-as region 'md t '(:with-toc nil))))
-	(gui-set-selection 'CLIPBOARD markdown))))
-  #+end_src
 * copy/paste
 #+begin_src elisp
   (defun my-copy-to-next-window (b e)
