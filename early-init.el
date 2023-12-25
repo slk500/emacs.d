@@ -64,5 +64,4 @@
  ring-bell-function 'ignore
  use-short-answers t
  ;; prefer newer elisp files
- load-prefer-newer t
- gc-cons-threshold 100000000)
+ load-prefer-newer t)

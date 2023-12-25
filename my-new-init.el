@@ -1,3 +1,39 @@
+;;; translation
+
+(use-package text-translator)
+
+(setq text-translator-default-engine "google.com_plen")
+
+;;; mail
+
+(use-package notmuch)
+
+(setq-default notmuch-search-oldest-first nil)
+(setq notmuch-show-logo nil)
+
+;;; table
+(defun org-table-strip-table-at-point ()
+  (interactive)
+  (let* ((table (delete 'hline (org-table-to-lisp)))
+     (contents (orgtbl-to-generic
+            table '(:sep "\t"))))
+    (goto-char (org-table-begin))
+    (re-search-forward "|")
+    (backward-char)
+    (delete-region (point) (org-table-end))
+    (insert contents)))
+;;; debug on error
+
+(setq debug-on-error nil)
+
+;;; hl-line-mode
+(global-hl-line-mode t)
+;;; ui
+  (setq-default
+        cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
+;;;; unbind commands
+  (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
+  (global-unset-key (kbd "C-h g")) ; describe-gnu-project
 ;;; kill ring
 
 (use-package browse-kill-ring
@@ -8,8 +44,7 @@
 (add-hook 'sql-mode-hook 'lsp)
 (setq lsp-sqls-workspace-config-path nil)
 (setq lsp-sqls-connections
-    '(((driver . "mysql") (dataSourceName . "test:test@tcp(localhost:3306)/test"))
-      ((driver . "mssql") (dataSourceName . "Server=localhost;Database=sammy;User Id=yyoncho;Password=hunter2;"))
+    '(((driver . "mysql") (dataSourceName . "test:test@tcp(localhost:3310)/test"))
       ))
 
 ;;; tempo 
@@ -184,8 +219,8 @@ is already narrowed."
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
-;;  (require 'org-eldoc) turned off after update to emacs 29 - error 
-;;  (global-eldoc-mode 1)
+  (require 'org-eldoc) ;;turned off after update to emacs 29 - error 
+  (global-eldoc-mode 1)
   )
 ;;;; agenda
 
@@ -232,6 +267,12 @@ is already narrowed."
 	  (tags "nullo"
 		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
 		      (org-agenda-overriding-header "\nSince\n")))
+	  ("t" "tasks to be done" tags-todo "TODO=\"TODO\" ")
+
+	  (tags-todo "TODO=\"TODO\" "
+		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
+		      (org-agenda-overriding-header "\nTasksFix\n")))
+
 	  (tags-todo "-book-video/DOING"
 		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
 		      (org-agenda-overriding-header "\nTasks\n")))
@@ -1004,6 +1045,14 @@ from elsewhere."
 (with-eval-after-load 'org
   (advice-add 'org-columns--summary-checkbox-count :override 'my/org-columns--summary-checkbox-count))
 
+(with-eval-after-load 'org-colview
+  (org-defkey org-columns-map [return] #'org-columns-edit-value))
+
+
+(with-eval-after-load 'org-colview
+(org-defkey org-columns-map [(shift down)] (lambda () (interactive)
+				  (org-columns-next-allowed-value nil 2))))
+
 
 (defun my/org-columns--overlay-text (value fmt width property original)
   "Return decorated VALUE string for columns overlay display.
@@ -1044,7 +1093,6 @@ ORIGINAL is the real string, i.e., before it is modified by
 
 (with-eval-after-load 'org
   (advice-add 'org-columns-toggle-or-columns-quit :override 'my/org-columns-toggle-or-columns-quit))
-
 
 (defun my/org-ctrl-c-ctrl-c (&optional arg)
   "Set tags in headline, or update according to changed information at point.
@@ -1307,3 +1355,68 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 
 (with-eval-after-load 'org
   (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c)) 
+
+
+(defun my/org-columns-next-allowed-value (&optional previous nth)
+  "Switch to the next allowed value for this column.
+When PREVIOUS is set, go to the previous value.  When NTH is
+an integer, select that value."
+  (interactive)
+  (org-columns-check-computed)
+  (let* ((column (org-current-text-column))
+	 (visible-column (current-column))
+	 (key (get-char-property (point) 'org-columns-key))
+	 (value (get-char-property (point) 'org-columns-value))
+	 (pom (or (get-text-property (line-beginning-position) 'org-hd-marker)
+		  (point)))
+	 (allowed
+	  (let ((all
+		 (or (org-property-get-allowed-values pom key)
+		     (pcase (nth column org-columns-current-fmt-compiled)
+		       (`(,_ ,_ ,_ ,(or "X" "X/" "X%") ,_) '("[X]" "[-]" "[ ]")))
+		     (org-colview-construct-allowed-dates value))))
+	    (if previous (reverse all) all))))
+    (when (equal key "ITEM") (error "Cannot edit item headline from here"))
+    (unless (or allowed (member key '("SCHEDULED" "DEADLINE" "CLOCKSUM")))
+      (error "Allowed values for this property have not been defined"))
+    (let* ((l (length allowed))
+	   (new
+	    (cond
+	     ((member key '("SCHEDULED" "DEADLINE" "CLOCKSUM"))
+	      (if previous 'earlier 'later))
+	     ((integerp nth)
+	      (when (> (abs nth) l)
+		(user-error "Only %d allowed values for property `%s'" l key))
+	      (nth (mod (1- nth) l) allowed))
+	     ((member value allowed)
+	      (when (= l 1) (error "Only one allowed value for this property"))
+	      (or (nth 1 (member value allowed)) (car allowed)))
+	     (t (car allowed))))
+	   (action (lambda () (org-entry-put pom key new))))
+      (cond
+       ((eq major-mode 'org-agenda-mode)
+	(org-columns--call action)
+	;; The following let preserves the current format, and makes
+	;; sure that in only a single file things need to be updated.
+	(let* ((org-overriding-columns-format org-columns-current-fmt)
+	       (buffer (marker-buffer pom))
+	       (org-agenda-contributing-files
+		(list (with-current-buffer buffer
+			(buffer-file-name (buffer-base-buffer))))))
+	  (org-agenda-columns)))
+       (t
+	(let ((inhibit-read-only t))
+	  (remove-text-properties (line-end-position 0) (line-end-position)
+				  '(read-only t))
+	  (org-columns--call action))
+	;; Some properties can modify headline (e.g., "TODO"), and
+	;; possible shuffle overlays.  Make sure they are still all at
+	;; the right place on the current line.
+	(let ((org-columns-inhibit-recalculation)) (org-columns-redo))
+	(org-columns-update key)
+	(org-move-to-column visible-column))))))
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns-next-allowed-value :override 'my/org-columns-next-allowed-value)) 
+
+

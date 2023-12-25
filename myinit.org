@@ -1,24 +1,3 @@
-
-* remove duplicates
-
-#+begin_src elisp
-(defun mir-org-uniq ()
-  "Remove duplicate subheadings, preserving order."
-  (interactive)
-  (let ((seen (make-hash-table :test 'equal))
-        (removed 0))
-    (save-excursion
-      (org-map-entries (lambda ()
-                         (let ((heading (org-get-heading t t t t)))
-                           (if (not (gethash heading seen))
-                               (puthash heading t seen)
-                             (org-cut-subtree)
-                             (org-backward-heading-same-level 1)
-                             (setq removed (1+ removed)))))
-                       (format "LEVEL=%s" (1+ (org-current-level)))
-                       'tree))
-    (message "Removed %d duplicates" removed)))
-#+end_src>
 * hide lines
 #+begin_src elisp
 (use-package hide-lines)
@@ -107,19 +86,6 @@ https://myaccount.google.com/apppasswords
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
 #+end_src
-** gnus
-#+begin_src elisp
-(setq gnus-select-method
- '(nnimap "gmail"
-          (nnimap-address "imap.gmail.com")
-          (nnimap-server-port 993)
-          (nnimap-stream ssl)
-          (nnimap-authinfo-file "~/aamystuff/.authinfo.gpg")))
-#+end_src
-** cite
-#+begin_src elisp
-(add-hook 'mail-citation-hook 'sc-cite-original)
-#+end_src
 * TODO https://github.com/emacsfodder/move-text
 * font
 #+begin_src elisp
@@ -152,15 +118,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
                                                   (call-interactively 'cider-eval-last-sexp)
                                                 (call-interactively 'eros-eval-last-sexp)
                                                 )))))
-#+end_src
-* ui
-#+begin_src elisp
-  (setq-default
-        cursor-in-non-selected-windows nil)     ; Hide the cursor in inactive windows
-#+end_src
-* hl-line-mode
-#+begin_src elisp
-(global-hl-line-mode t)
 #+end_src
 * repeat mode
 #+begin_src elisp
@@ -233,10 +190,6 @@ Dashes are not valid in TODO keywords and tags, but you are right, properties do
 * htmlize
 #+begin_src elisp
 (use-package htmlize)
-#+end_src
-* latex
-#+begin_src elisp
-(setq org-latex-packages-alist '("\\hypersetup{hidelinks,}"))
 #+end_src
 * sum numbers in region
 #+begin_src elisp
@@ -447,12 +400,6 @@ https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.htm
   "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
   :keybinding "g")
 #+end_src
-* TODO https://github.com/danielsz/Palimpsest
-* unbind commands
-#+begin_src elisp
-  (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
-  (global-unset-key (kbd "C-h g")) ; describe-gnu-project
-#+end_src
 * benchmark
 #+begin_src sh
 time emacs -nw -Q -eval '(kill-emacs)'
@@ -489,7 +436,7 @@ clm/open-command-log-buffer
  #+end_src
 ** tags
 #+begin_src elisp
-(setq org-tag-alist '(("book" . ?b)))
+(setq org-tag-alist '(("book" . ?b) ("email" . ?e) ("sms" . ?s)))
 #+end_src
 ** babel
 #+begin_src elisp
@@ -609,7 +556,6 @@ https://www.emacswiki.org/emacs/synonyms.el
 #+end_src
 * theme
 #+begin_src elisp
-
 (set-background-color "#292929")
 
   (use-package doom-themes)
