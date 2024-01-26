@@ -173,9 +173,8 @@
      (nameless-separator . "/")
      (nameless-current-name . "org-columns")))
  '(send-mail-function 'sendmail-send-it)
- '(smtpmail-smtp-server "smtp.gmail.com" t)
- '(smtpmail-smtp-service 587 t)
  '(treemacs-no-png-images t)
+ '(warning-suppress-types '((org)))
  '(xref-after-jump-hook '(recenter xref-pulse-momentarily pulsar-pulse-line)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

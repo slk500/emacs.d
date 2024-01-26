@@ -1,3 +1,20 @@
+;;; pomodoro
+
+(use-package org-pomodoro
+  :config
+  (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
+
+(setq org-pomodoro-format "%s")
+
+(keymap-global-set "<f6>" #'org-pomodoro)
+
+;;; savehist
+
+(recentf-mode 1)
+(use-package savehist
+  :init
+  (savehist-mode))
+
 ;;; translation
 
 (use-package text-translator)
@@ -5,11 +22,110 @@
 (setq text-translator-default-engine "google.com_plen")
 
 ;;; mail
+;; https://myaccount.google.com/apppasswords
 
 (use-package notmuch)
 
+(keymap-global-set "C-c m" #'notmuch-hello)
+
 (setq-default notmuch-search-oldest-first nil)
 (setq notmuch-show-logo nil)
+
+(keymap-set notmuch-search-mode-map "<delete>"
+	    (lambda (&optional beg end)
+              "mark thread as spam"
+              (interactive (notmuch-interactive-region))
+              (notmuch-search-tag (list "+deleted" "-inbox") beg end)))
+
+(setq notmuch-fcc-dirs "sent +sent -unread")
+
+ (setq notmuch-saved-searches
+   '((:name "inbox" :query "tag:inbox" :key
+	    [105])
+     (:name "unread" :query "tag:unread" :key
+	    [117])
+     (:name "todo" :query "tag:todo" :key
+	    "t")
+     (:name "flagged" :query "tag:flagged" :key
+	    [102])
+     (:name "sent" :query "tag:sent" :key
+	    [115])
+     (:name "drafts" :query "tag:draft" :key
+	    [100])
+     (:name "all mail" :query "*" :key
+	    [97])))
+
+(setq message-send-mail-function 'smtpmail-send-it
+      user-mail-address "slawomir.grochowski@gmail.com"
+      user-full-name "Sławomir Grochowski"
+      smtpmail-stream-type 'ssl
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 465
+      smtpmail-debug-verb t
+      mail-user-agent 'sendmail-user-agent
+      smtpmail-debug-info t)
+
+(setq auth-source-debug t)
+(setq auth-sources
+      '((:source "~/aamystuff/.authinfo.gpg")))
+(setq auth-source-debug t)
+(setq auth-source-do-cache nil)
+
+;;;; org-capture
+
+(defun vedang/notmuch-reply-later ()
+  "Capture this email for replying later."
+  (interactive)
+  ;; You need `org-capture' to be set up for this to work. Add this
+  ;; code somewhere in your init file after `org-cature' is loaded:
+
+  (org-capture nil "r")
+
+  ;; The rest of this function is just a nice message in the modeline.
+  (let* ((email-subject (format "%s..."
+                                (substring (notmuch-show-get-subject) 0 15)))
+         (email-from (format "%s..."
+                             (substring (notmuch-show-get-from) 0 15)))
+         (email-string (format "%s (From: %s)" email-subject email-from)))
+    (message "Noted! Reply Later: %s" email-string)))
+
+;;;; using org-mode in composing an email
+
+(use-package org-mime)
+
+;;;; see the recipient address instead of your address when listing sent messages
+
+(defun my/notmuch-unthreaded-show-recipient-if-sent (format-string result)
+(let* ((headers (plist-get result :headers))
+       (to (plist-get headers :To))
+       (author (plist-get headers :From))
+       (face (if (plist-get result :match)
+                 'notmuch-tree-match-author-face
+               'notmuch-tree-no-match-author-face)))
+  (propertize
+   (format format-string
+           (if (string-match "slawomir.grochowski@gmail.com" author)
+               (concat "↦ " (notmuch-tree-clean-address to))
+               (notmuch-tree-clean-address to)
+             author))
+   'face face)))
+
+(setq notmuch-unthreaded-result-format
+      '(("date" . "%12s  ")
+        (my/notmuch-unthreaded-show-recipient-if-sent . "%-20.20s")
+        ((("subject" . "%s"))
+         . " %-54s ")
+        ("tags" . "(%s)")))
+
+;;;; avoid forgetting the subject
+
+(defun my-notmuch-mua-empty-subject-check ()
+  "Request confirmation before sending a message with empty subject"
+  (when (and (null (message-field-value "Subject"))
+             (not (y-or-n-p "Subject is empty, send anyway? ")))
+    (error "Sending message cancelled: empty subject.")))
+(add-hook 'message-send-hook 'my-notmuch-mua-empty-subject-check)
 
 ;;; table
 (defun org-table-strip-table-at-point ()
@@ -195,8 +311,9 @@ is already narrowed."
 (use-package php-ts-mode
     :straight (:host github :repo "emacs-php/php-ts-mode"))
 
-;;; org
-;;;; org
+;;; org-mode
+
+(keymap-global-set "C-c !" #'org-timestamp-inactive)
 
 (use-package org
   :config
@@ -208,23 +325,75 @@ is already narrowed."
   (setq org-startup-folded t
 	org-hide-emphasis-markers t
 	org-log-done 'time
+	org-log-reschudle 'time
+	org-log-redeadline 'time
 	org-log-into-drawer t
-	org-special-ctrl-a/e t ;; ctrl a move to beginig of headline not line
+	org-use-fast-todo-selection 'expert ; todo selection appear in the smaller via minibuffer
+	org-special-ctrl-a/e t ;; ctrl a move to begining of heading not line
 	org-treat-insert-todo-heading-as-state-change t
 	initial-major-mode 'org-mode
 	org-ellipsis "⤵"
 	org-agenda-span 14
 	org-M-RET-may-split-line t
 	org-checkbox-hierarchical-statistics nil
+	bookmark-set-fringe-mark nil
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
   (require 'org-eldoc) ;;turned off after update to emacs 29 - error 
-  (global-eldoc-mode 1)
-  )
-;;;; agenda
+  (global-eldoc-mode 1))
 
-(eval-when-compile (require 'cl)) ;; adds lexical-let
+;;;; insert-heading
+
+(setq org-blank-before-new-entry '((heading . nil) (plain-list-item . auto)))
+
+;;;; refile
+
+(setq org-refile-targets '((nil :maxlevel . 6)))
+
+;;;; http
+
+(use-package ob-http
+  :straight (:host github :repo "zweifisch/ob-http"))
+
+;;;; babel
+
+   (setq org-confirm-babel-evaluate nil)
+   (setq org-babel-default-header-args
+         (cons '(:results . "output replace")
+               (assq-delete-all :results org-babel-default-header-args)))
+   (setq org-structure-template-alist (assoc-delete-all "e" org-structure-template-alist))
+   (setq org-structure-template-alist (assoc-delete-all "c" org-structure-template-alist))
+   (setq org-structure-template-alist (assoc-delete-all "s" org-structure-template-alist))
+   (add-to-list 'org-structure-template-alist '("e" . "src elisp"))
+   (add-to-list 'org-structure-template-alist '("c" . "src clojure"))
+   (add-to-list 'org-structure-template-alist '("b" . "src bash"))
+   (add-to-list 'org-structure-template-alist '("s" . "src sql"))
+   (add-to-list 'org-structure-template-alist '("t" . "src text"))
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages 
+   '((shell . t)
+     (sql . t)
+     (http . t)
+     (clojure . t)))
+
+;;;; tags
+
+(setq org-tag-alist '(("book" . ?b) ("email" . ?e) ("sms" . ?s) ("video" . ?v)))
+
+;;;; todo keywords
+
+(setq org-todo-keywords
+      '(
+        (sequence "REPEAT(r!)" "LOOKINGFOR(l!)" "STUCK(k!)" "DOING(o!)" "NEXT(n!)" "TODO(t!)" "WAITING(w!)" "SOMEDAY(s!)"
+                  "|" "CANCELED(c!)" "RECONSIDER(r!@)" "OFF(f!)" "DONE(d!)")
+        ))
+ 
+;;;; org-agenda
+
+;; TODO https://youtu.be/a_WNtuefREM Making Org Agenda Look Beautiful
+
 (defadvice org-agenda (around split-vertically activate)
   (let ((split-width-threshold 80))  ; or whatever width makes sense for you
     ad-do-it))
@@ -249,9 +418,7 @@ is already narrowed."
 	  ))))
 
 (setq org-agenda-custom-commands
-      '(("w" "work"
-	 ((todo "TODO" ((org-agenda-files '("~/aamystuff/job/molecular.gpg"))))))
-	("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK"
+      '(("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
 	 ((org-agenda-cmp-user-defined (cmp-date-property
 					"CLOSED"))
 	  (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
@@ -262,29 +429,26 @@ is already narrowed."
 	("g" "Get Things Done (GTD)"
 	 ((agenda ""
 		  ((org-agenda-skip-function
-		    '(org-agenda-skip-entry-if 'deadline))
+		    '(org-agenda-skip-entry-if 'todo 'done))
 		   (org-deadline-warning-days 0)))
+	  (tags-todo "-book-video/TODO|DOING"
+		     ((org-agenda-overriding-header
+		       (format "TODOs (%s)" (org-agenda-count "bar")))
+		      ))
 	  (tags "nullo"
-		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
-		      (org-agenda-overriding-header "\nSince\n")))
-	  ("t" "tasks to be done" tags-todo "TODO=\"TODO\" ")
-
-	  (tags-todo "TODO=\"TODO\" "
-		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
-		      (org-agenda-overriding-header "\nTasksFix\n")))
-
-	  (tags-todo "-book-video/DOING"
-		     ((org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline))
-		      (org-agenda-overriding-header "\nTasks\n")))
-	  ))))
+		((org-agenda-overriding-header "Since")))))))
 
 (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
-(global-set-key "\C-ca" 'org-agenda)
+(keymap-global-set "C-c a" #'org-agenda)
 (setq org-agenda-skip-scheduled-if-done t)
+
+(setq org-default-notes-file "~/aamystuff/life/notes.org")
 
 (setq org-agenda-files (append (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")
 			       '("~/aamystuff/life/life.org.gpg"
+				 "~/aamystuff/life/article.org"
+				 "~/aamystuff/life/notes.org"
 				 "~/aamystuff/life/job.org"
 				 "~/aamystuff/phprefactor/phprefactor.org"
 				 "~/aamystuff/emacs/emacs.org"
@@ -315,8 +479,11 @@ is already narrowed."
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
+		(insert (format "sane, clean mind %d" (* -1 (org-time-stamp-to-now "2024-01-17"))))
+		(insert "\n")
+		(insert (format "no coffe %d" (* -1 (org-time-stamp-to-now "2024-01-03"))))
+		(insert "\n")
 		(insert (format "free lungs %d" (* -1 (org-time-stamp-to-now "2023-05-09"))))))))
-
 
 (setq org-agenda-show-future-repeats nil)
 (defun my/org-agenda-adjust-text-size ()
@@ -327,6 +494,11 @@ is already narrowed."
 
 (setq org-agenda-sorting-strategy '((todo todo-state-up priority-down)
 				    (tags todo-state-up priority-down)))
+
+;;;; org-agenda-count
+
+(use-package org-agenda-count
+  :straight (:host github :repo "sid-kurias/org-agenda-count"))
 
 ;;;; day counter
 ;; https://www.reddit.com/r/orgmode/comments/13fgc09/orgagenda_elapsed_dayscounter_of_days/
@@ -342,23 +514,22 @@ is already narrowed."
 (setq org-goto-interface 'outline-path-completionp)
 (setq org-outline-path-complete-in-steps nil)
 
-;;;; export to markdown
-
-(use-package ox-gfm)
-
-(eval-after-load "org"
-  '(require 'ox-gfm nil t))
-
 ;;;; org-capture
 
-(global-set-key (kbd "<f6>") 'org-capture)
+(keymap-global-set "C-c c" #'org-capture)
 
-
+(push '("r" "Respond to email"
+        entry (file org-default-notes-file)
+        "* TODO Respond to %:from on %:subject  :email: \nSCHEDULED: %t\n%U\n%a\n"
+        :clock-in t
+        :clock-resume t
+        :immediate-finish t)
+      org-capture-templates)
 
 ;;; shell here
 
 (use-package shell-here)
-(define-key (current-global-map) "\C-c!" 'shell-here)
+;(define-key (current-global-map) "\C-c!" 'shell-here)
 
 ;;; spelling
 
@@ -370,8 +541,8 @@ is already narrowed."
 
 ;;; skip system buffers when cycling
 
-(set-frame-parameter (selected-frame) 'buffer-predicate
-             (lambda (buf) (not (string-match-p "^*" (buffer-name buf)))))
+;; (set-frame-parameter (selected-frame) 'buffer-predicate
+;;              (lambda (buf) (not (string-match-p "^*" (buffer-name buf)))))
 
 ;;; drag stuff
 
@@ -440,8 +611,8 @@ from elsewhere."
 ;;; https://github.com/joaotavora/breadcrumb
 ;;; expand region
 
-(use-package expand-region
-  :bind ("C-=" . er/expand-region))
+;; (use-package expand-region
+;;   :bind ("C-=" . er/expand-region))
 
 ;;; savehist
 
@@ -623,26 +794,44 @@ from elsewhere."
 (add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
 
 (use-package vertico
-  :init
+  :demand t                             ; Otherwise won't get loaded immediately
+  :straight (vertico :files (:defaults "extensions/*") ; Special recipe to load extensions conveniently
+		                          :includes (vertico-multiform))
+  :config
   (vertico-mode)
+  ;; Extensions
+  (vertico-multiform-mode)
+)
 
-  ;; Different scroll margin
-  ;; (setq vertico-scroll-margin 0)
+ (setq vertico-multiform-categories
+       '((imenu buffer)))
 
-  ;; Show more candidates
-  ;; (setq vertico-count 20)
 
-  ;; Grow and shrink the Vertico minibuffer
-  ;; (setq vertico-resize t)
+;;;; function to highlight enabled modes similar to counsel-M-x
+(defvar +vertico-transform-functions nil)
 
-  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
-  ;; (setq vertico-cycle t)
-  )
+(cl-defmethod vertico--format-candidate :around
+  (cand prefix suffix index start &context ((not +vertico-transform-functions) null))
+  (dolist (fun (ensure-list +vertico-transform-functions))
+    (setq cand (funcall fun cand)))
+  (cl-call-next-method cand prefix suffix index start))
 
-(recentf-mode 1)
-(use-package savehist
-  :init
-  (savehist-mode))
+
+(defun +vertico-highlight-enabled-mode (cmd)
+  "If MODE is enabled, highlight it as font-lock-constant-face."
+  (let ((sym (intern cmd)))
+    (if (or (eq sym major-mode)
+            (and
+             (memq sym minor-mode-list)
+             (boundp sym)))
+      (propertize cmd 'face 'font-lock-constant-face)
+      cmd)))
+
+(add-to-list 'vertico-multiform-commands
+             '(execute-extended-command
+               (+vertico-transform-functions . +vertico-highlight-enabled-mode)))
+
+;;;; consult
 
   (use-package consult
     ;; Replace bindings. Lazily loaded due by `use-package'.
@@ -760,6 +949,83 @@ from elsewhere."
     ;; (setq consult-project-function nil)
   )
 
+;;;;;; Previewing files in find-file
+
+(setq read-file-name-function #'consult-find-file-with-preview)
+
+(defun consult-find-file-with-preview (prompt &optional dir default mustmatch initial pred)
+  (interactive)
+  (let ((default-directory (or dir default-directory))
+        (minibuffer-completing-file-name t))
+    (consult--read #'read-file-name-internal :state (consult--file-preview)
+                   :prompt prompt
+                   :initial initial
+                   :require-match mustmatch
+                   :predicate pred)))
+
+;;; embark
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc. You may adjust the
+  ;; Eldoc strategy, if you want to see the documentation from
+  ;; multiple providers. Beware that using this can be a little
+  ;; jarring since the message shown in the minibuffer can be more
+  ;; than one line, causing the modeline to move up and down:
+
+  ;; (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+;;;; kill buffer in `consult-buffer
+
+(defun my-embark-M-k (&optional arg)
+  (interactive "P")
+  (require 'embark)
+  (if-let ((targets (embark--targets)))
+      (let* ((target
+              (or (nth
+                  (if (or (null arg) (minibufferp))
+                      0
+                    (mod (prefix-numeric-value arg) (length targets)))
+                  targets)))
+            (type (plist-get target :type)))
+        (cond
+         ((eq type 'buffer)
+          (let ((embark-pre-action-hooks))
+            (embark--act 'kill-buffer target)))))))
+
+(defvar my/consult-buffer-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-k" #'my-embark-M-k)
+    map))
+
+;;(consult-customize consult-buffer :keymap my/consult-buffer-map)
+
 ;;; marginalia
 
 (use-package marginalia
@@ -814,6 +1080,10 @@ from elsewhere."
           #'endless/locally-disable-show-paren)
 
 (setq show-paren-when-point-inside-paren t)
+
+;;;; rainbow
+
+(use-package rainbow-delimiters)
 
 ;;;; outshine
 
@@ -1027,6 +1297,29 @@ from elsewhere."
 	'font-lock-face 'calendar-iso-week-face))
 
 ;;; colview
+
+(defun org-columns-switch-columns ()
+  "Switch the positions of :COLUMNS: lines in the current heading of an Org mode buffer."
+  (interactive)
+  (save-excursion
+    (org-columns-goto-top-level)
+    (let ((heading-start (point)))
+      (org-end-of-meta-data t)
+      (let ((meta-data-end (point)))
+        (goto-char heading-start)
+        (when (re-search-forward ":COLUMNS:" meta-data-end t)
+          (let ((start (line-beginning-position))
+                (end (line-end-position)))
+            (forward-line)
+            (when (re-search-forward ":COLUMNS:" meta-data-end t)
+              (let ((start2 (line-beginning-position))
+                    (end2 (line-end-position)))
+                (transpose-regions start end start2 end2))))))))
+  (org-columns))
+
+(with-eval-after-load 'org-colview
+  (org-defkey org-columns-map "x" #'org-columns-switch-columns))
+
 (defun my/org-columns--summary-checkbox-count (check-boxes _)
   "Summarize CHECK-BOXES with a check-box cookie."
   (let ((completed 0)

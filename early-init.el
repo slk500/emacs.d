@@ -24,10 +24,16 @@
 (global-set-key (kbd "C-x 5") 'toggle-frame-split)
 (keymap-global-set "C-z" #'undo-only)
 (keymap-global-set "M-p" #'ace-swap-window)
+(keymap-global-set "C--" #'text-scale-decrease)
+(keymap-global-unset "C-=")
+(keymap-global-set "C-=" #'text-scale-increase)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (load-theme 'modus-vivendi t)
+
+;; (add-variable-watcher 'smtpmail-smtp-service (lambda (s n o w)
+;;                                                      (debug)))
 
 (setq custom-theme-allow-multiple-selections nil)
 (defadvice load-theme (before clear-previous-themes activate)
@@ -49,7 +55,8 @@
 
 ;; do not show the startup screen.
 (setq inhibit-startup-message t
-      initial-scratch-message nil)
+      initial-scratch-message nil
+      use-file-dialog nil)
 
 ;; always select the help window
 (setq help-window-select t)

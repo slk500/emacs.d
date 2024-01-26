@@ -65,27 +65,7 @@ https://www.n16f.net/blog/making-ielm-more-comfortable/
 (add-hook 'ielm-mode-hook 'eldoc-mode)
 #+end_src
 * legacy define-key and global-set-key in Emacs
-https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.html
-* mail
-https://myaccount.google.com/apppasswords
-#+begin_src elisp
-  (setq message-send-mail-function 'smtpmail-send-it
-        user-mail-address "slawomir.grochowski@gmail.com"
-        user-full-name "Sławomir Grochowski"
-        smtpmail-stream-type 'ssl
-        smtpmail-default-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-service 465
-        smtpmail-debug-verb t
-        mail-user-agent 'sendmail-user-agent
-        smtpmail-debug-info t)
-
-    (setq auth-source-debug t)
-    (setq auth-sources
-          '((:source "~/aamystuff/.authinfo.gpg")))
-  (setq auth-source-debug t)
-  (setq auth-source-do-cache nil)
-#+end_src
+https://drshapeless.com/blog/posts/legacy-define-key-and-global-set-key-in-emacs.html
 * TODO https://github.com/emacsfodder/move-text
 * font
 #+begin_src elisp
@@ -426,40 +406,7 @@ clm/open-command-log-buffer
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (setq org-log-reschedule 'note)
 #+end_src
-** pomodoro
-#+begin_src elisp
-  (use-package org-pomodoro
-     :config
-     (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
-
-  (setq org-pomodoro-format "%s")
- #+end_src
-** tags
-#+begin_src elisp
-(setq org-tag-alist '(("book" . ?b) ("email" . ?e) ("sms" . ?s)))
-#+end_src
 ** babel
-#+begin_src elisp
-   (setq org-confirm-babel-evaluate nil)
-   (setq org-babel-default-header-args
-         (cons '(:results . "output replace")
-               (assq-delete-all :results org-babel-default-header-args)))
-   (setq org-structure-template-alist (assoc-delete-all "e" org-structure-template-alist))
-   (setq org-structure-template-alist (assoc-delete-all "c" org-structure-template-alist))
-   (setq org-structure-template-alist (assoc-delete-all "s" org-structure-template-alist))
-   (add-to-list 'org-structure-template-alist '("e" . "src elisp"))
-   (add-to-list 'org-structure-template-alist '("c" . "src clojure"))
-   (add-to-list 'org-structure-template-alist '("b" . "src bash"))
-   (add-to-list 'org-structure-template-alist '("s" . "src sql"))
-   (add-to-list 'org-structure-template-alist '("t" . "src text"))
-
-  (org-babel-do-load-languages
-   'org-babel-load-languages 
-   '((shell . t)
-     (sql . t)
-     (clojure . t)))
-#+end_src
-
 *** php
 #+begin_src elisp
   (use-package php-mode)
@@ -477,16 +424,6 @@ clm/open-command-log-buffer
   (exec-path-from-shell-initialize))
 #+END_SRC
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
-** todo
-#+begin_src elisp
-    (setq org-todo-keywords
-            '(
-              (sequence "REPEAT(r!)" "LOOKINGFOR(!l)" "STUCK(k!)" "DOING(o!)" "NEXT(n!)" "TODO(t!)" "WAITING(w!)" "SOMEDAY(!s)"
-                        "|" "CANCELED(c!)" "RECONSIDER(r!@)" "OFF(f!)" "GIST(g!)" "DONE(d!)")
-              ))
-
-    (setq org-use-fast-todo-selection 'expert) ; todo selection appear in the smaller minibuffer via
-#+end_src
 ** logbook
 #+begin_src elisp
   (add-to-list 'org-log-note-headings '(note . "%t"))
@@ -552,7 +489,7 @@ https://www.emacswiki.org/emacs/synonyms.el
                   bongo-display-track-icons nil)))
 
   (setq-default bongo-next-action 'bongo-play-next)
-  (global-set-key (kbd "C-c m") 'bongo-playlist)
+;;  (global-set-key (kbd "C-c m") 'bongo-playlist)
 #+end_src
 * theme
 #+begin_src elisp
