@@ -116,21 +116,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
       (interactive "*P\nr")
       (sort-regexp-fields reverse "\\w+" "\\&" beg end))
 #+end_src
-* magit
-#+begin_src elisp
-  (use-package magit)
-  (keymap-global-set "C-x g" #'magit-status)
-
-  (defun copy-diff-region ()
-    "Copy diff region without + or - markers."
-    (interactive)
-    (deactivate-mark)
-    (let ((text (buffer-substring-no-properties
-                 (region-beginning) (region-end))))
-      (kill-new (replace-regexp-in-string "^[\\+\\-]" "" text))))
-
-  (setq magit-branch-read-upstream-first 'fallback)
-#+end_src
 * space
 #+begin_src elisp
     (defun remove-multiple-spaces-in-region (start end)
@@ -164,9 +149,6 @@ backward-delete-char-untabify-method a to nie jest to samo?
 (windsize-default-keybindings)
 ;;https://github.com/grammati/windsize
 #+end_src
-* TODO LOOKING-FOR
-https://lists.gnu.org/archive/html/emacs-orgmode/2010-08/msg00870.html
-Dashes are not valid in TODO keywords and tags, but you are right, properties do allow them. hmmm. I don't remember why I did allow hem - but surely enough I did. 
 * htmlize
 #+begin_src elisp
 (use-package htmlize)

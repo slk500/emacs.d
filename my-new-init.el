@@ -1,3 +1,29 @@
+;;; inhibit startup message
+(setq inhibit-startup-message t)
+(setq inhibit-startup-echo-area-message t)
+
+(defun display-startup-echo-area-message ()
+  (message ""))
+
+;;; magit
+
+(use-package magit
+:config
+(setq magit-branch-read-upstream-first 'fallback
+      magit-log-section-commit-count 50))
+
+(keymap-global-set "C-x g" #'magit-status)
+
+(defun copy-diff-region ()
+  "Copy diff region without + or - markers."
+  (interactive)
+  (deactivate-mark)
+  (let ((text (buffer-substring-no-properties
+               (region-beginning) (region-end))))
+    (kill-new (replace-regexp-in-string "^[\\+\\-]" "" text))))
+
+
+
 ;;; pomodoro
 
 (use-package org-pomodoro
@@ -46,6 +72,8 @@
 	    [117])
      (:name "todo" :query "tag:todo" :key
 	    "t")
+     (:name "emacs" :query "tag:emacs" :key
+	    "e")
      (:name "flagged" :query "tag:flagged" :key
 	    [102])
      (:name "sent" :query "tag:sent" :key
@@ -74,21 +102,13 @@
 
 ;;;; org-capture
 
-(defun vedang/notmuch-reply-later ()
-  "Capture this email for replying later."
-  (interactive)
-  ;; You need `org-capture' to be set up for this to work. Add this
-  ;; code somewhere in your init file after `org-cature' is loaded:
-
-  (org-capture nil "r")
-
-  ;; The rest of this function is just a nice message in the modeline.
-  (let* ((email-subject (format "%s..."
-                                (substring (notmuch-show-get-subject) 0 15)))
-         (email-from (format "%s..."
-                             (substring (notmuch-show-get-from) 0 15)))
-         (email-string (format "%s (From: %s)" email-subject email-from)))
-    (message "Noted! Reply Later: %s" email-string)))
+ (defun capture-mail()
+    "Capture mail to org mode."
+    (interactive)
+    (org-store-link nil)
+    (org-capture nil "r")
+    )
+  (bind-key "t" 'capture-mail notmuch-show-mode-map)
 
 ;;;; using org-mode in composing an email
 
@@ -315,6 +335,10 @@ is already narrowed."
 
 (keymap-global-set "C-c !" #'org-timestamp-inactive)
 
+;; (setq org-adapt-indentation t
+;;       org-hide-leading-stars t
+;;       org-odd-levels-only t)
+
 (use-package org
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
@@ -350,6 +374,20 @@ is already narrowed."
 ;;;; refile
 
 (setq org-refile-targets '((nil :maxlevel . 6)))
+
+;; Create hook to auto-refile when todo is changing state
+(add-hook 'org-after-todo-state-change-hook 'dk/refile-todo 'append)
+(defun dk/refile-todo()
+  (if (equal org-state "DONE")
+      (dk/refile-to "~/aamystuff/life/notes.org" "done")))
+
+(defun dk/refile-to (file headline)
+  "Move current headline to specified location"
+  (let ((pos (save-excursion
+	       (find-file file)
+	       (org-find-exact-headline-in-buffer headline))))
+    (org-refile nil nil (list headline file nil pos)))
+  (switch-to-buffer (current-buffer)))
 
 ;;;; http
 
@@ -394,9 +432,14 @@ is already narrowed."
 
 ;; TODO https://youtu.be/a_WNtuefREM Making Org Agenda Look Beautiful
 
+
+
 (defadvice org-agenda (around split-vertically activate)
   (let ((split-width-threshold 80))  ; or whatever width makes sense for you
     ad-do-it))
+
+
+(eval-when-compile (require 'cl-lib)) ;; adds lexical-let - needed for cmp-date-property
 
 (defun cmp-date-property (prop)
   "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
@@ -428,8 +471,8 @@ is already narrowed."
 	 ("~/aamystuff/books.html"))
 	("g" "Get Things Done (GTD)"
 	 ((agenda ""
-		  ((org-agenda-skip-function
-		    '(org-agenda-skip-entry-if 'todo 'done))
+		  (
+		  ;; (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
 		   (org-deadline-warning-days 0)))
 	  (tags-todo "-book-video/TODO|DOING"
 		     ((org-agenda-overriding-header
@@ -441,7 +484,7 @@ is already narrowed."
 (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
 (keymap-global-set "C-c a" #'org-agenda)
-(setq org-agenda-skip-scheduled-if-done t)
+(setq org-agenda-skip-scheduled-if-done nil)
 
 (setq org-default-notes-file "~/aamystuff/life/notes.org")
 
@@ -449,6 +492,7 @@ is already narrowed."
 			       '("~/aamystuff/life/life.org.gpg"
 				 "~/aamystuff/life/article.org"
 				 "~/aamystuff/life/notes.org"
+				 "~/aamystuff/life/todos.org"
 				 "~/aamystuff/life/job.org"
 				 "~/aamystuff/phprefactor/phprefactor.org"
 				 "~/aamystuff/emacs/emacs.org"
@@ -479,11 +523,11 @@ is already narrowed."
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
-		(insert (format "sane, clean mind %d" (* -1 (org-time-stamp-to-now "2024-01-17"))))
+		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-31")))))
 		(insert "\n")
-		(insert (format "no coffe %d" (* -1 (org-time-stamp-to-now "2024-01-03"))))
+		(insert (format "no coffe %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-03")))))
 		(insert "\n")
-		(insert (format "free lungs %d" (* -1 (org-time-stamp-to-now "2023-05-09"))))))))
+		(insert (format "free lungs %d" (+ 1 (* -1 (org-time-stamp-to-now "2023-05-09")))))))))
 
 (setq org-agenda-show-future-repeats nil)
 (defun my/org-agenda-adjust-text-size ()
@@ -516,15 +560,12 @@ is already narrowed."
 
 ;;;; org-capture
 
-(keymap-global-set "C-c c" #'org-capture)
+(keymap-global-set "<f10>" #'org-capture)
 
-(push '("r" "Respond to email"
-        entry (file org-default-notes-file)
-        "* TODO Respond to %:from on %:subject  :email: \nSCHEDULED: %t\n%U\n%a\n"
-        :clock-in t
-        :clock-resume t
-        :immediate-finish t)
-      org-capture-templates)
+(setq org-capture-templates
+  '(("r" "Reply to an email" entry
+ (file+headline "~/aamystuff/life/notes.org" "Mail correspondence")
+ "* TODO [#B] %:from %:subject \n SCHEDULED: %t\n :PROPERTIES:\n :END:\n\n %i %?")))
 
 ;;; shell here
 
@@ -1278,6 +1319,7 @@ from elsewhere."
 	  (lambda ()
 	    (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
 	    (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+	    (define-key dired-mode-map (kbd ".") 'dired-omit-mode) ; was dired-advertised-find-file
 	    (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))))
 
 ;;; calendar
@@ -1297,6 +1339,19 @@ from elsewhere."
 	'font-lock-face 'calendar-iso-week-face))
 
 ;;; colview
+
+(setq org-columns-checkbox-states '("[ ]" "[-]" "[X]"))
+
+(with-eval-after-load 'org-colview
+  (org-defkey org-columns-map [(shift left)] (lambda () (interactive)
+					       (org-columns-next-allowed-value nil 3))))
+(with-eval-after-load 'org-colview
+ (org-defkey org-columns-map [(shift down)] (lambda () (interactive)
+					       (org-columns-next-allowed-value nil 2))))
+
+(with-eval-after-load 'org-colview
+ (org-defkey org-columns-map [(shift right)] (lambda () (interactive)
+					       (org-columns-next-allowed-value nil 1))))
 
 (defun org-columns-switch-columns ()
   "Switch the positions of :COLUMNS: lines in the current heading of an Org mode buffer."
@@ -1340,12 +1395,6 @@ from elsewhere."
 
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
-
-
-(with-eval-after-load 'org-colview
-(org-defkey org-columns-map [(shift down)] (lambda () (interactive)
-				  (org-columns-next-allowed-value nil 2))))
-
 
 (defun my/org-columns--overlay-text (value fmt width property original)
   "Return decorated VALUE string for columns overlay display.
@@ -1648,68 +1697,4 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 
 (with-eval-after-load 'org
   (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c)) 
-
-
-(defun my/org-columns-next-allowed-value (&optional previous nth)
-  "Switch to the next allowed value for this column.
-When PREVIOUS is set, go to the previous value.  When NTH is
-an integer, select that value."
-  (interactive)
-  (org-columns-check-computed)
-  (let* ((column (org-current-text-column))
-	 (visible-column (current-column))
-	 (key (get-char-property (point) 'org-columns-key))
-	 (value (get-char-property (point) 'org-columns-value))
-	 (pom (or (get-text-property (line-beginning-position) 'org-hd-marker)
-		  (point)))
-	 (allowed
-	  (let ((all
-		 (or (org-property-get-allowed-values pom key)
-		     (pcase (nth column org-columns-current-fmt-compiled)
-		       (`(,_ ,_ ,_ ,(or "X" "X/" "X%") ,_) '("[X]" "[-]" "[ ]")))
-		     (org-colview-construct-allowed-dates value))))
-	    (if previous (reverse all) all))))
-    (when (equal key "ITEM") (error "Cannot edit item headline from here"))
-    (unless (or allowed (member key '("SCHEDULED" "DEADLINE" "CLOCKSUM")))
-      (error "Allowed values for this property have not been defined"))
-    (let* ((l (length allowed))
-	   (new
-	    (cond
-	     ((member key '("SCHEDULED" "DEADLINE" "CLOCKSUM"))
-	      (if previous 'earlier 'later))
-	     ((integerp nth)
-	      (when (> (abs nth) l)
-		(user-error "Only %d allowed values for property `%s'" l key))
-	      (nth (mod (1- nth) l) allowed))
-	     ((member value allowed)
-	      (when (= l 1) (error "Only one allowed value for this property"))
-	      (or (nth 1 (member value allowed)) (car allowed)))
-	     (t (car allowed))))
-	   (action (lambda () (org-entry-put pom key new))))
-      (cond
-       ((eq major-mode 'org-agenda-mode)
-	(org-columns--call action)
-	;; The following let preserves the current format, and makes
-	;; sure that in only a single file things need to be updated.
-	(let* ((org-overriding-columns-format org-columns-current-fmt)
-	       (buffer (marker-buffer pom))
-	       (org-agenda-contributing-files
-		(list (with-current-buffer buffer
-			(buffer-file-name (buffer-base-buffer))))))
-	  (org-agenda-columns)))
-       (t
-	(let ((inhibit-read-only t))
-	  (remove-text-properties (line-end-position 0) (line-end-position)
-				  '(read-only t))
-	  (org-columns--call action))
-	;; Some properties can modify headline (e.g., "TODO"), and
-	;; possible shuffle overlays.  Make sure they are still all at
-	;; the right place on the current line.
-	(let ((org-columns-inhibit-recalculation)) (org-columns-redo))
-	(org-columns-update key)
-	(org-move-to-column visible-column))))))
-
-(with-eval-after-load 'org
-  (advice-add 'org-columns-next-allowed-value :override 'my/org-columns-next-allowed-value)) 
-
 
