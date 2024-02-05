@@ -134,15 +134,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+begin_src elisp
 (use-package replace+)
 #+end_src
-* hungry-delete
-
-backward-delete-char-untabify-method a to nie jest to samo?
-
-#+begin_src elisp
-  (use-package hungry-delete)
-  (setq hungry-delete-join-reluctantly t)
-  (global-hungry-delete-mode)
-#+end_src
 * windows resizing
 #+begin_src elisp
 (use-package windsize)
@@ -372,11 +363,11 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (use-package command-log-mode)
 #+end_src
-* window move
+* Moves the point to the newly created window after splitting
 #+begin_src elisp
-  (defadvice split-window (after move-point-to-new-window activate)
-    "Moves the point to the newly created window after splitting."
-    (other-window 1))
+  ;; (defadvice split-window (after move-point-to-new-window activate)
+  ;;   "Moves the point to the newly created window after splitting."
+  ;;   (other-window 1))
 #+end_src
 * indent
 #+begin_src elisp
@@ -413,9 +404,9 @@ clm/open-command-log-buffer
 * modeline
 #+begin_src elisp
   (setq column-number-mode t)
-  (use-package delight)
-  (delight 'eldoc-mode nil "eldoc")
-  (delight 'ivy-mode nil "ivy")
+;;  (use-package delight)
+;;  (delight 'eldoc-mode nil "eldoc")
+;;  (delight 'ivy-mode nil "ivy")
 #+end_src
 * display ^l glyphs as horizontal lines
 #+begin_src elisp
@@ -473,24 +464,7 @@ https://www.emacswiki.org/emacs/synonyms.el
   (setq-default bongo-next-action 'bongo-play-next)
 ;;  (global-set-key (kbd "C-c m") 'bongo-playlist)
 #+end_src
-* theme
-#+begin_src elisp
-(set-background-color "#292929")
-
-  (use-package doom-themes)
-
-   (setq doom-themes-enable-bold t 
-         doom-themes-enable-italic t)
-
-   (load-theme 'doom-ayu-dark t)
-
-   ;; Enable flashing mode-line on errors
-   (doom-themes-visual-bell-config)
-
-   ;; Corrects (and improves) org-mode's native fontification.
-   (doom-themes-org-config)
-#+end_src
-** improve
+* improve theme
 #+begin_src elisp
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

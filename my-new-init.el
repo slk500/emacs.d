@@ -1,3 +1,111 @@
+;;; theme
+
+;;(set-background-color "#292929")
+
+(use-package doom-themes)
+
+(setq doom-themes-enable-bold t 
+      doom-themes-enable-italic t)
+
+(load-theme 'doom-ayu-dark t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
+
+;;; https://github.com/karthink/gptel
+;;; hungry delete
+
+(use-package hungry-delete)
+(setq hungry-delete-join-reluctantly t
+      backward-delete-char-untabify-method 'all) ; to work with paredit https://emacs.stackexchange.com/questions/33734/how-to-get-hungry-delete-working-in-paredit-mode
+(global-hungry-delete-mode)
+
+;;; quick help org-columns
+
+(defun help-quick (&optional keymap)
+  "Display a quick-help buffer showing popular commands and their bindings.
+The window showing quick-help can be toggled using \\[help-quick-toggle].
+You can click on a key binding shown in the quick-help buffer to display
+the documentation of the command bound to that key sequence."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Quick Help*")
+    (let ((inhibit-read-only t) (padding 2) blocks)
+
+      ;; Go through every section and prepare a text-rectangle to be
+      ;; inserted later.
+      (dolist (section help-quick-sections)
+        (let ((max-key-len 0) (max-cmd-len 0) keys)
+          (dolist (ent (reverse (cdr section)))
+            (catch 'skip
+              (let* ((bind (where-is-internal (car ent) keymap t))
+                     (key (if bind
+                              (propertize
+                               (key-description bind)
+                               'face 'help-key-binding)
+                            (throw 'skip nil))))
+                (setq max-cmd-len (max (length (cdr ent)) max-cmd-len)
+                      max-key-len (max (length key) max-key-len))
+                (push (list key (cdr ent) (car ent)) keys))))
+          (when keys
+            (let ((fmt (format "%%-%ds %%-%ds%s" max-key-len max-cmd-len
+                               (make-string padding ?\s)))
+                  (width (+ max-key-len 1 max-cmd-len padding)))
+              (push `(,width
+                      ,(propertize
+                        (concat
+                         (car section)
+                         (make-string (- width (length (car section))) ?\s))
+                        'face 'bold)
+                      ,@(mapcar (lambda (ent)
+                                  (format fmt
+                                          (propertize
+                                           (car ent)
+                                           'quick-help-cmd
+                                           (caddr ent))
+                                          (cadr ent)))
+                                keys))
+                    blocks)))))
+
+      ;; Insert each rectangle in order until they don't fit into the
+      ;; frame any more, in which case the next sections are inserted
+      ;; in a new "line".
+      (erase-buffer)
+      (dolist (block (nreverse blocks))
+        (when (> (+ (car block) (current-column)) (frame-width))
+          (goto-char (point-max))
+          (newline 2))
+        (save-excursion
+          (insert-rectangle (cdr block)))
+        (end-of-line))
+      (delete-trailing-whitespace)
+
+      (save-excursion
+        (goto-char (point-min))
+        (while-let ((match (text-property-search-forward 'quick-help-cmd)))
+          (make-text-button (prop-match-beginning match)
+                            (prop-match-end match)
+                            'mouse-face 'highlight
+                            'button t
+                            'keymap button-map
+                            'action #'describe-symbol
+                            'button-data (prop-match-value match)))))
+
+    (help-mode)
+
+    ;; Display the buffer at the bottom of the frame...
+    (with-selected-window (display-buffer-at-bottom (current-buffer) '())
+      ;; ... mark it as dedicated to prevent focus from being stolen
+      (set-window-dedicated-p (selected-window) t)
+      ;; ... and shrink it immediately.
+      (fit-window-to-buffer))
+    (message
+     (substitute-command-keys "Toggle display of quick-help buffer using \\[help-quick-toggle]."))))
+
+
+
 ;;; inhibit startup message
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message t)
@@ -47,7 +155,7 @@
 
 (setq text-translator-default-engine "google.com_plen")
 
-;;; mail
+;;; mail, notmuch
 ;; https://myaccount.google.com/apppasswords
 
 (use-package notmuch)
@@ -99,6 +207,20 @@
       '((:source "~/aamystuff/.authinfo.gpg")))
 (setq auth-source-debug t)
 (setq auth-source-do-cache nil)
+
+;;;; hide patches
+
+  (advice-add 'notmuch-show-insert-bodypart :filter-args 'my/notmuch-hide-content)
+
+  (defvar my/notmuch-hide-content-types '("text/x-patch" "text/x-diff"))
+
+  (defun my/notmuch-hide-content (args)
+    (cl-destructuring-bind (msg part depth . hide) args
+      (list msg part depth
+            (if-let ((mime-type (notmuch-show-mime-type part))
+                     (_ (seq-some (lambda (type) (notmuch-match-content-type mime-type type))
+                                  my/notmuch-hide-content-types)))
+                t (car hide)))))
 
 ;;;; org-capture
 
@@ -163,7 +285,7 @@
 (setq debug-on-error nil)
 
 ;;; hl-line-mode
-(global-hl-line-mode t)
+;;(global-hl-line-mode t)
 ;;; ui
   (setq-default
         cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
@@ -333,6 +455,9 @@ is already narrowed."
 
 ;;; org-mode
 
+(use-package org-menu
+  :straight (:host github :repo "sheijk/org-menu"))
+
 (keymap-global-set "C-c !" #'org-timestamp-inactive)
 
 ;; (setq org-adapt-indentation t
@@ -364,7 +489,7 @@ is already narrowed."
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
-  (require 'org-eldoc) ;;turned off after update to emacs 29 - error 
+  (require 'org-eldoc)
   (global-eldoc-mode 1))
 
 ;;;; insert-heading
@@ -1340,7 +1465,7 @@ from elsewhere."
 
 ;;; colview
 
-(setq org-columns-checkbox-states '("[ ]" "[-]" "[X]"))
+(setq org-columns-checkbox-states '("[X]" "[-]" "[ ]" ))
 
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [(shift left)] (lambda () (interactive)

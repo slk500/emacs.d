@@ -184,6 +184,7 @@
  '(font-lock-comment-face ((t (:foreground "dim gray"))))
  '(font-lock-string-face ((t (:foreground "#6C8A56"))))
  '(fringe ((t (:background "#0d1017"))))
+ '(notmuch-message-summary-face ((t (:extend t :foreground "dim gray"))))
  '(org-agenda-done ((t (:inherit org-special-keyword))))
  '(org-block-begin-line ((t (:foreground "#5c626b" :extend t :inherit org-block))))
  '(org-checkbox-statistics-done ((t (:inherit org-todo))))
