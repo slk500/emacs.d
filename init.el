@@ -136,6 +136,7 @@
      (tab marginalia-annotate-tab builtin none)
      (multi-category marginalia-annotate-multi-category builtin none)))
  '(marginalia-mode t)
+ '(org-ellipsis nil)
  '(org-fold-catch-invisible-edits 'error)
  '(org-safe-remote-resources
    '("\\`https://github\\.com/fniessen/org-html-themes/blob/master/org/theme-bigblow-local\\.setup\\'" "\\`https://github\\.com/fniessen/org-html-themes/blob/master/org/theme-bigblow\\.setup\\'"))

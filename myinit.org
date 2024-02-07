@@ -363,12 +363,6 @@ clm/open-command-log-buffer
 #+begin_src elisp
   (use-package command-log-mode)
 #+end_src
-* Moves the point to the newly created window after splitting
-#+begin_src elisp
-  ;; (defadvice split-window (after move-point-to-new-window activate)
-  ;;   "Moves the point to the newly created window after splitting."
-  ;;   (other-window 1))
-#+end_src
 * indent
 #+begin_src elisp
   (setq electric-indent-mode nil)
@@ -413,24 +407,6 @@ clm/open-command-log-buffer
   (use-package form-feed
     :delight)
   (global-form-feed-mode)
-#+end_src
-* writing
-** spelling
-#+begin_src elisp
-  (global-set-key (kbd "C-c f") 'flyspell-correct-word-before-point)
-  (add-hook 'flyspell-mode-hook
-            (lambda ()
-              (setq flyspell-generic-check-word-predicate 'ignore-my-words)))
-  ;;(defun ignore-my-word )
-#+end_src
-*** TODO ignore emails
-https://superuser.com/questions/345084/how-to-exclude-in-flyspell-mode-and-flyspell-buffer/345461#345461
-** synonyms
-https://www.emacswiki.org/emacs/synonyms.el
-#+begin_src elisp
- ;; (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
- ;; (require 'synonyms)
- ;; (setq synonyms-file (concat user-emacs-directory "dictionary/mthesaur.txt"))
 #+end_src
 * bug tracker
 #+begin_src elisp

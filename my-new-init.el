@@ -1,6 +1,15 @@
+;;; translate 
+; https://github.com/atykhonov/google-translate
+;;; Moves the point to the newly created window after splitting
+
+(defadvice split-window (after move-point-to-new-window activate)
+  "Moves the point to the newly created window after splitting."
+  (other-window 1))
+
+;;; https://github.com/phillord/pabbrev
 ;;; theme
 
-;;(set-background-color "#292929")
+(set-background-color "#292929")
 
 (use-package doom-themes)
 
@@ -118,7 +127,13 @@ the documentation of the command bound to that key sequence."
 (use-package magit
 :config
 (setq magit-branch-read-upstream-first 'fallback
-      magit-log-section-commit-count 50))
+      magit-log-section-commit-count 50)
+(dolist (m (list magit-diff-mode-map
+                 magit-file-section-map
+                 magit-hunk-section-map
+                 magit-unstaged-section-map
+                 magit-staged-section-map))
+  (define-key m (kbd "C-c") 'cua-copy-region)))
 
 (keymap-global-set "C-x g" #'magit-status)
 
@@ -129,8 +144,6 @@ the documentation of the command bound to that key sequence."
   (let ((text (buffer-substring-no-properties
                (region-beginning) (region-end))))
     (kill-new (replace-regexp-in-string "^[\\+\\-]" "" text))))
-
-
 
 ;;; pomodoro
 
@@ -167,7 +180,7 @@ the documentation of the command bound to that key sequence."
 
 (keymap-set notmuch-search-mode-map "<delete>"
 	    (lambda (&optional beg end)
-              "mark thread as spam"
+              "Mark thread as spam"
               (interactive (notmuch-interactive-region))
               (notmuch-search-tag (list "+deleted" "-inbox") beg end)))
 
@@ -202,7 +215,6 @@ the documentation of the command bound to that key sequence."
       mail-user-agent 'sendmail-user-agent
       smtpmail-debug-info t)
 
-(setq auth-source-debug t)
 (setq auth-sources
       '((:source "~/aamystuff/.authinfo.gpg")))
 (setq auth-source-debug t)
@@ -481,7 +493,7 @@ is already narrowed."
 	org-special-ctrl-a/e t ;; ctrl a move to begining of heading not line
 	org-treat-insert-todo-heading-as-state-change t
 	initial-major-mode 'org-mode
-	org-ellipsis "⤵"
+;;	org-ellipsis "⤵"
 	org-agenda-span 14
 	org-M-RET-may-split-line t
 	org-checkbox-hierarchical-statistics nil
