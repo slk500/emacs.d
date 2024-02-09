@@ -1,11 +1,21 @@
 ;;; translate 
-; https://github.com/atykhonov/google-translate
-;;; Moves the point to the newly created window after splitting
+; https://github.com/lorniu/go-translate
 
-(defadvice split-window (after move-point-to-new-window activate)
-  "Moves the point to the newly created window after splitting."
-  (other-window 1))
+(use-package go-translate)
+(setq gts-translate-list '(("pl" "en")))
 
+(setq gts-default-translator
+      (gts-translator
+       :picker (gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
+       :engines (list (gts-bing-engine) (gts-google-engine))
+       :render (gts-buffer-render)))
+
+
+;;; moves the point to the newly created window after splitting
+
+;; (defadvice split-window (after move-point-to-new-window activate)
+;;   "Moves the point to the newly created window after splitting."
+;;   (other-window 1))
 ;;; https://github.com/phillord/pabbrev
 ;;; theme
 
@@ -34,7 +44,7 @@
 
 ;;; quick help org-columns
 
-(defun help-quick (&optional keymap)
+(defun help-quick (&optional sections keymap)
   "Display a quick-help buffer showing popular commands and their bindings.
 The window showing quick-help can be toggled using \\[help-quick-toggle].
 You can click on a key binding shown in the quick-help buffer to display
@@ -45,7 +55,7 @@ the documentation of the command bound to that key sequence."
 
       ;; Go through every section and prepare a text-rectangle to be
       ;; inserted later.
-      (dolist (section help-quick-sections)
+      (dolist (section sections)
         (let ((max-key-len 0) (max-cmd-len 0) keys)
           (dolist (ent (reverse (cdr section)))
             (catch 'skip
@@ -113,8 +123,6 @@ the documentation of the command bound to that key sequence."
     (message
      (substitute-command-keys "Toggle display of quick-help buffer using \\[help-quick-toggle]."))))
 
-
-
 ;;; inhibit startup message
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message t)
@@ -162,14 +170,10 @@ the documentation of the command bound to that key sequence."
   :init
   (savehist-mode))
 
-;;; translation
-
-(use-package text-translator)
-
-(setq text-translator-default-engine "google.com_plen")
-
-;;; mail, notmuch
+;;; mail, email, notmuch
 ;; https://myaccount.google.com/apppasswords
+
+(setq display-time-mail-string "") ;; remove "Mail" in mode line
 
 (use-package notmuch)
 
@@ -213,11 +217,12 @@ the documentation of the command bound to that key sequence."
       smtpmail-smtp-service 465
       smtpmail-debug-verb t
       mail-user-agent 'sendmail-user-agent
-      smtpmail-debug-info t)
+      smtpmail-debug-info t
+      message-signature "Sławomir Grochowski")
 
 (setq auth-sources
-      '((:source "~/aamystuff/.authinfo.gpg")))
-(setq auth-source-debug t)
+      '((:source "~/aamystuff/.authinfo.gpg"))
+      auth-source-debug t)
 (setq auth-source-do-cache nil)
 
 ;;;; hide patches
@@ -599,8 +604,9 @@ is already narrowed."
 
 (setq org-agenda-custom-commands
       '(("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
-	 ((org-agenda-cmp-user-defined (cmp-date-property
-					"CLOSED"))
+	 (
+	  (org-agenda-files (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$") org-agenda-files)
+	 ;; (org-agenda-cmp-user-defined (cmp-date-property "CLOSED")) error with lexical-let - maybe after emacs update to 29.2?
 	  (org-agenda-sorting-strategy '(todo-state-down user-defined-down priority-down))
 	  (org-agenda-todo-keyword-format "%-2s")
 	  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
@@ -625,17 +631,19 @@ is already narrowed."
 
 (setq org-default-notes-file "~/aamystuff/life/notes.org")
 
-(setq org-agenda-files (append (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")
-			       '("~/aamystuff/life/life.org.gpg"
-				 "~/aamystuff/life/article.org"
-				 "~/aamystuff/life/notes.org"
-				 "~/aamystuff/life/todos.org"
-				 "~/aamystuff/life/job.org"
-				 "~/aamystuff/phprefactor/phprefactor.org"
-				 "~/aamystuff/emacs/emacs.org"
-				 "~/aamystuff/clojure/clojure-examples.org")))
+(setq org-agenda-files '("~/aamystuff/life/life.org.gpg"
+			"~/aamystuff/life/article.org"
+			"~/aamystuff/life/notes.org"
+			"~/aamystuff/life/todos.org"
+			"~/aamystuff/life/job.org"
+			"~/aamystuff/phprefactor/phprefactor.org"
+			"~/aamystuff/emacs/emacs.org"
+			"~/aamystuff/clojure/clojure-examples.org"))
 
-(setq org-agenda-prefix-format "%t %s")
+(setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t% s")
+				 (todo . " %i %-12:c")
+				 (tags . " %i %-12:c")
+				 (search . " %i %-12:c")))
 
 (add-hook 'org-agenda-finalize-hook
 	  (lambda ()
