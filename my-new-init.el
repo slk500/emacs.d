@@ -1,3 +1,24 @@
+;;; calendar
+
+(setq calendar-week-start-day 1)
+(defalias 'cc 'calendar)
+
+;;; coding system
+(set-language-environment "UTF-8")
+
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-language-environment 'utf-8)
+
+;;; which-key
+  (use-package which-key
+    :config (which-key-mode)
+    :delight)
+
+;; (setq which-key-persistent-popup t)
+
 ;;; translate 
 ; https://github.com/lorniu/go-translate
 
@@ -17,23 +38,6 @@
 ;;   "Moves the point to the newly created window after splitting."
 ;;   (other-window 1))
 ;;; https://github.com/phillord/pabbrev
-;;; theme
-
-(set-background-color "#292929")
-
-(use-package doom-themes)
-
-(setq doom-themes-enable-bold t 
-      doom-themes-enable-italic t)
-
-(load-theme 'doom-ayu-dark t)
-
-;; Enable flashing mode-line on errors
-(doom-themes-visual-bell-config)
-
-;; Corrects (and improves) org-mode's native fontification.
-(doom-themes-org-config)
-
 ;;; https://github.com/karthink/gptel
 ;;; hungry delete
 
@@ -44,84 +48,89 @@
 
 ;;; quick help org-columns
 
-(defun help-quick (&optional sections keymap)
-  "Display a quick-help buffer showing popular commands and their bindings.
-The window showing quick-help can be toggled using \\[help-quick-toggle].
-You can click on a key binding shown in the quick-help buffer to display
-the documentation of the command bound to that key sequence."
-  (interactive)
-  (with-current-buffer (get-buffer-create "*Quick Help*")
-    (let ((inhibit-read-only t) (padding 2) blocks)
+;; (defadvice help-quick (around noselect activate)
+;;   (flet ((find-file (&rest args)
+;;            (apply 'find-file-noselect args)))
+;;     ad-do-it))
 
-      ;; Go through every section and prepare a text-rectangle to be
-      ;; inserted later.
-      (dolist (section sections)
-        (let ((max-key-len 0) (max-cmd-len 0) keys)
-          (dolist (ent (reverse (cdr section)))
-            (catch 'skip
-              (let* ((bind (where-is-internal (car ent) keymap t))
-                     (key (if bind
-                              (propertize
-                               (key-description bind)
-                               'face 'help-key-binding)
-                            (throw 'skip nil))))
-                (setq max-cmd-len (max (length (cdr ent)) max-cmd-len)
-                      max-key-len (max (length key) max-key-len))
-                (push (list key (cdr ent) (car ent)) keys))))
-          (when keys
-            (let ((fmt (format "%%-%ds %%-%ds%s" max-key-len max-cmd-len
-                               (make-string padding ?\s)))
-                  (width (+ max-key-len 1 max-cmd-len padding)))
-              (push `(,width
-                      ,(propertize
-                        (concat
-                         (car section)
-                         (make-string (- width (length (car section))) ?\s))
-                        'face 'bold)
-                      ,@(mapcar (lambda (ent)
-                                  (format fmt
-                                          (propertize
-                                           (car ent)
-                                           'quick-help-cmd
-                                           (caddr ent))
-                                          (cadr ent)))
-                                keys))
-                    blocks)))))
+;; (defun help-quick (&optional sections keymap)
+;;   "Display a quick-help buffer showing popular commands and their bindings.
+;; The window showing quick-help can be toggled using \\[help-quick-toggle].
+;; You can click on a key binding shown in the quick-help buffer to display
+;; the documentation of the command bound to that key sequence."
+;;   (interactive)
+;;   (with-current-buffer (get-buffer-create "*Quick Help*")
+;;     (let ((inhibit-read-only t) (padding 2) blocks)
 
-      ;; Insert each rectangle in order until they don't fit into the
-      ;; frame any more, in which case the next sections are inserted
-      ;; in a new "line".
-      (erase-buffer)
-      (dolist (block (nreverse blocks))
-        (when (> (+ (car block) (current-column)) (frame-width))
-          (goto-char (point-max))
-          (newline 2))
-        (save-excursion
-          (insert-rectangle (cdr block)))
-        (end-of-line))
-      (delete-trailing-whitespace)
+;;       ;; Go through every section and prepare a text-rectangle to be
+;;       ;; inserted later.
+;;       (dolist (section sections)
+;;         (let ((max-key-len 0) (max-cmd-len 0) keys)
+;;           (dolist (ent (reverse (cdr section)))
+;;             (catch 'skip
+;;               (let* ((bind (where-is-internal (car ent) keymap t))
+;;                      (key (if bind
+;;                               (propertize
+;;                                (key-description bind)
+;;                                'face 'help-key-binding)
+;;                             (throw 'skip nil))))
+;;                 (setq max-cmd-len (max (length (cdr ent)) max-cmd-len)
+;;                       max-key-len (max (length key) max-key-len))
+;;                 (push (list key (cdr ent) (car ent)) keys))))
+;;           (when keys
+;;             (let ((fmt (format "%%-%ds %%-%ds%s" max-key-len max-cmd-len
+;;                                (make-string padding ?\s)))
+;;                   (width (+ max-key-len 1 max-cmd-len padding)))
+;;               (push `(,width
+;;                       ,(propertize
+;;                         (concat
+;;                          (car section)
+;;                          (make-string (- width (length (car section))) ?\s))
+;;                         'face 'bold)
+;;                       ,@(mapcar (lambda (ent)
+;;                                   (format fmt
+;;                                           (propertize
+;;                                            (car ent)
+;;                                            'quick-help-cmd
+;;                                            (caddr ent))
+;;                                           (cadr ent)))
+;;                                 keys))
+;;                     blocks)))))
 
-      (save-excursion
-        (goto-char (point-min))
-        (while-let ((match (text-property-search-forward 'quick-help-cmd)))
-          (make-text-button (prop-match-beginning match)
-                            (prop-match-end match)
-                            'mouse-face 'highlight
-                            'button t
-                            'keymap button-map
-                            'action #'describe-symbol
-                            'button-data (prop-match-value match)))))
+;;       ;; Insert each rectangle in order until they don't fit into the
+;;       ;; frame any more, in which case the next sections are inserted
+;;       ;; in a new "line".
+;;       (erase-buffer)
+;;       (dolist (block (nreverse blocks))
+;;         (when (> (+ (car block) (current-column)) (frame-width))
+;;           (goto-char (point-max))
+;;           (newline 2))
+;;         (save-excursion
+;;           (insert-rectangle (cdr block)))
+;;         (end-of-line))
+;;       (delete-trailing-whitespace)
 
-    (help-mode)
+;;       (save-excursion
+;;         (goto-char (point-min))
+;;         (while-let ((match (text-property-search-forward 'quick-help-cmd)))
+;;           (make-text-button (prop-match-beginning match)
+;;                             (prop-match-end match)
+;;                             'mouse-face 'highlight
+;;                             'button t
+;;                             'keymap button-map
+;;                             'action #'describe-symbol
+;;                             'button-data (prop-match-value match)))))
 
-    ;; Display the buffer at the bottom of the frame...
-    (with-selected-window (display-buffer-at-bottom (current-buffer) '())
-      ;; ... mark it as dedicated to prevent focus from being stolen
-      (set-window-dedicated-p (selected-window) t)
-      ;; ... and shrink it immediately.
-      (fit-window-to-buffer))
-    (message
-     (substitute-command-keys "Toggle display of quick-help buffer using \\[help-quick-toggle]."))))
+;;     (help-mode)
+
+;;     ;; Display the buffer at the bottom of the frame...
+;;     (with-selected-window (display-buffer-at-bottom (current-buffer) '())
+;;       ;; ... mark it as dedicated to prevent focus from being stolen
+;;       (set-window-dedicated-p (selected-window) t)
+;;       ;; ... and shrink it immediately.
+;;       (fit-window-to-buffer))
+;;     (message
+;;      (substitute-command-keys "Toggle display of quick-help buffer using \\[help-quick-toggle]."))))
 
 ;;; inhibit startup message
 (setq inhibit-startup-message t)
@@ -188,6 +197,8 @@ the documentation of the command bound to that key sequence."
               (interactive (notmuch-interactive-region))
               (notmuch-search-tag (list "+deleted" "-inbox") beg end)))
 
+(keymap-set notmuch-message-mode-map "C-s" #'notmuch-draft-save)
+
 (setq notmuch-fcc-dirs "sent +sent -unread")
 
  (setq notmuch-saved-searches
@@ -225,6 +236,55 @@ the documentation of the command bound to that key sequence."
       auth-source-debug t)
 (setq auth-source-do-cache nil)
 
+;;;; store link
+;; (org-add-link-type "notmuch" 'org-notmuch-open)
+;; (add-hook 'org-store-link-functions 'org-notmuch-store-link)
+
+(org-link-set-parameters "notmuch"
+			 :follow 'org-notmuch-open
+			 :store 'org-notmuch-store-link)
+
+(defun org-notmuch-open (id)
+  "Visit the notmuch message or thread with id ID."
+  (notmuch-show id))
+
+(defun org-notmuch-store-link ()
+  "Store a link to a notmuch mail message."
+  (pcase major-mode
+    ('notmuch-show-mode
+     ;; Store link to the current message
+     (let* ((id (notmuch-show-get-message-id))
+	    (link (concat "notmuch:" id))
+	    (description (format "Mail: %s" (notmuch-show-get-subject))))
+       (org-store-link-props
+	:type "notmuch"
+	:link link
+	:description description)))
+    ('notmuch-search-mode
+     ;; Store link to the thread on the current line
+     (let* ((id (notmuch-search-find-thread-id))
+	    (link (concat "notmuch:" id))
+	    (description (format "Mail: %s" (notmuch-search-find-subject))))
+       (org-store-link-props
+	:type "notmuch"
+	:link link
+	:description description)))))
+    
+;;;; date display
+
+(defun notmuch-show/format-date (&rest args)
+  (let* ((args (car args))
+         (headers (plist-get (nth 0 args) :headers))
+	 (date (plist-get headers :Date))
+         (parsed-date (parse-time-string date))
+         (fmt-date (format-time-string
+		    "%a, %d-%m-%Y %H:%M"
+                    (apply #'encode-time (parse-time-string date)))))
+    (plist-put headers :Date fmt-date)
+    args))
+
+(advice-add #'notmuch-show-insert-headerline :filter-args #'notmuch-show/format-date)
+
 ;;;; hide patches
 
   (advice-add 'notmuch-show-insert-bodypart :filter-args 'my/notmuch-hide-content)
@@ -241,7 +301,7 @@ the documentation of the command bound to that key sequence."
 
 ;;;; org-capture
 
- (defun capture-mail()
+(defun capture-mail()
     "Capture mail to org mode."
     (interactive)
     (org-store-link nil)
@@ -308,7 +368,7 @@ the documentation of the command bound to that key sequence."
         cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
 ;;;; unbind commands
   (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
-  (global-unset-key (kbd "C-h g")) ; describe-gnu-project
+(global-unset-key (kbd "C-h g")) ; describe-gnu-project
 ;;; kill ring
 
 (use-package browse-kill-ring
@@ -487,6 +547,7 @@ is already narrowed."
   ;; (use-package org-bullets)
   ;; (add-hook 'org-mode-hook 'org-bullets-mode)
   (add-hook 'org-mode-hook 'org-indent-mode)
+  (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)  
   (use-package org-contrib)
   (setq org-startup-folded t
 	org-hide-emphasis-markers t
@@ -500,9 +561,11 @@ is already narrowed."
 	initial-major-mode 'org-mode
 ;;	org-ellipsis "⤵"
 	org-agenda-span 14
+	org-agenda-sticky t
 	org-M-RET-may-split-line t
 	org-checkbox-hierarchical-statistics nil
 	bookmark-set-fringe-mark nil
+	org-log-reschedule 'note
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
@@ -574,6 +637,11 @@ is already narrowed."
 
 ;; TODO https://youtu.be/a_WNtuefREM Making Org Agenda Look Beautiful
 
+(defun my-gtd ()  
+  (interactive)
+  (org-agenda nil "g"))
+
+(global-set-key (kbd "<f9>") 'my-gtd)
 
 
 (defadvice org-agenda (around split-vertically activate)
@@ -708,9 +776,12 @@ is already narrowed."
 (keymap-global-set "<f10>" #'org-capture)
 
 (setq org-capture-templates
-  '(("r" "Reply to an email" entry
- (file+headline "~/aamystuff/life/notes.org" "Mail correspondence")
- "* TODO [#B] %:from %:subject \n SCHEDULED: %t\n :PROPERTIES:\n :END:\n\n %i %?")))
+      '(("r" "Reply to an email" entry
+	 (file+headline "~/aamystuff/life/notes.org" "Mail correspondence")
+	 "* TODO %:from %:subject \n SCHEDULED: %t\n :PROPERTIES:\n :END:\n\n %i %?")
+	("t" "Personal Task" entry
+         (file "~/aamystuff/life/todos.org")
+         "* TODO %?")))
 
 ;;; shell here
 
@@ -1251,8 +1322,12 @@ from elsewhere."
     :straight (:host github :repo "SqrtMinusOne/reverso.el"))
 (setq reverso-languages '(english polish))
 
-(keymap-global-set "M-#" #'dictionary-lookup-definition)
+;; sudo apt-get install dictd dict dict-{wn,vera,jargon,devil,gcide,foldoc}
+;; sudo systemctl enable dictd
+;; sudo apt remove mueller7-dict
+
 (setq dictionary-server "localhost")
+(keymap-global-set "M-#" #'dictionary-lookup-definition)
 
 ;;; elisp
 
@@ -1267,21 +1342,17 @@ from elsewhere."
 
 (setq show-paren-when-point-inside-paren t)
 
+;;;; outli
+
+(use-package outli
+  :straight (:host github :repo "jdtsmith/outli")
+  :bind (:map outli-mode-map ; convenience key to get back to containing heading
+	      ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading))))
+  :hook ((prog-mode text-mode) . outli-mode))
+
 ;;;; rainbow
 
 (use-package rainbow-delimiters)
-
-;;;; outshine
-
-(use-package outshine
-  :straight
-  (:host github :repo "alphapapa/outshine")
-  :bind (:map outshine-mode-map
-	      ("<backtab>" . outshine-cycle-buffer)
-	      ("M-<up>" . nil)
-	      ("M-<down>" . nil)))
-
-(add-hook 'emacs-lisp-mode-hook 'outshine-mode)
 
 ;;;; highlight
 
@@ -1499,23 +1570,13 @@ from elsewhere."
 					       (org-columns-next-allowed-value nil 1))))
 
 (defun org-columns-switch-columns ()
-  "Switch the positions of :COLUMNS: lines in the current heading of an Org mode buffer."
   (interactive)
   (save-excursion
     (org-columns-goto-top-level)
-    (let ((heading-start (point)))
-      (org-end-of-meta-data t)
-      (let ((meta-data-end (point)))
-        (goto-char heading-start)
-        (when (re-search-forward ":COLUMNS:" meta-data-end t)
-          (let ((start (line-beginning-position))
-                (end (line-end-position)))
-            (forward-line)
-            (when (re-search-forward ":COLUMNS:" meta-data-end t)
-              (let ((start2 (line-beginning-position))
-                    (end2 (line-end-position)))
-                (transpose-regions start end start2 end2))))))))
-  (org-columns))
+    (re-search-forward ":COLUMNS:")
+    (org-metadown)
+    (org-metadown)
+    (org-columns)))
 
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map "x" #'org-columns-switch-columns))

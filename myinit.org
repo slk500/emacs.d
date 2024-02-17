@@ -1,3 +1,18 @@
+* theme
+#+begin_src elisp
+(use-package doom-themes)
+
+(setq doom-themes-enable-bold t 
+      doom-themes-enable-italic t)
+
+(load-theme 'doom-ayu-dark t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
+#+end_src
 * hide lines
 #+begin_src elisp
 (use-package hide-lines)
@@ -209,14 +224,7 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+end_src
 * lisp
 #+begin_src elisp
-  ;; (use-package paredit)
-  ;; (defun my-paredit-mode-hook ()
-  ;;     (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill)
-  ;;     (keymap-set paredit-mode-map "M-/" #'xref-find-references))
-
-  ;; (add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
-
-  (use-package nameless
+(use-package nameless
     :hook
     (emacs-lisp-mode . nameless-mode)
     :config
@@ -368,11 +376,6 @@ clm/open-command-log-buffer
   (setq electric-indent-mode nil)
 #+end_src
 * org
-** log
-#+begin_src elisp
-  (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
-  (setq org-log-reschedule 'note)
-#+end_src
 ** babel
 *** php
 #+begin_src elisp
@@ -412,14 +415,6 @@ clm/open-command-log-buffer
 #+begin_src elisp
 (use-package debbugs)
 #+end_src
-* shortcuts
-#+begin_src emacs-lisp
-
-  (defun my-gtd ()
-    (interactive) (org-agenda nil "g"))
-
-    (global-set-key (kbd "<f9>") 'my-gtd)
-#+END_SRC
 * center
 #+BEGIN_SRC emacs-lisp
 (use-package centered-window)
@@ -492,11 +487,6 @@ clm/open-command-log-buffer
 				   :port 6697
 				   :encryption tls)))
 #+end_src
-* calendar
-#+begin_src elisp
-  (setq calendar-week-start-day 1)
-  (defalias 'cc 'calendar)
-#+end_src
 * treemacs
 #+begin_src elisp
   (use-package treemacs
@@ -555,10 +545,4 @@ clm/open-command-log-buffer
           ("C-x t B"   . treemacs-bookmark)
           ("C-x t C-t" . treemacs-find-file)
           ("C-x t M-t" . treemacs-find-tag)))
-#+end_src
-* auto
-#+begin_src  elisp
-  (use-package which-key
-    :config (which-key-mode)
-    :delight)
 #+end_src
