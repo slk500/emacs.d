@@ -141,6 +141,9 @@
 
 ;;; magit
 
+;;Symbolic link to Git-controlled source file; follow link?
+(setq vc-follow-symlinks t)
+
 (use-package magit
 :config
 (setq magit-branch-read-upstream-first 'fallback
@@ -302,12 +305,12 @@
 ;;;; org-capture
 
 (defun capture-mail()
-    "Capture mail to org mode."
-    (interactive)
-    (org-store-link nil)
-    (org-capture nil "r")
-    )
-  (bind-key "t" 'capture-mail notmuch-show-mode-map)
+  "Capture mail to org mode."
+  (interactive)
+  (org-store-link nil)
+  (org-capture nil "r"))
+
+(bind-key "t" 'capture-mail notmuch-show-mode-map)
 
 ;;;; using org-mode in composing an email
 
@@ -362,7 +365,9 @@
 (setq debug-on-error nil)
 
 ;;; hl-line-mode
-;;(global-hl-line-mode t)
+
+(global-hl-line-mode t)
+
 ;;; ui
   (setq-default
         cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
@@ -572,10 +577,6 @@ is already narrowed."
   (require 'org-eldoc)
   (global-eldoc-mode 1))
 
-;;;; insert-heading
-
-(setq org-blank-before-new-entry '((heading . nil) (plain-list-item . auto)))
-
 ;;;; refile
 
 (setq org-refile-targets '((nil :maxlevel . 6)))
@@ -778,7 +779,7 @@ is already narrowed."
 (setq org-capture-templates
       '(("r" "Reply to an email" entry
 	 (file+headline "~/aamystuff/life/notes.org" "Mail correspondence")
-	 "* TODO %:from %:subject \n SCHEDULED: %t\n :PROPERTIES:\n :END:\n\n %i %?")
+	 "* TODO %a")
 	("t" "Personal Task" entry
          (file "~/aamystuff/life/todos.org")
          "* TODO %?")))
@@ -1060,6 +1061,7 @@ from elsewhere."
   (vertico-multiform-mode)
 )
 
+;; 
  (setq vertico-multiform-categories
        '((imenu buffer)))
 
@@ -1281,7 +1283,7 @@ from elsewhere."
     (define-key map "\C-k" #'my-embark-M-k)
     map))
 
-;;(consult-customize consult-buffer :keymap my/consult-buffer-map)
+(consult-customize consult-buffer :keymap my/consult-buffer-map)
 
 ;;; marginalia
 
