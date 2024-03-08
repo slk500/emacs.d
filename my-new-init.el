@@ -1,3 +1,48 @@
+;;;
+;;; help
+
+(use-package elisp-demos
+  :straight (:host github :repo "xuchunyang/elisp-demos")
+  :config
+  (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
+
+(use-package helpful)
+
+(global-set-key (kbd "C-h f") #'helpful-callable)
+(global-set-key (kbd "C-h v") #'helpful-variable)
+(global-set-key (kbd "C-h k") #'helpful-key)
+(global-set-key (kbd "C-h x") #'helpful-command)
+
+(keymap-global-set "C-h l" #'find-library)
+
+(setq helpful-switch-buffer-function #'+helpful-switch-to-buffer)
+
+(defun +helpful-switch-to-buffer (buffer-or-name)
+  "Switch to helpful BUFFER-OR-NAME.
+
+The logic is simple, if we are currently in the helpful buffer,
+reuse it's window, otherwise create new one."
+  (if (eq major-mode 'helpful-mode)
+      (switch-to-buffer buffer-or-name)
+    (pop-to-buffer buffer-or-name)))
+
+
+;;; xah fly keys
+
+;;; hide copyright
+
+(add-hook 'emacs-lisp-mode-hook 'elide-head-mode)
+
+;;; search web
+
+(use-package engine-mode
+  :config
+  (engine-mode t))
+
+(defengine google
+  "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
+  :keybinding "g")
+
 ;;; calendar
 
 (setq calendar-week-start-day 1)
@@ -21,6 +66,8 @@
 
 ;;; translate 
 ; https://github.com/lorniu/go-translate
+; https://www.reddit.com/r/emacs/comments/1b1s7wk/grammarly_in_emacs/ TODO
+; https://github.com/emacs-languagetool
 
 (use-package go-translate)
 (setq gts-translate-list '(("pl" "en")))
@@ -34,10 +81,11 @@
 
 ;;; moves the point to the newly created window after splitting
 
-;; (defadvice split-window (after move-point-to-new-window activate)
-;;   "Moves the point to the newly created window after splitting."
-;;   (other-window 1))
-;;; https://github.com/phillord/pabbrev
+(defadvice split-window (after move-point-to-new-window activate)
+  "Moves the point to the newly created window after splitting."
+  (other-window 1))
+
+;;; httks://github.com/phillord/pabbrev
 ;;; https://github.com/karthink/gptel
 ;;; hungry delete
 
@@ -167,6 +215,8 @@
 
 ;;; pomodoro
 
+(use-package hammy)
+
 (use-package org-pomodoro
   :config
   (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
@@ -177,7 +227,7 @@
 
 ;;; savehist
 
-(recentf-mode 1)
+;;(recentf-mode 1)
 (use-package savehist
   :init
   (savehist-mode))
@@ -206,21 +256,23 @@
 
  (setq notmuch-saved-searches
    '((:name "inbox" :query "tag:inbox" :key
-	    [105])
-     (:name "unread" :query "tag:unread" :key
-	    [117])
+	    "i")
      (:name "todo" :query "tag:todo" :key
 	    "t")
      (:name "emacs" :query "tag:emacs" :key
 	    "e")
+     (:name "emacs-org" :query "tag:emacs-org" :key
+	    "o")
+     (:name "emacs-devel" :query "tag:emacs-devel" :key
+	    "d")
      (:name "flagged" :query "tag:flagged" :key
-	    [102])
+	    "f")
      (:name "sent" :query "tag:sent" :key
-	    [115])
+	    "s")
      (:name "drafts" :query "tag:draft" :key
-	    [100])
+	    "d")
      (:name "all mail" :query "*" :key
-	    [97])))
+	    "a")))
 
 (setq message-send-mail-function 'smtpmail-send-it
       user-mail-address "slawomir.grochowski@gmail.com"
@@ -275,18 +327,18 @@
     
 ;;;; date display
 
-(defun notmuch-show/format-date (&rest args)
-  (let* ((args (car args))
-         (headers (plist-get (nth 0 args) :headers))
-	 (date (plist-get headers :Date))
-         (parsed-date (parse-time-string date))
-         (fmt-date (format-time-string
-		    "%a, %d-%m-%Y %H:%M"
-                    (apply #'encode-time (parse-time-string date)))))
-    (plist-put headers :Date fmt-date)
-    args))
+;; (defun notmuch-show/format-date (&rest args)
+;;   (let* ((args (car args))
+;;          (headers (plist-get (nth 0 args) :headers))
+;; 	 (date (plist-get headers :Date))
+;;          (parsed-date (parse-time-string date))
+;;          (fmt-date (format-time-string
+;; 		    "%a, %d-%m-%Y %H:%M"
+;;                     (apply #'encode-time (parse-time-string date)))))
+;;     (plist-put headers :Date fmt-date)
+;;     args))
 
-(advice-add #'notmuch-show-insert-headerline :filter-args #'notmuch-show/format-date)
+;; (advice-add #'notmuch-show-insert-headerline :filter-args #'notmuch-show/format-date)
 
 ;;;; hide patches
 
@@ -362,7 +414,7 @@
     (insert contents)))
 ;;; debug on error
 
-(setq debug-on-error nil)
+(setq debug-on-error t)
 
 ;;; hl-line-mode
 
@@ -515,13 +567,13 @@ is already narrowed."
 (display-time-mode 1)   
 ;;; treesitter
 
-(require 'treesit)
+;;(require 'treesit)
 
-(add-to-list
-  'treesit-language-source-alist
-  '(php "https://github.com/tree-sitter/tree-sitter-php.git")
-  '(clojure "http://github.com/sogaiu/tree-sitter-clojure.git") 
-  '(bash "https://github.com/tree-sitter/tree-sitter-bash.git"))
+;; (add-to-list
+;;   'treesit-language-source-alist
+;;   '(php "https://github.com/tree-sitter/tree-sitter-php.git")
+;;   '(clojure "http://github.com/sogaiu/tree-sitter-clojure.git")
+;;   '(bash "https://github.com/tree-sitter/tree-sitter-bash.git"))
 
 (setq treesit-load-name-override-list '((clojure "libtree-sitter-clojure" "libtree-sitter-clojure")))
 							
@@ -536,6 +588,9 @@ is already narrowed."
     :straight (:host github :repo "emacs-php/php-ts-mode"))
 
 ;;; org-mode
+
+
+;https://stackoverflow.com/questions/75900632/filter-custom-org-agenda-view-to-see-done-items-in-past-week TODO
 
 (use-package org-menu
   :straight (:host github :repo "sheijk/org-menu"))
@@ -571,6 +626,7 @@ is already narrowed."
 	org-checkbox-hierarchical-statistics nil
 	bookmark-set-fringe-mark nil
 	org-log-reschedule 'note
+	org-use-speed-commands t
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
   (require 'org-expiry)
@@ -579,21 +635,21 @@ is already narrowed."
 
 ;;;; refile
 
-(setq org-refile-targets '((nil :maxlevel . 6)))
+;; (setq org-refile-targets '((nil :maxlevel . 6)))
 
-;; Create hook to auto-refile when todo is changing state
-(add-hook 'org-after-todo-state-change-hook 'dk/refile-todo 'append)
-(defun dk/refile-todo()
-  (if (equal org-state "DONE")
-      (dk/refile-to "~/aamystuff/life/notes.org" "done")))
+;; ;; Create hook to auto-refile when todo is changing state
+;; (add-hook 'org-after-todo-state-change-hook 'dk/refile-todo 'append)
+;; (defun dk/refile-todo()
+;;   (if (equal org-state "DONE")
+;;       (dk/refile-to "~/aamystuff/life/notes.org" "done")))
 
-(defun dk/refile-to (file headline)
-  "Move current headline to specified location"
-  (let ((pos (save-excursion
-	       (find-file file)
-	       (org-find-exact-headline-in-buffer headline))))
-    (org-refile nil nil (list headline file nil pos)))
-  (switch-to-buffer (current-buffer)))
+;; (defun dk/refile-to (file headline)
+;;   "Move current headline to specified location"
+;;   (let ((pos (save-excursion
+;; 	       (find-file file)
+;; 	       (org-find-exact-headline-in-buffer headline))))
+;;     (org-refile nil nil (list headline file nil pos)))
+;;   (switch-to-buffer (current-buffer)))
 
 ;;;; http
 
@@ -684,7 +740,7 @@ is already narrowed."
 	("g" "Get Things Done (GTD)"
 	 ((agenda ""
 		  (
-		  ;; (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+		   (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
 		   (org-deadline-warning-days 0)))
 	  (tags-todo "-book-video/TODO|DOING"
 		     ((org-agenda-overriding-header
@@ -696,7 +752,7 @@ is already narrowed."
 (setq org-agenda-hide-tags-regexp (regexp-opt '("book")))
 
 (keymap-global-set "C-c a" #'org-agenda)
-(setq org-agenda-skip-scheduled-if-done nil)
+;(setq org-agenda-skip-scheduled-if-done nil)
 
 (setq org-default-notes-file "~/aamystuff/life/notes.org")
 
@@ -737,7 +793,7 @@ is already narrowed."
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
-		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-31")))))
+		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-03-08")))))
 		(insert "\n")
 		(insert (format "no coffe %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-03")))))
 		(insert "\n")
@@ -1044,13 +1100,6 @@ from elsewhere."
 (setq read-extended-command-predicate
 	  #'command-completion-default-include-p)
 
-(use-package paredit)
-(defun my-paredit-mode-hook ()
-  (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill)
-  (keymap-set paredit-mode-map "M-/" #'xref-find-references))
-
-(add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
-
 (use-package vertico
   :demand t                             ; Otherwise won't get loaded immediately
   :straight (vertico :files (:defaults "extensions/*") ; Special recipe to load extensions conveniently
@@ -1093,7 +1142,6 @@ from elsewhere."
 ;;;; consult
 
   (use-package consult
-    ;; Replace bindings. Lazily loaded due by `use-package'.
     :bind (;; C-c bindings in `mode-specific-map'
 	   ("C-c M-x" . consult-mode-command)
 	   ("C-c h" . consult-history)
@@ -1177,6 +1225,7 @@ from elsewhere."
     ;; For some commands and buffer sources it is useful to configure the
     ;; :preview-key on a per-command basis using the `consult-customize' macro.
     (consult-customize
+     consult-buffer :keymap my/consult-buffer-map
      consult-theme :preview-key '(:debounce 0.2 any)
      consult-ripgrep consult-git-grep consult-grep
      consult-bookmark consult-recent-file consult-xref
@@ -1188,39 +1237,22 @@ from elsewhere."
     ;; Optionally configure the narrowing key.
     ;; Both < and C-+ work reasonably well.
     (setq consult-narrow-key "<") ;; "C-+"
-
-    ;; Optionally make narrowing help available in the minibuffer.
-    ;; You may want to use `embark-prefix-help-command' or which-key instead.
-    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-    ;; By default `consult-project-function' uses `project-root' from project.el.
-    ;; Optionally configure a different project root function.
-    ;;;; 1. project.el (the default)
-    ;; (setq consult-project-function #'consult--default-project--function)
-    ;;;; 2. vc.el (vc-root-dir)
-    ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
-    ;;;; 3. locate-dominating-file
-    ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
-    ;;;; 4. projectile.el (projectile-project-root)
-    ;; (autoload 'projectile-project-root "projectile")
-    ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
-    ;;;; 5. No project support
-    ;; (setq consult-project-function nil)
   )
 
 ;;;;;; Previewing files in find-file
 
-(setq read-file-name-function #'consult-find-file-with-preview)
+;; cometimes errro
+;; (setq read-file-name-function #'consult-find-file-with-preview)
 
-(defun consult-find-file-with-preview (prompt &optional dir default mustmatch initial pred)
-  (interactive)
-  (let ((default-directory (or dir default-directory))
-        (minibuffer-completing-file-name t))
-    (consult--read #'read-file-name-internal :state (consult--file-preview)
-                   :prompt prompt
-                   :initial initial
-                   :require-match mustmatch
-                   :predicate pred)))
+;; (defun consult-find-file-with-preview (prompt &optional dir default mustmatch initial pred)
+;;   (interactive)
+;;   (let ((default-directory (or dir default-directory))
+;;         (minibuffer-completing-file-name t))
+;;     (consult--read #'read-file-name-internal :state (consult--file-preview)
+;;                    :prompt prompt
+;;                    :initial initial
+;;                    :require-match mustmatch
+;;                    :predicate pred)))
 
 ;;; embark
 
@@ -1283,8 +1315,6 @@ from elsewhere."
     (define-key map "\C-k" #'my-embark-M-k)
     map))
 
-(consult-customize consult-buffer :keymap my/consult-buffer-map)
-
 ;;; marginalia
 
 (use-package marginalia
@@ -1310,6 +1340,10 @@ from elsewhere."
 
 (add-to-list 'display-buffer-alist
 	     '("\\*cider-repl\\*" my-display-buffer-pop-up-same-width-window))
+
+(add-to-list 'display-buffer-alist
+	     '("\\*Help\\*" (display-buffer-reuse-window)))
+
 
 ;;; focus
 
@@ -1369,6 +1403,13 @@ from elsewhere."
 (keymap-set emacs-lisp-mode-map "M-RET" 'emr-show-refactor-menu)
 
 ;;;; others
+
+(use-package paredit)
+(defun my-paredit-mode-hook ()
+  (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill)
+  (keymap-set paredit-mode-map "M-/" #'xref-find-references))
+
+(add-hook 'paredit-mode-hook 'my-paredit-mode-hook)
 
 (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
 
@@ -1576,6 +1617,7 @@ from elsewhere."
   (save-excursion
     (org-columns-goto-top-level)
     (re-search-forward ":COLUMNS:")
+    (org-metadown)
     (org-metadown)
     (org-metadown)
     (org-columns)))
@@ -1905,4 +1947,3 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 
 (with-eval-after-load 'org
   (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c)) 
-

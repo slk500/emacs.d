@@ -135,7 +135,7 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 #+begin_src elisp
     (defun remove-multiple-spaces-in-region (start end)
       "Replace multiple spaces in the selected region with a single space."
-      (iqnteractive "r")
+      (interactive "r")
       (save-excursion
         (save-restriction
           (narrow-to-region start end)
@@ -168,19 +168,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
                       (split-string (buffer-substring start
                                                       end))
                       :key #'string-to-number)))
-#+end_src
-* help system
-#+begin_src elisp
-  (use-package elisp-demos
-    :straight (:host github :repo "xuchunyang/elisp-demos")
-    :config
-    (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
-
-  (use-package helpful)
-  (setq counsel-describe-function-function #'helpful-callable)
-  (setq counsel-describe-variable-function #'helpful-variable)
-
-  (keymap-global-set "C-h l" #'find-library)
 #+end_src
 * books
 #+begin_src elisp
@@ -350,16 +337,6 @@ https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.htm
     (let ((inhibit-message t))
       (undo-only)
       (undo-redo))))
-#+end_src
-* search web
-#+begin_src elisp
-(use-package engine-mode
-  :config
-  (engine-mode t))
-
-(defengine google
-  "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
-  :keybinding "g")
 #+end_src
 * benchmark
 #+begin_src sh
