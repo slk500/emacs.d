@@ -1,4 +1,3 @@
-;;;
 ;;; help
 
 (use-package elisp-demos
@@ -28,6 +27,8 @@ reuse it's window, otherwise create new one."
 
 
 ;;; xah fly keys
+
+; https://youtu.be/KZA6tojsGfU add org mode keys
 
 ;;; hide copyright
 
@@ -217,6 +218,10 @@ reuse it's window, otherwise create new one."
 
 (use-package hammy)
 
+(use-package svg-lib)
+
+(setq image-types '(svg png gif tiff jpeg xpm xbm pbm))
+
 (use-package org-pomodoro
   :config
   (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
@@ -276,7 +281,7 @@ reuse it's window, otherwise create new one."
 
 (setq message-send-mail-function 'smtpmail-send-it
       user-mail-address "slawomir.grochowski@gmail.com"
-      user-full-name "Sławomir Grochowski"
+      user-full-name "Slawomir Grochowski"
       smtpmail-stream-type 'ssl
       smtpmail-default-smtp-server "smtp.gmail.com"
       smtpmail-smtp-server "smtp.gmail.com"
@@ -284,7 +289,7 @@ reuse it's window, otherwise create new one."
       smtpmail-debug-verb t
       mail-user-agent 'sendmail-user-agent
       smtpmail-debug-info t
-      message-signature "Sławomir Grochowski")
+      message-signature "Slawomir Grochowski")
 
 (setq auth-sources
       '((:source "~/aamystuff/.authinfo.gpg"))
@@ -561,10 +566,6 @@ is already narrowed."
   (add-hook 'clojure-mode-hook #'paredit-mode)
   (add-hook 'clojure-mode-hook #'lsp-mode)
 
-;;; time
-(setq display-time-format "%H:%M")
-(setq display-time-default-load-average nil)
-(display-time-mode 1)   
 ;;; treesitter
 
 ;;(require 'treesit)
@@ -793,7 +794,7 @@ is already narrowed."
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
-		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-03-08")))))
+		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-03-15")))))
 		(insert "\n")
 		(insert (format "no coffe %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-03")))))
 		(insert "\n")
