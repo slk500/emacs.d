@@ -1,17 +1,17 @@
 * theme
 #+begin_src elisp
-(use-package doom-themes)
+  (use-package doom-themes)
 
-(setq doom-themes-enable-bold t 
-      doom-themes-enable-italic t)
+  (setq doom-themes-enable-bold t 
+        doom-themes-enable-italic t)
 
-(load-theme 'doom-ayu-dark t)
+  (load-theme 'doom-ayu-dark t)
 
-;; Enable flashing mode-line on errors
-(doom-themes-visual-bell-config)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
 
-;; Corrects (and improves) org-mode's native fontification.
-(doom-themes-org-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
 #+end_src
 * hide lines
 #+begin_src elisp
@@ -106,13 +106,13 @@ https://drshapeless.com/blog/posts/legacy-define-key-and-global-set-key-in-emacs
 https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/
 
 #+begin_src elisp
-  (with-eval-after-load "org" (define-key org-mode-map (kbd "C-x C-e")
-                                          (lambda () (interactive)
-                                            (let ((lang (nth 0 (org-babel-get-src-block-info))))
-                                              (if (and (org-in-src-block-p) (string= lang "clojure"))
-                                                  (call-interactively 'cider-eval-last-sexp)
-                                                (call-interactively 'eros-eval-last-sexp)
-                                                )))))
+  ;; (with-eval-after-load "org" (define-key org-mode-map (kbd "C-x C-e")
+  ;;                                         (lambda () (interactive)
+  ;;                                           (let ((lang (nth 0 (org-babel-get-src-block-info))))
+  ;;                                             (if (and (org-in-src-block-p) (string= lang "clojure"))
+  ;;                                                 (call-interactively 'cider-eval-last-sexp)
+  ;;                                               (call-interactively 'eros-eval-last-sexp)
+  ;;                                               )))))
 #+end_src
 * repeat mode
 #+begin_src elisp
@@ -374,13 +374,6 @@ clm/open-command-log-buffer
 ** logbook
 #+begin_src elisp
   (add-to-list 'org-log-note-headings '(note . "%t"))
-#+end_src
-* modeline
-#+begin_src elisp
-  (setq column-number-mode t)
-;;  (use-package delight)
-;;  (delight 'eldoc-mode nil "eldoc")
-;;  (delight 'ivy-mode nil "ivy")
 #+end_src
 * display ^l glyphs as horizontal lines
 #+begin_src elisp

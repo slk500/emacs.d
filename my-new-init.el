@@ -1,3 +1,73 @@
+;;; modeline
+
+(setq-default mode-line-format (delq 'mode-line-modes mode-line-format))
+
+;;; tetris
+
+(setq gamegrid-glyph-height-mm 10.0)
+
+;;; publish
+
+(require 'ox-publish)
+
+(setq org-publish-project-alist
+      `(("pages"
+         :base-directory "~/aamystuff/slawomir-grochowski.com/org"
+         :base-extension "org"
+         :recursive t
+         :publishing-directory "~/aamystuff/slawomir-grochowski.com/html"
+	 :html-doctype "html5"
+	 :html-html5-fancy t
+	 :html-head-include-scripts nil
+	 :html-head-include-default-style nil
+	 :html-head "<link rel=\"stylesheet\" href=\"/style.css\" type=\"text/css\"/>"
+	 :html-preamble "<nav>
+  <a href=\"/\">&lt; Home</a>
+</nav>
+<div id=\"updated\">Updated: %C</div>"
+
+	 :html-postamble "<hr/>
+<footer>
+  <div class=\"copyright-container\">
+    <div class=\"copyright\">
+      Copyright &copy; 2017-2020 Thomas Ingram some rights reserved<br/>
+      Content is available under
+      <a rel=\"license\" href=\"http://creativecommons.org/licenses/by-sa/4.0/\">
+        CC-BY-SA 4.0
+      </a> unless otherwise noted
+    </div>
+    <div class=\"cc-badge\">
+      <a rel=\"license\" href=\"http://creativecommons.org/licenses/by-sa/4.0/\">
+        <img alt=\"Creative Commons License\"
+             src=\"https://i.creativecommons.org/l/by-sa/4.0/88x31.png\" />
+      </a>
+    </div>
+  </div>
+
+  <div class=\"generated\">
+    Created with %c on <a href=\"https://www.gnu.org\">GNU</a>/<a href=\"https://www.kernel.org/\">Linux</a>
+  </div>
+</footer>"
+         :publishing-function org-html-publish-to-html)
+
+        ("static"
+         :base-directory "~/aamystuff/slawomir-grochowski.com/org"
+         :base-extension "css\\|txt\\|jpg\\|gif\\|png"
+         :recursive t
+         :publishing-directory  "~/aamystuff/slawomir-grochowski.com/html"
+         :publishing-function org-publish-attachment)
+
+        ("slawomir-grochowski.com" :components ("pages" "static"))))
+
+;;; modeline
+
+(setq column-number-mode t)
+
+;;;; which function cursor is at?
+
+;(which-function-mode 1)
+
+
 ;;; help
 
 (use-package elisp-demos
@@ -5,12 +75,17 @@
   :config
   (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
-(use-package helpful)
-
-(global-set-key (kbd "C-h f") #'helpful-callable)
-(global-set-key (kbd "C-h v") #'helpful-variable)
-(global-set-key (kbd "C-h k") #'helpful-key)
-(global-set-key (kbd "C-h x") #'helpful-command)
+(use-package helpful
+  :commands (helpful-callable helpful-variable helpful-command helpful-key)
+  :bind
+  (([remap describe-function] . helpful-callable)
+   ([remap describe-command] . helpful-command)
+   ([remap describe-variable] . helpful-variable)
+   ([remap describe-key] . helpful-key)
+   :map emacs-lisp-mode-map
+   ("C-c C-d" . helpful-at-point)
+   :map helpful-mode-map
+   ("C-c C-d" . helpful-at-point)))
 
 (keymap-global-set "C-h l" #'find-library)
 
@@ -38,11 +113,11 @@ reuse it's window, otherwise create new one."
 
 (use-package engine-mode
   :config
-  (engine-mode t))
-
-(defengine google
-  "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
-  :keybinding "g")
+  (engine-mode t)
+  (engine/set-keymap-prefix (kbd "C-c e"))
+  (defengine google
+    "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
+    :keybinding "g"))
 
 ;;; calendar
 
@@ -82,9 +157,12 @@ reuse it's window, otherwise create new one."
 
 ;;; moves the point to the newly created window after splitting
 
-(defadvice split-window (after move-point-to-new-window activate)
-  "Moves the point to the newly created window after splitting."
-  (other-window 1))
+;; (defadvice split-window (after move-point-to-new-window activate)
+;;   "Moves the point to the newly created window after splitting."
+;;   (other-window 1))
+
+(global-set-key "\C-x2" (lambda () (interactive)(split-window-vertically) (other-window 1)))
+(global-set-key "\C-x3" (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 
 ;;; httks://github.com/phillord/pabbrev
 ;;; https://github.com/karthink/gptel
@@ -256,6 +334,7 @@ reuse it's window, otherwise create new one."
               (notmuch-search-tag (list "+deleted" "-inbox") beg end)))
 
 (keymap-set notmuch-message-mode-map "C-s" #'notmuch-draft-save)
+(keymap-set notmuch-show-mode-map "r" #'notmuch-show-reply)
 
 (setq notmuch-fcc-dirs "sent +sent -unread")
 
@@ -423,13 +502,14 @@ reuse it's window, otherwise create new one."
 
 ;;; hl-line-mode
 
+; highlights the line about the current buffer's point in all live windows
 (global-hl-line-mode t)
 
 ;;; ui
-  (setq-default
-        cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
+(setq-default
+ cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
 ;;;; unbind commands
-  (global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
+(global-unset-key (kbd "C-h <RET>")) ; view-order-manuals
 (global-unset-key (kbd "C-h g")) ; describe-gnu-project
 ;;; kill ring
 
@@ -501,15 +581,6 @@ reuse it's window, otherwise create new one."
 ;; The package is young and doesn't have comprehensive coverage.
 (use-package tempel-collection)
 
-;;; code compas
-(use-package async)
-(use-package dash)
-(use-package f)
-(use-package s)
-(use-package simple-httpd)
-
-(use-package code-compass
-  :load-path "~/.emacs.d/lisp")
 ;;; narrow
 
 (defun narrow-or-widen-dwim (p)
@@ -551,20 +622,22 @@ is already narrowed."
 
 ;;; clojure
 
-  (require 'ob-clojure)
-  (use-package cider)
-  (require 'cider)  
-  (setq org-babel-clojure-backend 'cider)
+; commeted out - bc - errors after update to master emacs 30 with theme doom
+
+;  (require 'ob-clojure)
+ ; (use-package cider)
+ ; (require 'cider)
+;  (setq org-babel-clojure-backend 'cider)
 
 ;  (define-key clojure-mode-map (kbd "\C-x \C-e") 'cider-eval-last-sexp)
 ;  (global-set-key (kbd "\C-x \C-e") 'cider-eval-last-sexp)
 
-  (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
+;  (define-key clojure-mode-map (kbd "M-RET") 'lsp-execute-code-action)
 
-  (add-hook 'cider-repl-mode-hook #'paredit-mode)
-  (add-hook 'cider-mode-hook #'paredit-mode)
-  (add-hook 'clojure-mode-hook #'paredit-mode)
-  (add-hook 'clojure-mode-hook #'lsp-mode)
+  ;; (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  ;; (add-hook 'cider-mode-hook #'paredit-mode)
+  ;; (add-hook 'clojure-mode-hook #'paredit-mode)
+  ;; (add-hook 'clojure-mode-hook #'lsp-mode)
 
 ;;; treesitter
 
@@ -741,9 +814,9 @@ is already narrowed."
 	("g" "Get Things Done (GTD)"
 	 ((agenda ""
 		  (
-		   (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+		 ;  (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
 		   (org-deadline-warning-days 0)))
-	  (tags-todo "-book-video/TODO|DOING"
+	  (tags-todo "-book-video/TODO|DOING|WAITING"
 		     ((org-agenda-overriding-header
 		       (format "TODOs (%s)" (org-agenda-count "bar")))
 		      ))
@@ -1242,7 +1315,7 @@ from elsewhere."
 
 ;;;;;; Previewing files in find-file
 
-;; cometimes errro
+;; sometimes errro
 ;; (setq read-file-name-function #'consult-find-file-with-preview)
 
 ;; (defun consult-find-file-with-preview (prompt &optional dir default mustmatch initial pred)
@@ -1454,10 +1527,6 @@ from elsewhere."
 
 (global-smartscan-mode 1)
 
-;;;; which function cursor is at?
-
-(which-function-mode 1)
-
 ;;; overlay
 
 (defun highlight-line ()
@@ -1600,7 +1669,7 @@ from elsewhere."
 
 ;;; colview
 
-(setq org-columns-checkbox-states '("[X]" "[-]" "[ ]" ))
+(setq org-columns-checkbox-states '("[X]" "[-]" "[ ]" "" ))
 
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [(shift left)] (lambda () (interactive)
@@ -1617,10 +1686,14 @@ from elsewhere."
   (interactive)
   (save-excursion
     (org-columns-goto-top-level)
+    (re-search-forward ":PROPERTIES:")
+    (org-fold-hide-drawer-toggle 'off)
     (re-search-forward ":COLUMNS:")
     (org-metadown)
     (org-metadown)
     (org-metadown)
+    (re-search-backward ":PROPERTIES:")
+    (org-fold-hide-drawer-toggle)
     (org-columns)))
 
 (with-eval-after-load 'org-colview
