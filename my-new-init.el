@@ -1,3 +1,71 @@
+;;; fill-mode
+
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+;;; palimpset
+
+(use-package palimpsest
+  :bind (("M-w" . palimpsest-move-region-to-bottom)))
+
+;;; theme
+
+(use-package doom-themes
+  :config
+  ;; Load the theme
+  (load-theme 'doom-ayu-dark t))
+
+(setq doom-themes-enable-bold t
+      doom-themes-enable-italic t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
+
+
+;;; toggle-fill-paragraph
+
+(defun my-fill-or-unfill ()
+  "Like `fill-paragraph', but unfill if used twice."
+  (interactive)
+  (let ((fill-column
+         (if (eq last-command 'my-fill-or-unfill)
+             (progn (setq this-command nil)
+                    (point-max))
+           fill-column)))
+    (call-interactively 'fill-paragraph nil (vector nil t))))
+
+(global-set-key [remap org-fill-paragraph]
+                'my-fill-or-unfill)
+
+;;; latitude
+
+(setq calendar-latitude 52.237049
+      calendar-longitude 21.017532)
+
+;;; elfeed, rss
+
+(use-package elfeed)
+(use-package elfeed-org)
+
+;;; gpt ai
+
+(use-package gptel
+  :config
+  (setq gptel-default-mode 'org-mode))
+
+(setq gptel-model   "mixtral-8x7b-32768"
+      gptel-backend
+      (gptel-make-openai "Groq"
+        :host "api.groq.com"
+	:key (auth-source-pick-first-password :host "api.groq.com")
+        :endpoint "/openai/v1/chat/completions"
+        :stream t
+        :models '("mixtral-8x7b-32768"
+                  "gemma-7b-it"
+                  "llama2-70b-4096")))
+
 ;;; modeline
 
 (setq-default mode-line-format (delq 'mode-line-modes mode-line-format))
@@ -10,51 +78,42 @@
 
 (require 'ox-publish)
 
+(defun m/org-publish-org-sitemap-format-entry (entry style project)
+  (cond ((not (directory-name-p entry))
+         (let* ((date (org-publish-find-date entry project)))
+           (format "%s - [[file:%s][%s]]"
+                   (format-time-string "%F" date) entry
+                   (org-publish-find-title entry project))))
+        ((eq style 'tree)
+         ;; Return only last subdir.
+         (file-name-nondirectory (directory-file-name entry)))
+        (t entry)))
+
 (setq org-publish-project-alist
       `(("pages"
+	 :auto-sitemap t
+	 :sitemap-filename "index.org"
+	 :sitemap-title "Slawomir Grochowski homepage"
+	 :sitemap-style tree
+	 :sitemap-sort-files anti-chronologically
+	 :sitemap-format-entry m/org-publish-org-sitemap-format-entry
          :base-directory "~/aamystuff/slawomir-grochowski.com/org"
          :base-extension "org"
          :recursive t
-         :publishing-directory "~/aamystuff/slawomir-grochowski.com/html"
+         :publishing-directory "/ssh:root@51.178.48.169:/var/www/slawomir-grochowski.com"
+;;         :publishing-directory "~/aamystuff/slawomir-grochowski.com/html"
 	 :html-doctype "html5"
 	 :html-html5-fancy t
 	 :html-head-include-scripts nil
-	 :html-head-include-default-style nil
-	 :html-head "<link rel=\"stylesheet\" href=\"/style.css\" type=\"text/css\"/>"
-	 :html-preamble "<nav>
-  <a href=\"/\">&lt; Home</a>
-</nav>
-<div id=\"updated\">Updated: %C</div>"
-
-	 :html-postamble "<hr/>
-<footer>
-  <div class=\"copyright-container\">
-    <div class=\"copyright\">
-      Copyright &copy; 2017-2020 Thomas Ingram some rights reserved<br/>
-      Content is available under
-      <a rel=\"license\" href=\"http://creativecommons.org/licenses/by-sa/4.0/\">
-        CC-BY-SA 4.0
-      </a> unless otherwise noted
-    </div>
-    <div class=\"cc-badge\">
-      <a rel=\"license\" href=\"http://creativecommons.org/licenses/by-sa/4.0/\">
-        <img alt=\"Creative Commons License\"
-             src=\"https://i.creativecommons.org/l/by-sa/4.0/88x31.png\" />
-      </a>
-    </div>
-  </div>
-
-  <div class=\"generated\">
-    Created with %c on <a href=\"https://www.gnu.org\">GNU</a>/<a href=\"https://www.kernel.org/\">Linux</a>
-  </div>
-</footer>"
+	 :html-head-include-default-style t
+	 :html-head "<link href= \"../static/style.css\" rel=\"stylesheet\" type=\"text/css\" />"
          :publishing-function org-html-publish-to-html)
-
         ("static"
-         :base-directory "~/aamystuff/slawomir-grochowski.com/org"
-         :base-extension "css\\|txt\\|jpg\\|gif\\|png"
+         :base-directory "~/aamystuff/slawomir-grochowski.com/static"
+         :base-extension "css\\|txt\\|jpg\\|jpeg\\|gif\\|png"
          :recursive t
-         :publishing-directory  "~/aamystuff/slawomir-grochowski.com/html"
+;;         :publishing-directory "~/aamystuff/slawomir-grochowski.com/static"
+         :publishing-directory  "/ssh:root@51.178.48.169:/var/www/slawomir-grochowski.com/static/"
          :publishing-function org-publish-attachment)
 
         ("slawomir-grochowski.com" :components ("pages" "static"))))
@@ -145,15 +204,14 @@ reuse it's window, otherwise create new one."
 ; https://www.reddit.com/r/emacs/comments/1b1s7wk/grammarly_in_emacs/ TODO
 ; https://github.com/emacs-languagetool
 
-(use-package go-translate)
-(setq gts-translate-list '(("pl" "en")))
-
-(setq gts-default-translator
-      (gts-translator
-       :picker (gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
-       :engines (list (gts-bing-engine) (gts-google-engine))
-       :render (gts-buffer-render)))
-
+(use-package go-translate
+  :config
+  (setq gt-langs '(pl en)
+	gt-default-translator (gt-translator
+			       :taker   (gt-taker :text 'buffer :pick 'paragraph)
+			       :engines (list (gt-bing-engine) (gt-google-engine) (gt-chatgpt-engine))
+			       :render  (gt-buffer-render))
+	gt-chatgpt-key (auth-source-pick-first-password :host "api.openai.com")))
 
 ;;; moves the point to the newly created window after splitting
 
@@ -332,6 +390,13 @@ reuse it's window, otherwise create new one."
               "Mark thread as spam"
               (interactive (notmuch-interactive-region))
               (notmuch-search-tag (list "+deleted" "-inbox") beg end)))
+
+(define-key notmuch-show-mode-map "b"
+	    (lambda (&optional address)
+              "Bounce the current message."
+              (interactive "sBounce To: ")
+              (notmuch-show-view-raw-message)
+              (message-resend address)))
 
 (keymap-set notmuch-message-mode-map "C-s" #'notmuch-draft-save)
 (keymap-set notmuch-show-mode-map "r" #'notmuch-show-reply)
@@ -663,7 +728,6 @@ is already narrowed."
 
 ;;; org-mode
 
-
 ;https://stackoverflow.com/questions/75900632/filter-custom-org-agenda-view-to-see-done-items-in-past-week TODO
 
 (use-package org-menu
@@ -671,17 +735,11 @@ is already narrowed."
 
 (keymap-global-set "C-c !" #'org-timestamp-inactive)
 
-;; (setq org-adapt-indentation t
-;;       org-hide-leading-stars t
-;;       org-odd-levels-only t)
-
 (use-package org
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
-  ;; (use-package org-bullets)
-  ;; (add-hook 'org-mode-hook 'org-bullets-mode)
   (add-hook 'org-mode-hook 'org-indent-mode)
-  (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)  
+  (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (use-package org-contrib)
   (setq org-startup-folded t
 	org-hide-emphasis-markers t
@@ -694,7 +752,6 @@ is already narrowed."
 	org-treat-insert-todo-heading-as-state-change t
 	initial-major-mode 'org-mode
 ;;	org-ellipsis "⤵"
-	org-agenda-span 14
 	org-agenda-sticky t
 	org-M-RET-may-split-line t
 	org-checkbox-hierarchical-statistics nil
@@ -703,27 +760,29 @@ is already narrowed."
 	org-use-speed-commands t
 	org-src-tab-acts-natively t)
   (require 'org-tempo)
-  (require 'org-expiry)
   (require 'org-eldoc)
   (global-eldoc-mode 1))
 
-;;;; refile
+;;;; table
 
-;; (setq org-refile-targets '((nil :maxlevel . 6)))
+(with-eval-after-load 'org-table
+  (org-defkey org-table-fedit-map [return] #'org-table-insert-row))
 
-;; ;; Create hook to auto-refile when todo is changing state
-;; (add-hook 'org-after-todo-state-change-hook 'dk/refile-todo 'append)
-;; (defun dk/refile-todo()
-;;   (if (equal org-state "DONE")
-;;       (dk/refile-to "~/aamystuff/life/notes.org" "done")))
+;;;; export
 
-;; (defun dk/refile-to (file headline)
-;;   "Move current headline to specified location"
-;;   (let ((pos (save-excursion
-;; 	       (find-file file)
-;; 	       (org-find-exact-headline-in-buffer headline))))
-;;     (org-refile nil nil (list headline file nil pos)))
-;;   (switch-to-buffer (current-buffer)))
+(setq org-export-with-email t)
+(setq org-html-validation-link nil)
+(setq org-export-allow-bind-keywords t)
+(setq org-image-actual-width nil)
+
+;;;;; export underscore as underscore instead of highlight in HTML
+
+(setq org-use-sub-superscripts nil)
+(setq org-export-with-sub-superscripts nil)
+
+;;;; do not insert line between headers
+
+(setf org-blank-before-new-entry '((heading . nil) (plain-list-item . nil)))
 
 ;;;; http
 
@@ -754,7 +813,7 @@ is already narrowed."
 
 ;;;; tags
 
-(setq org-tag-alist '(("book" . ?b) ("email" . ?e) ("sms" . ?s) ("video" . ?v)))
+(setq org-tag-alist '(("book" . ?b) ("email" . ?e) ("sms" . ?s) ("video" . ?v) ("noexport" . ?n)))
 
 ;;;; todo keywords
 
@@ -816,7 +875,7 @@ is already narrowed."
 		  (
 		 ;  (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
 		   (org-deadline-warning-days 0)))
-	  (tags-todo "-book-video/TODO|DOING|WAITING"
+	  (tags-todo "-book-video/TODO|DOING"
 		     ((org-agenda-overriding-header
 		       (format "TODOs (%s)" (org-agenda-count "bar")))
 		      ))
@@ -830,14 +889,15 @@ is already narrowed."
 
 (setq org-default-notes-file "~/aamystuff/life/notes.org")
 
-(setq org-agenda-files '("~/aamystuff/life/life.org.gpg"
-			"~/aamystuff/life/article.org"
-			"~/aamystuff/life/notes.org"
-			"~/aamystuff/life/todos.org"
-			"~/aamystuff/life/job.org"
-			"~/aamystuff/phprefactor/phprefactor.org"
-			"~/aamystuff/emacs/emacs.org"
-			"~/aamystuff/clojure/clojure-examples.org"))
+(setq org-agenda-files (append '("~/aamystuff/life/life.org.gpg"
+				 "~/aamystuff/life/notes.org"
+				 "~/aamystuff/life/todos.org"
+				 "~/aamystuff/life/job.org"
+				 "~/aamystuff/phprefactor/phprefactor.org"
+				 "~/aamystuff/emacs/emacs.org"
+				 "~/aamystuff/clojure/clojure-examples.org")
+				; (directory-files-recursively "~/aamystuff/slawomir-grochowski.com/" "\\.org$")
+			       ))
 
 (setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t% s")
 				 (todo . " %i %-12:c")
@@ -867,11 +927,10 @@ is already narrowed."
 	      (when (re-search-forward "Since*" nil t)
 		(insert "\n")
 		(insert "\n")
-		(insert (format "sane, clean mind %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-03-15")))))
-		(insert "\n")
 		(insert (format "no coffe %d" (+ 1 (* -1 (org-time-stamp-to-now "2024-01-03")))))
 		(insert "\n")
-		(insert (format "free lungs %d" (+ 1 (* -1 (org-time-stamp-to-now "2023-05-09")))))))))
+		;;(insert (format "free lungs %d" (+ 1 (* -1 (org-time-stamp-to-now "2023-05-09")))))
+		))))
 
 (setq org-agenda-show-future-repeats nil)
 (defun my/org-agenda-adjust-text-size ()
@@ -890,11 +949,6 @@ is already narrowed."
 
 ;;;; day counter
 ;; https://www.reddit.com/r/orgmode/comments/13fgc09/orgagenda_elapsed_dayscounter_of_days/
-;;;; created 
-
-;(require 'org-expiry)
-;(org-expiry-insinuate)
-;(setq org-expiry-created-property-name "CREATED")
 
 ;;;; imenu
 
@@ -912,7 +966,7 @@ is already narrowed."
 	 "* TODO %a")
 	("t" "Personal Task" entry
          (file "~/aamystuff/life/todos.org")
-         "* TODO %?")))
+         "* TODO %?" :prepend t)))
 
 ;;; shell here
 
@@ -922,6 +976,7 @@ is already narrowed."
 ;;; spelling
 
 (use-package jinx
+  :straight (:host github :repo "minad/jinx")
   :bind (("M-$" . jinx-correct)
          ("C-M-$" . jinx-languages)))
 
@@ -982,12 +1037,9 @@ from elsewhere."
   "make current region colored red, using text properties"
   (interactive (list (region-beginning) (region-end)))
   (put-text-property begin end 'font-lock-face '(:foreground "green")))
-;;; org-blk-uri
+;;; org-web-tools
 
 (use-package org-web-tools)
-
-(use-package org-blk-uri
-    :straight (:host github :repo "ag91/org-blk-uri"))
 
 ;;; edebug
 (setq edebug-print-level 100
@@ -1111,9 +1163,9 @@ from elsewhere."
 
 ;;; whitespace
 
-(use-package whitespace-cleanup-mode
-      :config
-      (global-whitespace-cleanup-mode +1))
+;; (use-package whitespace-cleanup-mode
+;;       :config
+;;       (global-whitespace-cleanup-mode +1))
 
 ;(add-hook 'before-save-hook 'whitespace-cleanup)
 
@@ -1669,35 +1721,60 @@ from elsewhere."
 
 ;;; colview
 
-(setq org-columns-checkbox-states '("[X]" "[-]" "[ ]" "" ))
-
-(with-eval-after-load 'org-colview
-  (org-defkey org-columns-map [(shift left)] (lambda () (interactive)
-					       (org-columns-next-allowed-value nil 3))))
-(with-eval-after-load 'org-colview
- (org-defkey org-columns-map [(shift down)] (lambda () (interactive)
-					       (org-columns-next-allowed-value nil 2))))
-
-(with-eval-after-load 'org-colview
- (org-defkey org-columns-map [(shift right)] (lambda () (interactive)
-					       (org-columns-next-allowed-value nil 1))))
+(setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" "" "[^]"))
 
 (defun org-columns-switch-columns ()
   (interactive)
   (save-excursion
     (org-columns-goto-top-level)
     (re-search-forward ":PROPERTIES:")
-    (org-fold-hide-drawer-toggle 'off)
-    (re-search-forward ":COLUMNS:")
-    (org-metadown)
-    (org-metadown)
-    (org-metadown)
-    (re-search-backward ":PROPERTIES:")
-    (org-fold-hide-drawer-toggle)
-    (org-columns)))
+    (let* ((folded-p (org-fold-folded-p))
+	   (beg (re-search-forward ":COLUMNS:"))
+	   (end (re-search-forward ":END:"))
+	   (num-of-columns (count-matches ":COLUMNS:" beg end)))
+      (when folded-p
+	(org-fold-hide-drawer-toggle))
+      (goto-char beg)
+      (dotimes (_ num-of-columns)
+	(org-metadown))
+      (re-search-backward ":PROPERTIES:")
+      (when folded-p
+	(org-fold-hide-drawer-toggle))
+      (org-columns))))
 
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map "x" #'org-columns-switch-columns))
+
+(defun my/org-columns-get-format (&optional fmt-string)
+  "Return columns format specifications.
+When optional argument FMT-STRING is non-nil, use it as the
+current specifications.  This function also sets
+`org-columns-current-fmt-compiled' and
+`org-columns-current-fmt'."
+  (interactive)
+  (let ((format
+	 (or fmt-string
+             (progn
+               (save-excursion (re-search-forward ":COLUMNS:\\s-*.*" nil t)
+                               (replace-regexp-in-string ":COLUMNS:\\s-*" ""
+                                                         (buffer-substring-no-properties
+                                                          (line-beginning-position) (line-end-position)))))
+	     (org-with-wide-buffer
+	      (goto-char (point-min))
+	      (catch :found
+		(let ((case-fold-search t))
+		  (while (re-search-forward "^[ \t]*#\\+COLUMNS: .+$" nil t)
+		    (let ((element (org-element-at-point)))
+		      (when (org-element-type-p element 'keyword)
+			(throw :found (org-element-property :value element)))))
+		  nil)))
+	     org-columns-default-format)))
+    (setq org-columns-current-fmt format)
+    (org-columns-compile-format format)
+    format))
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns-get-format :override 'my/org-columns-get-format))
 
 (defun my/org-columns--summary-checkbox-count (check-boxes _)
   "Summarize CHECK-BOXES with a check-box cookie."
@@ -1708,9 +1785,16 @@ from elsewhere."
        ((equal b "[X]")
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
-       ((string-match "\\[\\([0-9]+\\)/\\([0-9]+\\)\\]" b)
+       ((equal b "[^]") nil)
+       ((string-match (rx "[" (one-or-more digit) "]") b)
+	(setq completed (+ completed 1))
+	(setq total (+ total 1)))
+       ((string-match (rx "[" (group (one-or-more digit))
+                          "/"
+                          (group (or (one-or-more digit) "?")) "]") b)
 	(setq completed (+ completed (string-to-number (match-string 1 b))))
-	(setq total (+ total (string-to-number (match-string 2 b)))))
+	(setq total (+ total (let ((total (string-to-number (match-string 2 b)))) ;; "?" is counted as one
+			       (if (= 0 total) 1 total) ))))
        (t (setq total (+ total 1)))))
     (format "[%d/%d]" completed total)))
 
@@ -1739,15 +1823,62 @@ ORIGINAL is the real string, i.e., before it is modified by
 		  (lambda (m) (propertize m 'face (org-get-tag-face m)))
 		  v nil nil 1)))
 	      ("TODO" (propertize v 'face (org-get-todo-face original)))
-	      (_ (if (string-match "\\[\\([1-9][0-9]*\\)/\\([1-9][0-9]*\\)\\]" v)
+	      (_ (if (string-match (rx (and "["
+                             (group (one-or-more digit))
+                             "/"
+                             (group (or (one-or-more digit) "?"))
+                             "]")) v)
 		     (let* ((first-number (string-to-number (match-string 1 v)))
 			    (second-number (string-to-number (match-string 2 v))))
-		       (if (= first-number second-number)
+		       (if (or (> first-number second-number) (= first-number second-number) (= 0 second-number)) ;; 0 because (string-to-number "?") => 0
 			   (propertize v 'face (org-get-todo-face original))
-			 v))
-		   (if (string-match "\\[X\\]" v)
+			 (if (< first-number second-number)
+			     (propertize v 'face 'error)
+			     v)))
+		   (if (string-match (rx "[" (or (one-or-more digit) "X") "]") v)
 		       (propertize v 'face (org-get-todo-face original))
 		     v)))))))
+
+(defun my/org-columns--displayed-value (spec value &optional no-star)
+  "Return displayed value for specification SPEC in current entry.
+
+SPEC is a column format specification as stored in
+`org-columns-current-fmt-compiled'.  VALUE is the real value to
+display, as a string.
+
+When NO-STAR is non-nil, do not add asterisks before displayed
+value for ITEM property."
+  (or (and (functionp org-columns-modify-value-for-display-function)
+	   (funcall org-columns-modify-value-for-display-function
+		    (nth 1 spec)	;column name
+		    value))
+      (pcase spec
+	(`("ITEM" . ,_)
+	 (let ((stars
+		(and (not no-star)
+		     (concat (make-string (1- (org-current-level))
+					  (if org-hide-leading-stars ?\s ?*))
+			     "* "))))
+	   (concat stars (org-link-display-format value))))
+	(`(,(or "DEADLINE" "SCHEDULED" "TIMESTAMP") . ,_)
+	 (replace-regexp-in-string org-ts-regexp "[\\1]" value))
+	(`(,_ ,_ ,_ ,_ nil) value)
+	;; If PRINTF is set, assume we are displaying a number and
+	;; obey to the format string.
+	(`(,_ ,_ ,_ ,_ ,printf)
+         (if (string-empty-p value) ;; empty string if empty value
+             ""
+           (format printf (string-to-number value))))
+	(_ (error "Invalid column specification format: %S" spec)))))
+
+
+
+
+
+
+(with-eval-after-load 'org
+  (advice-add 'org-columns--displayed-value :override 'my/org-columns--displayed-value))
+
 
 (with-eval-after-load 'org
   (advice-add 'org-columns--overlay-text :override 'my/org-columns--overlay-text))
@@ -2020,4 +2151,4 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 		      :inherit 'default))
 
 (with-eval-after-load 'org
-  (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c)) 
+  (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c))

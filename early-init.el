@@ -16,7 +16,6 @@
 ;(global-unset-key (kbd "C-x h")) ;=> mark whole buffer, easy to make mistake with C-h
 (bind-key* "C-w" 'kill-this-buffer)
 (global-set-key (kbd "C-x f") 'find-file)
-;(global-set-key (kbd "C-w") 'kill-this-buffer)
 (global-set-key (kbd "C-f") 'isearch-forward)
 (global-set-key (kbd "C-s") 'save-buffer)
 (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
@@ -42,7 +41,7 @@
   "Clear existing theme settings instead of layering them"
   (mapc #'disable-theme custom-enabled-themes))
 
-(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/mystuff/software.org")))
+(global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/slawomir-grochowski.com/articles.org")))
 (global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/aamystuff/phprefactor/phprefactor.org")))
 (global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/life/life.org.gpg")))
 (global-set-key (kbd "C-c 4") (lambda() (interactive)(find-file "~/aamystuff/emacs/emacs.org")))
