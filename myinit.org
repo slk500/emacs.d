@@ -67,10 +67,6 @@ https://www.n16f.net/blog/making-ielm-more-comfortable/
 * legacy define-key and global-set-key in Emacs
 https://drshapeless.com/blog/posts/legacy-define-key-and-global-set-key-in-emacs.html
 * TODO https://github.com/emacsfodder/move-text
-* font
-#+begin_src elisp
-  (setq text-scale-mode-step 1.05)
-#+end_src
 * long lines, truncate, wrap
 #+begin_src elisp
   (setq-default truncate-lines t)
@@ -86,18 +82,6 @@ https://drshapeless.com/blog/posts/legacy-define-key-and-global-set-key-in-emacs
 * wrap text in parenthesis
 #+begin_src elisp
  (electric-pair-mode -1)
-#+end_src
-* adding keymaps to src blocks
-https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-via-org-font-lock-hook/
-
-#+begin_src elisp
-  ;; (with-eval-after-load "org" (define-key org-mode-map (kbd "C-x C-e")
-  ;;                                         (lambda () (interactive)
-  ;;                                           (let ((lang (nth 0 (org-babel-get-src-block-info))))
-  ;;                                             (if (and (org-in-src-block-p) (string= lang "clojure"))
-  ;;                                                 (call-interactively 'cider-eval-last-sexp)
-  ;;                                               (call-interactively 'eros-eval-last-sexp)
-  ;;                                               )))))
 #+end_src
 * repeat mode
 #+begin_src elisp
@@ -127,9 +111,7 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
           (goto-char (point-min))
           (while (re-search-forward "  +" nil t)
             (replace-match " ")))))
-    (+ 1 1)
-  (+ 1 1)
-#+end_src
+ #+end_src
 * replace+
 #+begin_src elisp
 (use-package replace+)
@@ -195,13 +177,6 @@ https://kitchingroup.cheme.cmu.edu/blog/2017/06/10/Adding-keymaps-to-src-blocks-
 (setq nobreak-char-display nil)
 #+end_src
 * lisp
-#+begin_src elisp
-(use-package nameless
-    :hook
-    (emacs-lisp-mode . nameless-mode)
-    :config
-    (setq nameless-prefix "-"))
-#+end_src
 ** clojure
 https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
 https://github.com/clojure-emacs/cider/issues/1819
@@ -323,16 +298,6 @@ https://blog.drshapeless.com/p/legacy-define-key-and-global-set-key-in-emacs.htm
       (undo-only)
       (undo-redo))))
 #+end_src
-* benchmark
-#+begin_src sh
-time emacs -nw -Q -eval '(kill-emacs)'
-#+end_src
-* command-log-mode
-global-commannd-log-mode
-clm/open-command-log-buffer
-#+begin_src elisp
-  (use-package command-log-mode)
-#+end_src
 * indent
 #+begin_src elisp
   (setq electric-indent-mode nil)
@@ -356,24 +321,12 @@ clm/open-command-log-buffer
   (exec-path-from-shell-initialize))
 #+END_SRC
 ** [[https://emacs.stackexchange.com/questions/39478/emacs-not-loading-org-agenda-files-on-startup][Emacs not loading org-agenda-files on startup]]
-** logbook
-#+begin_src elisp
-  (add-to-list 'org-log-note-headings '(note . "%t"))
-#+end_src
 * display ^l glyphs as horizontal lines
 #+begin_src elisp
   (use-package form-feed
     :delight)
   (global-form-feed-mode)
 #+end_src
-* bug tracker
-#+begin_src elisp
-(use-package debbugs)
-#+end_src
-* center
-#+BEGIN_SRC emacs-lisp
-(use-package centered-window)
-#+END_SRC
 * music
 #+begin_src elisp
     (use-package bongo
@@ -419,10 +372,6 @@ clm/open-command-log-buffer
 ** whole line
 #+begin_src elisp
   (use-package whole-line-or-region)
-#+end_src
-* count
-#+begin_src elisp
-  (global-set-key (kbd "M-=") #'count-words)
 #+end_src
 * irc
 #+begin_src elisp

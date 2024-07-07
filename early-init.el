@@ -28,10 +28,12 @@
 (keymap-global-set "C--" #'text-scale-decrease)
 (keymap-global-unset "C-=")
 (keymap-global-set "C-=" #'text-scale-increase)
+(keymap-global-set "M-=" #'count-words)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (load-theme 'modus-vivendi t)
+(setq text-scale-mode-step 1.05)
 
 ;; (add-variable-watcher 'smtpmail-smtp-service (lambda (s n o w)
 ;;                                                      (debug)))

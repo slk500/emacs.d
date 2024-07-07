@@ -199,8 +199,8 @@ reuse it's window, otherwise create new one."
 
 ;; (setq which-key-persistent-popup t)
 
-;;; translate 
-; https://github.com/lorniu/go-translate
+;;; text language
+;;;; translate
 ; https://www.reddit.com/r/emacs/comments/1b1s7wk/grammarly_in_emacs/ TODO
 ; https://github.com/emacs-languagetool
 
@@ -212,6 +212,14 @@ reuse it's window, otherwise create new one."
 			       :engines (list (gt-bing-engine) (gt-google-engine) (gt-chatgpt-engine))
 			       :render  (gt-buffer-render))
 	gt-chatgpt-key (auth-source-pick-first-password :host "api.openai.com")))
+
+
+(add-hook 'gt-buffer-render-output-hook 'visual-line-mode)
+
+;;;; langtool
+
+(use-package langtool)
+(setq langtool-language-tool-jar "~/apps/LanguageTool-6.4/languagetool-commandline.jar")
 
 ;;; moves the point to the newly created window after splitting
 
@@ -746,6 +754,7 @@ is already narrowed."
 	org-log-done 'time
 	org-log-reschudle 'time
 	org-log-redeadline 'time
+	org-log-note-headings '(note . "%t")
 	org-log-into-drawer t
 	org-use-fast-todo-selection 'expert ; todo selection appear in the smaller via minibuffer
 	org-special-ctrl-a/e t ;; ctrl a move to begining of heading not line
@@ -1539,17 +1548,17 @@ from elsewhere."
 
 (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
 
-(add-hook 'emacs-lisp-mode-hook
-	  (lambda ()
-	     (add-hook 'before-save-hook 'eval-buffer nil 'make-it-local)))
+;; (add-hook 'emacs-lisp-mode-hook
+;; 	  (lambda ()
+;; 	     (add-hook 'before-save-hook 'eval-buffer nil 'make-it-local)))
 
-(defun mp-elisp-mode-eval-buffer ()
-  (interactive)
-  (message "Evaluated buffer")
-  (eval-buffer)
-  (ert-run-all-tests))
+;; (defun mp-elisp-mode-eval-buffer ()
+;;   (interactive)
+;;   (message "Evaluated buffer")
+;;   (eval-buffer)
+;;   (ert-run-all-tests))
 
-(define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
+;; (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'mp-elisp-mode-eval-buffer)
 
 (use-package highlight-defined
   :hook
@@ -1566,6 +1575,14 @@ from elsewhere."
   (other-window -1))
 
 (keymap-global-set "<f7>" #'ert-run-all-tests)
+
+;;;; nameless
+
+(use-package nameless
+    :hook
+    (emacs-lisp-mode . nameless-mode)
+    :config
+    (setq nameless-prefix "-"))
 
 ;;; moving around code
 ;;;; smart scan
