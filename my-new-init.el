@@ -49,6 +49,13 @@
 (use-package elfeed)
 (use-package elfeed-org)
 
+(elfeed-org)
+
+;; Optionally specify a number of files containing elfeed
+;; configuration. If not set then the location below is used.
+;; Note: The customize interface is also supported.
+(setq rmh-elfeed-org-files (list "~/aamystuff/rss.org"))
+
 ;;; gpt ai
 
 (use-package gptel
@@ -754,7 +761,7 @@ is already narrowed."
 	org-log-done 'time
 	org-log-reschudle 'time
 	org-log-redeadline 'time
-	org-log-note-headings '(note . "%t")
+	org-log-note-headings '((note . "%t"))
 	org-log-into-drawer t
 	org-use-fast-todo-selection 'expert ; todo selection appear in the smaller via minibuffer
 	org-special-ctrl-a/e t ;; ctrl a move to begining of heading not line
@@ -896,10 +903,9 @@ is already narrowed."
 (keymap-global-set "C-c a" #'org-agenda)
 ;(setq org-agenda-skip-scheduled-if-done nil)
 
-(setq org-default-notes-file "~/aamystuff/life/notes.org")
+(setq org-default-notes-file "~/aamystuff/life/todos.org")
 
 (setq org-agenda-files (append '("~/aamystuff/life/life.org.gpg"
-				 "~/aamystuff/life/notes.org"
 				 "~/aamystuff/life/todos.org"
 				 "~/aamystuff/life/job.org"
 				 "~/aamystuff/phprefactor/phprefactor.org"
@@ -971,8 +977,8 @@ is already narrowed."
 
 (setq org-capture-templates
       '(("r" "Reply to an email" entry
-	 (file+headline "~/aamystuff/life/notes.org" "Mail correspondence")
-	 "* TODO %a")
+	 (file "~/aamystuff/life/todos.org")
+	 "* TODO %a" :prepend t)
 	("t" "Personal Task" entry
          (file "~/aamystuff/life/todos.org")
          "* TODO %?" :prepend t)))
@@ -1051,11 +1057,38 @@ from elsewhere."
 (use-package org-web-tools)
 
 ;;; edebug
+
 (setq edebug-print-level 100
       edebug-print-length 1000
       edebug-print-circle nil
       eval-expression-print-level 50
       eval-expression-print-length 1000)
+
+;;;; eros
+; https://xenodium.com/inline-previous-result-and-why-you-should-edebug/
+
+(defun adviced:edebug-compute-previous-result (_ &rest r)
+  "Adviced `edebug-compute-previous-result'."
+  (let ((previous-value (nth 0 r)))
+    (if edebug-unwrap-results
+        (setq previous-value
+              (edebug-unwrap* previous-value)))
+    (setq edebug-previous-result
+          (edebug-safe-prin1-to-string previous-value))))
+
+(advice-add #'edebug-compute-previous-result
+            :around
+            #'adviced:edebug-compute-previous-result)
+
+(defun adviced:edebug-previous-result (_ &rest r)
+  "Adviced `edebug-previous-result'."
+  (eros--make-result-overlay edebug-previous-result
+    :where (point)
+    :duration eros-eval-result-duration))
+
+(advice-add #'edebug-previous-result
+            :around
+            #'adviced:edebug-previous-result)
 
 ;;; https://github.com/joaotavora/breadcrumb
 ;;; expand region
