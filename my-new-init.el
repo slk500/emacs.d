@@ -200,9 +200,8 @@ reuse it's window, otherwise create new one."
 (set-language-environment 'utf-8)
 
 ;;; which-key
-  (use-package which-key
-    :config (which-key-mode)
-    :delight)
+
+(which-key-mode 1)
 
 ;; (setq which-key-persistent-popup t)
 
@@ -585,6 +584,9 @@ reuse it's window, otherwise create new one."
 ; highlights the line about the current buffer's point in all live windows
 (global-hl-line-mode t)
 
+(set-face-background 'hl-line "#313638")
+
+
 ;;; ui
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
@@ -779,6 +781,10 @@ is already narrowed."
   (require 'org-eldoc)
   (global-eldoc-mode 1))
 
+;;;; org-tidy
+
+(use-package org-tidy)
+
 ;;;; table
 
 (with-eval-after-load 'org-table
@@ -836,7 +842,7 @@ is already narrowed."
 (setq org-todo-keywords
       '(
         (sequence "REPEAT(r!)" "LOOKINGFOR(l!)" "STUCK(k!)" "DOING(o!)" "NEXT(n!)" "TODO(t!)" "WAITING(w!)" "SOMEDAY(s!)"
-                  "|" "CANCELED(c!)" "RECONSIDER(r!@)" "OFF(f!)" "DONE(d!)")
+                  "|" "CANCELED(c@!)" "RECONSIDER(r!@)" "OFF(f!)" "DONE(d!)")
         ))
  
 ;;;; org-agenda

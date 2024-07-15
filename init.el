@@ -192,18 +192,6 @@
      (etags-regen-regexp-alist
       (("c" "objc") "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/"
        "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/"))
-     (eval defun clearhead-in-this-year nil (interactive)
-	   (message
-	    (format "%f"
-		    (* 100
-		       (/ (- (time-to-day-in-year (current-time)) 7)
-			  (float (time-to-day-in-year (current-time))))))))
-     (eval defun sober-in-this-year nil (interactive)
-	   (message
-	    (format "%f"
-		    (* 100
-		       (/ (- (time-to-day-in-year (current-time)) 7)
-			  (float (time-to-day-in-year (current-time))))))))
      (nameless-separator . "/")
      (nameless-current-name . "org-columns")))
  '(send-mail-function 'sendmail-send-it)
