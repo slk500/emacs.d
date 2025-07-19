@@ -1,0 +1,8 @@
+# ignore these
+*
+# except
+!early-init.el
+!init.el
+!myinit.org
+!my-new-init.el
+!.gitignore
