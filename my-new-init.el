@@ -594,7 +594,7 @@ reuse it's window, otherwise create new one."
 
 (add-hook 'emacs-lisp-mode-hook 'elide-head-mode)
 
-;g;; search web
+;;; search web
 
 (use-package engine-mode
   :config
@@ -2229,9 +2229,10 @@ from elsewhere."
     (org-entry-put pom "PLANK" "1")
     (org-entry-put pom "PUSHUP" "15")))
 
-
+(when (file-exists-p "private.el")
+  (load (expand-file-name "private.el" user-emacs-directory) nil t)
 (with-eval-after-load 'org
-  (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
+  (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value)))
 
 
 ;;;; rest
@@ -2670,8 +2671,3 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 
 (with-eval-after-load 'org
   (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c))
-
-;;; load private file
-
-(when (file-exists-p "private.el")
-  (load "private.el" nil t))
