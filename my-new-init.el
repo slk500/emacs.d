@@ -1,6 +1,55 @@
 ;;; ...  -*- lexical-binding: t -*-
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
+;;; view mode
+
+;; Enable view-mode when entering read-only
+(setq view-read-only t)
+
+;; Enhanced keybindings
+(with-eval-after-load 'view
+
+  (define-key view-mode-map (kbd "a") 'beginning-of-line)
+  (define-key view-mode-map (kbd "e") 'end-of-line)
+
+  (define-key view-mode-map (kbd "i") 'View-exit)
+
+  (define-key view-mode-map (kbd "u") '(lambda()
+                                         (interactive)
+                                         (View-scroll-page-backward 3)))
+  (define-key view-mode-map (kbd "d") '(lambda()
+                                         (interactive)
+                                         (View-scroll-page-forward 3)))
+
+  (define-key view-mode-map (kbd "0") 'beginning-of-line)
+  (define-key view-mode-map (kbd "$") 'end-of-line)
+
+  (define-key view-mode-map (kbd "g") 'beginning-of-buffer)
+  (define-key view-mode-map (kbd "G") 'end-of-buffer)
+
+  (define-key view-mode-map (kbd ";") 'other-window)
+
+  (define-key view-mode-map (kbd "SPC") 'nil))
+
+;; Quick toggle keys
+(global-set-key (kbd "<escape>") 'view-mode)
+
+;; Optional: return to view-mode after saving
+(add-hook 'after-save-hook
+          (lambda ()
+            (when (and buffer-file-name (not view-mode))
+              (view-mode 1))))
+
+;; Visual feedback - box cursor in view mode, bar when editing
+(add-hook 'view-mode-hook
+          (defun view-mode-hookee+ ()
+            (setq cursor-type (if view-mode 'hollowe 'bar))))
+
+(add-hook 'find-file-hook
+          (lambda ()
+            (unless (or (derived-mode-p 'dired-mode))
+              (view-mode 1))))
+
 ;;; desktop
  (desktop-save-mode 1)
 
@@ -1221,7 +1270,7 @@ is already narrowed."
 
 (use-package org-tidy)
 
-;;;; table
+;;;; org-table
 
 (with-eval-after-load 'org-table
   (org-defkey org-table-fedit-map [return] #'org-table-insert-row))
