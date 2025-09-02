@@ -1,57 +1,150 @@
 ;;; ...  -*- lexical-binding: t -*-
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
+
+;;; ibuffer
+
+(use-package all-the-icons-ibuffer :ensure t
+  :hook (ibuffer-mode . all-the-icons-ibuffer-mode))
+
+(use-package ibuffer :ensure nil
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-title-face 'font-lock-doc-face)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " "
+                (name 16 -1)
+                " " filename)))
+  (setq ibuffer-saved-filter-groups
+        '(("Main"
+           ("Directories" (mode . dired-mode))
+           ("C++" (or
+                   (mode . c++-mode)
+                   (mode . c++-ts-mode)
+                   (mode . c-mode)
+                   (mode . c-ts-mode)
+                   (mode . c-or-c++-ts-mode)))
+           ("Python" (or
+                      (mode . python-ts-mode)
+                      (mode . c-mode)
+                      (mode . python-mode)))
+           ("Build" (or
+                     (mode . make-mode)
+                     (mode . makefile-gmake-mode)
+                     (name . "^Makefile$")
+                     (mode . change-log-mode)))
+           ("Scripts" (or
+                       (mode . shell-script-mode)
+                       (mode . shell-mode)
+                       (mode . sh-mode)
+                       (mode . lua-mode)
+                       (mode . bat-mode)))
+           ("Config" (or
+                      (mode . conf-mode)
+                      (mode . conf-toml-mode)
+                      (mode . toml-ts-mode)
+                      (mode . conf-windows-mode)
+                      (name . "^\\.clangd$")
+                      (name . "^\\.gitignore$")
+                      (name . "^Doxyfile$")
+                      (name . "^config\\.toml$")
+                      (mode . yaml-mode)))
+           ("Web" (or
+                   (mode . mhtml-mode)
+                   (mode . html-mode)
+                   (mode . web-mode)
+                   (mode . nxml-mode)))
+           ("CSS" (or
+                   (mode . css-mode)
+                   (mode . sass-mode)))
+           ("JS" (or
+                  (mode . js-mode)
+                  (mode . rjsx-mode)))
+           ("Markup" (or
+                   (mode . markdown-mode)
+                   (mode . adoc-mode)))
+           ("Org" (mode . org-mode))
+           ("LaTeX" (name . "\.tex$"))
+           ("Magit" (or
+                     (mode . magit-blame-mode)
+                     (mode . magit-cherry-mode)
+                     (mode . magit-diff-mode)
+                     (mode . magit-log-mode)
+                     (mode . magit-process-mode)
+                     (mode . magit-status-mode)))
+           ("Apps" (or
+                    (mode . elfeed-search-mode)
+                    (mode . elfeed-show-mode)))
+           ("Fundamental" (or
+                           (mode . fundamental-mode)
+                           (mode . text-mode)))
+           ("Emacs" (or
+                     (mode . emacs-lisp-mode)
+                     (name . "^\\*Help\\*$")
+                     (name . "^\\*Custom.*")
+                     (name . "^\\*Org Agenda\\*$")
+                     (name . "^\\*info\\*$")
+                     (name . "^\\*scratch\\*$")
+                     (name . "^\\*Backtrace\\*$")
+                     (name . "^\\*Messages\\*$"))))))
+  :hook
+  (ibuffer-mode . (lambda ()
+                    (ibuffer-switch-to-saved-filter-groups "Main")))
+)
+
 ;;; view mode
 
-;; Enable view-mode when entering read-only
 (setq view-read-only t)
 
-;; Enhanced keybindings
 (with-eval-after-load 'view
 
   (define-key view-mode-map (kbd "a") 'beginning-of-line)
   (define-key view-mode-map (kbd "e") 'end-of-line)
-
-  (define-key view-mode-map (kbd "i") 'View-exit)
-
+  (define-key view-mode-map (kbd "<return>") 'View-exit)
   (define-key view-mode-map (kbd "u") '(lambda()
                                          (interactive)
                                          (View-scroll-page-backward 3)))
   (define-key view-mode-map (kbd "d") '(lambda()
                                          (interactive)
                                          (View-scroll-page-forward 3)))
-
   (define-key view-mode-map (kbd "0") 'beginning-of-line)
   (define-key view-mode-map (kbd "$") 'end-of-line)
-
   (define-key view-mode-map (kbd "g") 'beginning-of-buffer)
   (define-key view-mode-map (kbd "G") 'end-of-buffer)
-
   (define-key view-mode-map (kbd ";") 'other-window)
-
   (define-key view-mode-map (kbd "SPC") 'nil))
 
-;; Quick toggle keys
 (global-set-key (kbd "<escape>") 'view-mode)
 
-;; Optional: return to view-mode after saving
 (add-hook 'after-save-hook
           (lambda ()
             (when (and buffer-file-name (not view-mode))
               (view-mode 1))))
 
-;; Visual feedback - box cursor in view mode, bar when editing
 (add-hook 'view-mode-hook
           (defun view-mode-hookee+ ()
             (setq cursor-type (if view-mode 'hollowe 'bar))))
 
-(add-hook 'find-file-hook
-          (lambda ()
-            (unless (or (derived-mode-p 'dired-mode))
-              (view-mode 1))))
+;; (add-hook 'find-file-hook
+;;           (lambda ()
+;;             (unless (or (derived-mode-p 'dired-mode))
+;;               (view-mode 1))))
 
 ;;; desktop
- (desktop-save-mode 1)
+; (desktop-save-mode 1)
 
 ;;; backward-forward
 
@@ -1403,38 +1496,37 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	       )
 	  (if (eq cmp t) nil (my-signum cmp))))))
 
-(when (string= 'slk user-login-name)
-  (setq org-agenda-custom-commands
-	'(("a" "default" agenda "" ((org-scheduled-past-days 1)
-				    (org-deadline-past-days 1)
-				    (org-habit-scheduled-past-days 10000)
-				    (org-deadline-warning-days 0)))
-	  ("Z" "org-ql test"
-	   ((org-ql-block '(or (ts-active :on today) (and (habit) (scheduled :to today))))))
-;; use org-ql
+(setq org-agenda-custom-commands
+      '(("a" "default" agenda "" ((org-scheduled-past-days 1)
+				  (org-deadline-past-days 1)
+				  (org-habit-scheduled-past-days 10000)
+				  (org-deadline-warning-days 0)))
+	("Z" "org-ql test"
+	 ((org-ql-block '(or (ts-active :on today) (and (habit) (scheduled :to today))))))
+	;; use org-ql
 
-	  ("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
-	   ((org-agenda-files (append org-agenda-files (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")))
-	    (org-agenda-cmp-user-defined (cmp-date-property "CLOSED"))
-	    (org-agenda-sorting-strategy '(user-defined-down todo-state-down priority-down))
-	    (org-agenda-todo-keyword-format "%-2s")
-	    (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
-	    ) nil ("~/aamystuff/books.html"))
-	  ("s" "Someday" tags-todo "-book-video/SOMEDAY")
-	  ("g" "Get Things Done (GTD)"
-	   ((agenda "")
-	    (tags-todo "-book-video-emacs/TODO"
-		       ((org-agenda-overriding-header
-			 (format "TODOs (%s)" (org-agenda-count "bar")))))
-	    (tags-todo "+emacs/TODO"
-		       ((org-agenda-overriding-header
-			 (format "EMACSs (%s)" (org-agenda-count "elo")))))
-	    (todo "WAITING"
-		  ((org-agenda-overriding-header
-		    (format "WAITINGs (%s)" (org-agenda-count "foo")))))
-	    (tags-todo "book/DOING"
-		       ((org-agenda-overriding-header
-			 (format "BOOKs (%s)" (org-agenda-count "book"))))))))))
+	("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
+	 ((org-agenda-files (append org-agenda-files (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")))
+	  (org-agenda-cmp-user-defined (cmp-date-property "CLOSED"))
+	  (org-agenda-sorting-strategy '(user-defined-down todo-state-down priority-down))
+	  (org-agenda-todo-keyword-format "%-2s")
+	  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
+	  ) nil ("~/aamystuff/books.html"))
+	("s" "Someday" tags-todo "-book-video/SOMEDAY")
+	("e" "Emacs" tags-todo "+emacs/-SOMEDAY"
+	 ((org-agenda-overriding-header
+	   (format "EMACSs (%s)" (org-agenda-count "elo")))))
+	("g" "Get Things Done (GTD)"
+	 ((agenda "")
+	  (tags-todo "-book-video-emacs/TODO"
+		     ((org-agenda-overriding-header
+		       (format "TODOs (%s)" (org-agenda-count "bar")))))
+	  (tags-todo "-emacs/WAITING"
+		((org-agenda-overriding-header
+		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))
+	  (tags-todo "book/DOING"
+		     ((org-agenda-overriding-header
+		       (format "BOOKs (%s)" (org-agenda-count "book")))))))))
 
 (setq org-agenda-prefix-format '((agenda . " %i %?-12t% s")
 				 (todo . " ")
@@ -1456,9 +1548,10 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 ;				   "~/aamystuff/job/job.org"
 				   "~/aamystuff/phprefactor/phprefactor.org"
 				   "~/aamystuff/emacs/emacs.org"
-				   "~/aamystuff/clojure/clojure-examples.org"
+		;;		   "~/aamystuff/clojure/clojure-examples.org"
 				   "~/aamystuff/mystuff/books.org"
-				   "~/aamystuff/mystuff/psychology.org")
+		;;		   "~/aamystuff/mystuff/psychology.org"
+				   )
 					; (directory-files-recursively "~/aamystuff/slawomir-grochowski.com/" "\\.org$")
 				 )))
 
@@ -2243,6 +2336,9 @@ from elsewhere."
 
 (setq calendar-week-start-day 1)
 (defalias 'cc 'calendar)
+
+(setq calendar-today-marker 'calendar-month-header)
+(add-hook 'calendar-today-visible-hook 'calendar-mark-today)
 
 (copy-face font-lock-constant-face 'calendar-iso-week-face)
 
