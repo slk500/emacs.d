@@ -2,6 +2,11 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+;;; buffer box
+
+(use-package buffer-box
+  :straight (:host github :repo "rougier/buffer-box"))
+
 ;;; ibuffer
 
 (use-package all-the-icons-ibuffer :ensure t
@@ -124,8 +129,7 @@
   (define-key view-mode-map (kbd "$") 'end-of-line)
   (define-key view-mode-map (kbd "g") 'beginning-of-buffer)
   (define-key view-mode-map (kbd "G") 'end-of-buffer)
-  (define-key view-mode-map (kbd ";") 'other-window)
-  (define-key view-mode-map (kbd "SPC") 'nil))
+  (define-key view-mode-map (kbd ";") 'other-window))
 
 (global-set-key (kbd "<escape>") 'view-mode)
 
@@ -144,7 +148,7 @@
 ;;               (view-mode 1))))
 
 ;;; desktop
-; (desktop-save-mode 1)
+ (desktop-save-mode 1)
 
 ;;; backward-forward
 
@@ -1142,14 +1146,6 @@ timestamp."
 
 (use-package browse-kill-ring)
 
-;;; sql
-
-;; (add-hook 'sql-mode-hook 'lsp)
-;; (setq lsp-sqls-workspace-config-path nil)
-;; (setq lsp-sqls-connections
-;;     '(((driver . "mysql") (dataSourceName . "test:test@tcp(localhost:3310)/test"))
-;;       ))
-
 ;;; tempel
 
 ;; Configure Tempel
@@ -1268,8 +1264,8 @@ is already narrowed."
 ;; (use-package clojure-ts-mode
 ;;     :straight (:host github :repo "clojure-emacs/clojure-ts-mode"))
 
-;; (use-package php-ts-mode
-;;     :straight (:host github :repo "emacs-php/php-ts-mode"))
+(use-package php-ts-mode
+    :straight (:host github :repo "emacs-php/php-ts-mode"))
 
 ;;; org-mode
 
