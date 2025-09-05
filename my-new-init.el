@@ -2582,6 +2582,8 @@ ORIGINAL is the real string, i.e., before it is modified by
 		     (let* ((first-number (string-to-number (match-string 1 v)))
 			    (second-number (string-to-number (match-string 2 v))))
 		       (cond
+			((and (eq first-number 0) (eq second-number 0))
+			 (propertize v 'face '(:foreground "white")))
 			((eq first-number 0)
 			 (propertize v 'face 'error))
 			((or (> first-number second-number) (= first-number second-number) (= 0 second-number))
