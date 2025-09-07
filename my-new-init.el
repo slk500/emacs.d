@@ -2,6 +2,48 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+;;; Make C-g a bit more helpful
+
+(defun prot/keyboard-quit-dwim ()
+  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
+
+The generic `keyboard-quit' does not do the expected thing when
+the minibuffer is open.  Whereas we want it to close the
+minibuffer, even without explicitly focusing it.
+
+The DWIM behaviour of this command is as follows:
+
+- When the region is active, disable it.
+- When a minibuffer is open, but not focused, close the minibuffer.
+- When the Completions buffer is selected, close it.
+- In every other case use the regular `keyboard-quit'."
+  (interactive)
+  (cond
+   ((region-active-p)
+    (keyboard-quit))
+   ((derived-mode-p 'completion-list-mode)
+    (delete-completion-window))
+   ((> (minibuffer-depth) 0)
+    (abort-recursive-edit))
+   (t
+    (keyboard-quit))))
+
+(define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
+
+;;; custom
+
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(load custom-file :no-error-if-file-is-missing)
+
+;;; semext
+
+(use-package semext
+  :straight (:host github :repo "ahyatt/semext")
+  :init
+  ;; Replace provider with whatever you want, see https://github.com/ahyatt/llm
+  ;; (setopt qsemext-provider (make-llm-ollama :chat-model "gemma3:1b"))
+  )
+
 ;;; buffer box
 
 (use-package buffer-box
@@ -596,7 +638,7 @@ Stole from aweshell"
 
 (use-package doom-themes
   :config
-  (load-theme 'doom-ayu-dark t))
+  (load-theme 'doom-ayu-dark :no-confirm-loading))
 
 (setq doom-themes-enable-bold t
       doom-themes-enable-italic t)
