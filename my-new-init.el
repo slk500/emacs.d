@@ -152,43 +152,6 @@ The DWIM behaviour of this command is as follows:
                     (ibuffer-switch-to-saved-filter-groups "Main")))
 )
 
-;;; view mode
-
-(setq view-read-only t)
-
-(with-eval-after-load 'view
-
-  (define-key view-mode-map (kbd "a") 'beginning-of-line)
-  (define-key view-mode-map (kbd "e") 'end-of-line)
-  (define-key view-mode-map (kbd "<return>") 'View-exit)
-  (define-key view-mode-map (kbd "u") '(lambda()
-                                         (interactive)
-                                         (View-scroll-page-backward 3)))
-  (define-key view-mode-map (kbd "d") '(lambda()
-                                         (interactive)
-                                         (View-scroll-page-forward 3)))
-  (define-key view-mode-map (kbd "0") 'beginning-of-line)
-  (define-key view-mode-map (kbd "$") 'end-of-line)
-  (define-key view-mode-map (kbd "g") 'beginning-of-buffer)
-  (define-key view-mode-map (kbd "G") 'end-of-buffer)
-  (define-key view-mode-map (kbd ";") 'other-window))
-
-(global-set-key (kbd "<escape>") 'view-mode)
-
-(add-hook 'after-save-hook
-          (lambda ()
-            (when (and buffer-file-name (not view-mode))
-              (view-mode 1))))
-
-(add-hook 'view-mode-hook
-          (defun view-mode-hookee+ ()
-            (setq cursor-type (if view-mode 'hollowe 'bar))))
-
-;; (add-hook 'find-file-hook
-;;           (lambda ()
-;;             (unless (or (derived-mode-p 'dired-mode))
-;;               (view-mode 1))))
-
 ;;; desktop
  (desktop-save-mode 1)
 
