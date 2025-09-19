@@ -2,6 +2,10 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+;;; COBOL
+
+(use-package cobol-mode)
+
 ;;; Make C-g a bit more helpful
 
 (defun prot/keyboard-quit-dwim ()
@@ -2186,17 +2190,17 @@ from elsewhere."
 
 ; emacs -batch -l ert -l *-test.el -f ert-run-tests-batch-and-exit
 
-(defun my-eval-and-run-all-tests-in-buffer ()
-  "Delete all loaded tests from the runtime, evaluate the current buffer and run all loaded tests with ert."
-  (interactive)
-  (ert-delete-all-tests)
-  (eval-buffer)
-  (ert 't))
+;; (defun my-eval-and-run-all-tests-in-buffer ()
+;;   "Delete all loaded tests from the runtime, evaluate the current buffer and run all loaded tests with ert."
+;;   (interactive)
+;;   (ert-delete-all-tests)
+;;   (eval-buffer)
+;;   (ert 't))
 
-(defun ert-run-all-tests ()
-  (interactive)
-  (ert "t")
-  (other-window -1))
+;; (defun ert-run-all-tests ()
+;;   (interactive)
+;;   (ert "t")
+;;   (other-window -1))
 
 ;(keymap-global-set "<f7>" #'ert-run-all-tests)
 
