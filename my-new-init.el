@@ -2,6 +2,10 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+;;; org-reveal
+
+(use-package ox-reveal)
+
 ;;; COBOL
 
 (use-package cobol-mode)
@@ -2376,11 +2380,11 @@ from elsewhere."
 ;;;; excercise
 
 (defun my/string-in-brackets-to-number (string)
-  "Zamienia ciąg w formacie '[X]' na liczbę całkowitą."
-  (let* ((trimmed-string (substring string 1 -1)) ; Usuń nawiasy
+  "Convert a string in the format '[X]' to an integer."
+  (let* ((trimmed-string (replace-regexp-in-string "\\[\\|\\]" "" string)) ; Remove brackets
          (number (if (string= trimmed-string "X")
-		     1
-		     (string-to-number trimmed-string)))) ; Konwertuj na liczbę
+                     1
+                   (string-to-number trimmed-string)))) ; Convert to number
     number))
 
 (defun my/org-columns-excercise-update (pom key nval)
