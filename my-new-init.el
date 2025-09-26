@@ -2,6 +2,13 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+;;; kill all buffers
+
+(defun kill-other-buffers ()
+  "Kill all other buffers."
+  (interactive)
+  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+
 ;;; org-reveal
 
 (use-package ox-reveal)
@@ -333,14 +340,24 @@ The DWIM behaviour of this command is as follows:
   (setq electric-indent-mode nil)
 
 ;;; babel
+;;;; babel
+
+(defun org-babel-execute:cobol (body params)
+  "Orgmode Babel COBOL evaluate function for `BODY' with `PARAMS'."
+  (let* ((tmp-src-file (org-babel-temp-file "cobol-src-" ".cob"))
+         (tmp-bin-file (org-babel-temp-file "cobol-bin-"))
+         ;; Redirect stderr to /dev/null to suppress warnings.
+         (cmd (concat "cobc -x -o " tmp-bin-file " " tmp-src-file " && " tmp-bin-file " 2>/dev/null")))
+    (with-temp-file tmp-src-file (insert body "\n"))
+    (org-babel-eval cmd "")))
+
 ;;;; php
 
-  (use-package php-mode)
-  (defun org-babel-execute:php (body params)
-  "Orgmode Babel PHP evaluate function for `BODY' with `PARAMS'."
-  (let;;; ((cmd "php")
-         (body (concat "<?php\n" body "\n?>")))
-    (org-babel-eval cmd body))
+(use-package php-mode)
+(defun org-babel-execute:php (body params)
+  (let ((cmd "php")
+        (body (concat "<?php\n" body)))
+    (org-babel-eval cmd body)))
 
 ;;;; path
 
