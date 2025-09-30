@@ -15,7 +15,9 @@
 
 ;;; COBOL
 
-(use-package cobol-mode)
+(use-package cobol-mode
+  :config
+  (setq cobol-source-format 'free))
 
 ;;; Make C-g a bit more helpful
 
@@ -347,7 +349,7 @@ The DWIM behaviour of this command is as follows:
   (let* ((tmp-src-file (org-babel-temp-file "cobol-src-" ".cob"))
          (tmp-bin-file (org-babel-temp-file "cobol-bin-"))
          ;; Redirect stderr to /dev/null to suppress warnings.
-         (cmd (concat "cobc -x -o " tmp-bin-file " " tmp-src-file " && " tmp-bin-file " 2>/dev/null")))
+         (cmd (concat "cobc -x -free -o " tmp-bin-file " " tmp-src-file " && " tmp-bin-file " 2>/dev/null")))
     (with-temp-file tmp-src-file (insert body "\n"))
     (org-babel-eval cmd "")))
 
