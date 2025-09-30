@@ -2424,6 +2424,10 @@ from elsewhere."
     (org-entry-put pom "SX" "[X]")
     (org-entry-put pom "S-FOOD-CHECK" "[X]")))
 
+(let ((personal-settings (expand-file-name "private.el" user-emacs-directory)))
+ (when (file-exists-p personal-settings)
+   (load-file personal-settings)))
+
 (defun my/org-columns-edit-value (&optional key)
   "Edit the value of the property at point in column view.
 Where possible, use the standard interface for changing this line."
