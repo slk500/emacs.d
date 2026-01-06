@@ -679,7 +679,7 @@ Stole from aweshell"
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key (gptel-api-key-from-auth-source)
-	gptel-model 'gpt-4o))
+	gptel-model 'gpt-5.2))
 
 ;;; tetris
 
@@ -1573,7 +1573,8 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   (setq org-default-notes-file "~/aamystuff/life/todos.org.gpg")
   (setq org-agenda-files (append '("~/aamystuff/life/life.org.gpg"
 				   "~/aamystuff/life/todos.org.gpg"
-;				   "~/aamystuff/job/job.org"
+				   "~/aamystuff/job/job.org"
+				   "~/aamystuff/cobol/readme.org"
 				   "~/aamystuff/phprefactor/phprefactor.org"
 				   "~/aamystuff/emacs/emacs.org"
 		;;		   "~/aamystuff/clojure/clojure-examples.org"
@@ -2412,8 +2413,9 @@ from elsewhere."
     (org-entry-put pom "CRUNCH" "10")
     (org-entry-put pom "BIRDIE" "10")
     (org-entry-put pom "LYING-LEG-RAISE" "5")
-    (org-entry-put pom "PLANK" "0.5")
-    (org-entry-put pom "PUSHUP" "5")))
+    (org-entry-put pom "PLANK" "1")
+   ;; (org-entry-put pom "PUSHUP" "0")
+    ))
 
 (with-eval-after-load 'org
    (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
