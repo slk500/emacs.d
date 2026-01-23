@@ -679,7 +679,7 @@ Stole from aweshell"
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key (gptel-api-key-from-auth-source)
-	gptel-model 'gpt-5.2))
+	gptel-model 'gpt-4.0))
 
 ;;; tetris
 
@@ -1637,7 +1637,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
            "* TODO %? :meeting:" :prepend t)
 	  ("t" "Task" entry
            (file "~/aamystuff/life/todos.org.gpg")
-           "* TODO %?" :prepend t)
+           "* TODO [#B] %?" :prepend t)
 	  ("v" "Event" entry
            (file "~/aamystuff/life/todos.org.gpg")
            "* %? :event:" :prepend t)
