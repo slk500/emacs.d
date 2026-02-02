@@ -679,7 +679,7 @@ Stole from aweshell"
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key (gptel-api-key-from-auth-source)
-	gptel-model 'gpt-4.0))
+	gptel-model 'gpt-4o))
 
 ;;; tetris
 
@@ -1442,12 +1442,16 @@ is already narrowed."
 
 ;;;; tags
 
-(setq org-tag-alist '(("book" . ?b)
-		      ("emacs" . ?e)
-		      ("email" . ?m)
-		      ("sms" . ?s)
-		      ("video" . ?v)
-		      ("noexport" . ?n)))
+;; (setq org-tag-alist '(("book" . ?b)
+;; 		      ("emacs" . ?e)
+;; 		      ("email" . ?m)
+;; 		      ("sms" . ?s)
+;; 		      ("video" . ?v)
+;; 		      ("noexport" . ?n)))
+
+
+(setq org-tag-alist nil)
+
 
 ;;;; todo keywords
 
@@ -2409,9 +2413,9 @@ from elsewhere."
 
 (defun my/org-columns-excercise-update (pom key nval)
   (when (and nval (string-equal key "EXCERCISE") (< 0 (my/string-in-brackets-to-number nval)))
-    (org-entry-put pom "PLANK-SHOULDER" "10")
+    (org-entry-put pom "PLANK-SHOULDER" "20")
     (org-entry-put pom "CRUNCH" "10")
-    (org-entry-put pom "BIRDIE" "10")
+    (org-entry-put pom "BIRDIE" "20")
     (org-entry-put pom "LYING-LEG-RAISE" "5")
     (org-entry-put pom "PLANK" "1")
    ;; (org-entry-put pom "PUSHUP" "0")
