@@ -2664,8 +2664,7 @@ value for ITEM property."
 					  (if org-hide-leading-stars ?\s ?*))
 			     "* ")))
 	       ;; usuwa rok z timestamp
-	       (value-without-year (replace-regexp-in-string "^\\[\\([0-9]\\{4\\}\\)-\\|\\[" ""
-                            (replace-regexp-in-string "\\]" "" value))))
+	       (value-without-year (replace-regexp-in-string "\\[\\([0-9]\\{4\\}-\\)?\\(.*?\\)\\]" "[\\2]" value)))
 	   (concat stars (org-link-display-format value-without-year))))
 	(`(,(or "DEADLINE" "SCHEDULED" "TIMESTAMP") . ,_)
 	 (replace-regexp-in-string org-ts-regexp "[\\1]" value))
