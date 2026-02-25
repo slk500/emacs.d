@@ -2,6 +2,21 @@
 
 ;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
 
+
+;;; weather
+
+;; (use-package boem-weather
+;;   :straight (:host gitlab :type git :repo "boskoivanisevic/boem-weather")
+;;   :config
+;;   (setq boem-weather-latitude calendar-latitude
+;;         boem-weather-longitude calendar-longitude))
+
+(use-package nerd-icons)
+
+(use-package wttrin)
+
+(setq wttrin-default-cities '("Warsaw"))
+
 ;;; kill all buffers
 
 (defun kill-other-buffers ()
@@ -1119,7 +1134,7 @@ timestamp."
     (error "Sending message cancelled: empty subject.")))
 (add-hook 'message-send-hook 'my-notmuch-mua-empty-subject-check)
 
-;;; table
+;;;; table
 
 (defun org-table-strip-table-at-point ()
   (interactive)
@@ -1320,6 +1335,7 @@ is already narrowed."
 	org-insert-heading-respect-content nil
 	org-adapt-indentation t
 	org-startup-folded t
+	org-hide-leading-stars t
 	org-hide-emphasis-markers t
 	org-log-done 'time
 	org-log-reschudle 'time
@@ -1461,6 +1477,8 @@ is already narrowed."
  
 ;;;; org-agenda
 
+(setq org-overriding-columns-format "%60ITEM(item) %CLOCKSUM(time) %DEADLINE(deadline)")
+
 ;; TODO https://youtu.be/a_WNtuefREM Making Org Agenda Look Beautiful
 
 ;; Zaznaczenie danego taska jako DONE - analogicznie jak się zaznacza checkboxa.
@@ -1475,9 +1493,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 ;; Override the key definition for org-exit
 ;(define-key org-agenda-mode-map (kbd "C-c c") nil)
 (define-key org-agenda-mode-map (kbd "C-c C-c") 'sacha/org-agenda-done)
-
-;; wyświetla start od dzisiejszego dnia, a nie jak wcześniej od poniedziałku
-(setq org-agenda-start-on-weekday nil)
 
 ;; org mode - prevent future repetitive entries from showing up in agenda view
 ;; https://emacs.stackexchange.com/questions/12609/org-mode-prevent-future-repetitive-entries-from-showing-up-in-agenda-view
@@ -1556,9 +1571,9 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	  (tags-todo "-emacs/WAITING"
 		((org-agenda-overriding-header
 		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))
-	  (tags-todo "book/DOING"
+	  (tags "constant"
 		     ((org-agenda-overriding-header
-		       (format "BOOKs (%s)" (org-agenda-count "book")))))))))
+		       (format "Constant (%s)" (org-agenda-count "book")))))))))
 
 (setq org-agenda-prefix-format '((agenda . " %i %?-12t% s")
 				 (todo . " ")
@@ -1573,20 +1588,8 @@ the same tree node, and the headline of the tree node in the Org-mode file."
       org-deadline-warning-days 14
       org-agenda-show-future-repeats nil)
 
-(when (string= 'slk user-login-name)
-  (setq org-default-notes-file "~/aamystuff/life/todos.org.gpg")
-  (setq org-agenda-files (append '("~/aamystuff/life/life.org.gpg"
-				   "~/aamystuff/life/todos.org.gpg"
-				   "~/aamystuff/job/job.org"
-				   "~/aamystuff/cobol/readme.org"
-				   "~/aamystuff/phprefactor/phprefactor.org"
-				   "~/aamystuff/emacs/emacs.org"
-		;;		   "~/aamystuff/clojure/clojure-examples.org"
-				   "~/aamystuff/mystuff/books.org"
-		;;		   "~/aamystuff/mystuff/psychology.org"
-				   )
-					; (directory-files-recursively "~/aamystuff/slawomir-grochowski.com/" "\\.org$")
-				 )))
+(setq org-default-notes-file "~/aamystuff/life/todos.org.gpg")
+(setq org-agenda-files '("~/aamystuff/life/todos.org.gpg"))
 
 (add-hook 'org-agenda-finalize-hook
 	  (lambda ()
@@ -2396,11 +2399,6 @@ from elsewhere."
     (while (re-search-forward "^[ \t]*:.*:" nil t)
       (org-flag-drawer t))))
 
-
-;;;; org-agenda
-
-(setq org-overriding-columns-format "%60ITEM(item) %CLOCKSUM(time) %DEADLINE(deadline)")
-
 ;;;; excercise
 
 (defun my/string-in-brackets-to-number (string)
@@ -2416,8 +2414,9 @@ from elsewhere."
     (org-entry-put pom "PLANK-SHOULDER" "20")
     (org-entry-put pom "CRUNCH" "10")
     (org-entry-put pom "BIRDIE" "20")
-    (org-entry-put pom "LYING-LEG-RAISE" "5")
+    (org-entry-put pom "LYING-LEG-RAISE" "10")
     (org-entry-put pom "PLANK" "1")
+    (org-entry-put pom "KEGEL-FLOOR" "10")
    ;; (org-entry-put pom "PUSHUP" "0")
     ))
 

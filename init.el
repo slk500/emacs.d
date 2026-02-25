@@ -172,14 +172,6 @@
      (multi-category marginalia-annotate-multi-category
 		     builtin none)))
  '(marginalia-mode t)
- '(org-agenda-files
-   '("/home/slk/aamystuff/life/life.org.gpg"
-     "/home/slk/aamystuff/life/todos.org.gpg"
-     "/home/slk/aamystuff/phprefactor/phprefactor.org"
-     "/home/slk/aamystuff/emacs/emacs.org"
-     "/home/slk/aamystuff/clojure/clojure-examples.org"
-     "/home/slk/aamystuff/mystuff/books.org"
-     "/home/slk/aamystuff/mystuff/psychology.org"))
  '(org-ellipsis nil)
  '(org-fold-catch-invisible-edits 'error)
  '(org-safe-remote-resources

@@ -52,8 +52,8 @@
   "Clear existing theme settings instead of layering them"
   (mapc #'disable-theme custom-enabled-themes))
 
-(global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/aamystuff/slawomir-grochowski.com/articles.org")))
-(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/phprefactor/phprefactor.org")))
+(global-set-key (kbd "C-c 3") (lambda() (interactive)(find-file "~/aamystuff/slawomir-grochowski.com/articles.org")))
+(global-set-key (kbd "C-c 2") (lambda() (interactive)(find-file "~/aamystuff/phprefactor/phprefactor.org")))
 (global-set-key (kbd "C-c 1") (lambda() (interactive)(find-file "~/aamystuff/life/life.org.gpg")))
 
 (global-set-key (kbd "C-c 4") (lambda() (interactive)(find-file "~/aamystuff/emacs/emacs.org")))
@@ -62,7 +62,6 @@
 (global-set-key (kbd "C-c r") (lambda() (interactive)(find-file (expand-file-name "init.el" user-emacs-directory))))
 
 (blink-cursor-mode 0)
-(setq org-hide-leading-stars t)
 
 ;; do not show the startup screen.
 (setq inhibit-startup-message t
