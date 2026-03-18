@@ -1,21 +1,12 @@
 ;;; ...  -*- lexical-binding: t -*-
 
-;; https://github.com/vberezhnev/better-org-habit.el?tab=readme-ov-file
-
-
 ;;; weather
-
-;; (use-package boem-weather
-;;   :straight (:host gitlab :type git :repo "boskoivanisevic/boem-weather")
-;;   :config
-;;   (setq boem-weather-latitude calendar-latitude
-;;         boem-weather-longitude calendar-longitude))
 
 (use-package nerd-icons)
 
 (use-package wttrin)
 
-(setq wttrin-default-cities '("Warsaw"))
+(setq wttrin-default-locations '("Warsaw, PL"))
 
 ;;; kill all buffers
 
@@ -27,12 +18,6 @@
 ;;; org-reveal
 
 (use-package ox-reveal)
-
-;;; COBOL
-
-(use-package cobol-mode
-  :config
-  (setq cobol-source-format 'free))
 
 ;;; Make C-g a bit more helpful
 
@@ -81,109 +66,6 @@ The DWIM behaviour of this command is as follows:
 (use-package buffer-box
   :straight (:host github :repo "rougier/buffer-box"))
 
-;;; ibuffer
-
-(use-package all-the-icons-ibuffer :ensure t
-  :hook (ibuffer-mode . all-the-icons-ibuffer-mode))
-
-(use-package ibuffer :ensure nil
-  :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-title-face 'font-lock-doc-face)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " "
-                (name 16 -1)
-                " " filename)))
-  (setq ibuffer-saved-filter-groups
-        '(("Main"
-           ("Directories" (mode . dired-mode))
-           ("C++" (or
-                   (mode . c++-mode)
-                   (mode . c++-ts-mode)
-                   (mode . c-mode)
-                   (mode . c-ts-mode)
-                   (mode . c-or-c++-ts-mode)))
-           ("Python" (or
-                      (mode . python-ts-mode)
-                      (mode . c-mode)
-                      (mode . python-mode)))
-           ("Build" (or
-                     (mode . make-mode)
-                     (mode . makefile-gmake-mode)
-                     (name . "^Makefile$")
-                     (mode . change-log-mode)))
-           ("Scripts" (or
-                       (mode . shell-script-mode)
-                       (mode . shell-mode)
-                       (mode . sh-mode)
-                       (mode . lua-mode)
-                       (mode . bat-mode)))
-           ("Config" (or
-                      (mode . conf-mode)
-                      (mode . conf-toml-mode)
-                      (mode . toml-ts-mode)
-                      (mode . conf-windows-mode)
-                      (name . "^\\.clangd$")
-                      (name . "^\\.gitignore$")
-                      (name . "^Doxyfile$")
-                      (name . "^config\\.toml$")
-                      (mode . yaml-mode)))
-           ("Web" (or
-                   (mode . mhtml-mode)
-                   (mode . html-mode)
-                   (mode . web-mode)
-                   (mode . nxml-mode)))
-           ("CSS" (or
-                   (mode . css-mode)
-                   (mode . sass-mode)))
-           ("JS" (or
-                  (mode . js-mode)
-                  (mode . rjsx-mode)))
-           ("Markup" (or
-                   (mode . markdown-mode)
-                   (mode . adoc-mode)))
-           ("Org" (mode . org-mode))
-           ("LaTeX" (name . "\.tex$"))
-           ("Magit" (or
-                     (mode . magit-blame-mode)
-                     (mode . magit-cherry-mode)
-                     (mode . magit-diff-mode)
-                     (mode . magit-log-mode)
-                     (mode . magit-process-mode)
-                     (mode . magit-status-mode)))
-           ("Apps" (or
-                    (mode . elfeed-search-mode)
-                    (mode . elfeed-show-mode)))
-           ("Fundamental" (or
-                           (mode . fundamental-mode)
-                           (mode . text-mode)))
-           ("Emacs" (or
-                     (mode . emacs-lisp-mode)
-                     (name . "^\\*Help\\*$")
-                     (name . "^\\*Custom.*")
-                     (name . "^\\*Org Agenda\\*$")
-                     (name . "^\\*info\\*$")
-                     (name . "^\\*scratch\\*$")
-                     (name . "^\\*Backtrace\\*$")
-                     (name . "^\\*Messages\\*$"))))))
-  :hook
-  (ibuffer-mode . (lambda ()
-                    (ibuffer-switch-to-saved-filter-groups "Main")))
-)
-
 ;;; desktop
  (desktop-save-mode 1)
 
@@ -213,10 +95,11 @@ The DWIM behaviour of this command is as follows:
 (use-package org-habit-plus
   :straight (:host github :repo "myshevchuk/org-habit-plus"))
 
+;; https://github.com/vberezhnev/better-org-habit.el
 ;; https://github.com/colonelpanic8/org-window-habit
 
 ;;; repeat todo
-
+;; https://github.com/TomoeMami/org-repeat-by-cron.el?tab=readme-ov-file
 (use-package repeat-todo
   :straight (:host github :repo "cashpw/repeat-todo"))
 
@@ -312,18 +195,6 @@ The DWIM behaviour of this command is as follows:
       (interactive ";;;P\nr")
       (sort-regexp-fields reverse "\\w+" "\\&" beg end))
 
-;;; space
-
-    (defun remove-multiple-spaces-in-region (start end)
-      "Replace multiple spaces in the selected region with a single space."
-      (interactive "r")
-      (save-excursion
-        (save-restriction
-          (narrow-to-region start end)
-          (goto-char (point-min))
-          (while (re-search-forward "  +" nil t)
-            (replace-match " ")))))
-
 ;;; replace+
 
 (use-package replace+)
@@ -357,17 +228,6 @@ The DWIM behaviour of this command is as follows:
   (setq electric-indent-mode nil)
 
 ;;; babel
-;;;; babel
-
-(defun org-babel-execute:cobol (body params)
-  "Orgmode Babel COBOL evaluate function for `BODY' with `PARAMS'."
-  (let* ((tmp-src-file (org-babel-temp-file "cobol-src-" ".cob"))
-         (tmp-bin-file (org-babel-temp-file "cobol-bin-"))
-         ;; Redirect stderr to /dev/null to suppress warnings.
-         (cmd (concat "cobc -x -free -o " tmp-bin-file " " tmp-src-file " && " tmp-bin-file " 2>/dev/null")))
-    (with-temp-file tmp-src-file (insert body "\n"))
-    (org-babel-eval cmd "")))
-
 ;;;; php
 
 (use-package php-mode)
@@ -1334,6 +1194,7 @@ is already narrowed."
   (setq org-M-RET-may-split-line '((default . nil)) ;; don't split line, just create the new heading
 	org-insert-heading-respect-content nil
 	org-adapt-indentation t
+	org-clock-mode-line-total 'today
 	org-startup-folded t
 	org-hide-leading-stars t
 	org-hide-emphasis-markers t
@@ -1490,8 +1351,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   (interactive "P")
   (org-agenda-todo "DONE")
   (org-agenda-redo-all))
-;; Override the key definition for org-exit
-;(define-key org-agenda-mode-map (kbd "C-c c") nil)
+
 (define-key org-agenda-mode-map (kbd "C-c C-c") 'sacha/org-agenda-done)
 
 ;; org mode - prevent future repetitive entries from showing up in agenda view
@@ -1559,7 +1419,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	  (org-agenda-todo-keyword-format "%-2s")
 	  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
 	  ) nil ("~/aamystuff/books.html"))
-	("s" "Someday" tags-todo "-book-video/SOMEDAY")
+	("s" "Someday" tags-todo "-book-video-emacs/SOMEDAY")
 	("e" "Emacs" tags-todo "+emacs/-SOMEDAY"
 	 ((org-agenda-overriding-header
 	   (format "EMACSs (%s)" (org-agenda-count "elo")))))
@@ -1918,6 +1778,21 @@ from elsewhere."
     ("<prior>" . 'vertico-scroll-down)
     ("<next>"  . 'vertico-scroll-up)))
 
+;; (use-package vertico-postrame
+;;   :straight (:host github :repo "tumashu/vertico-posframe"))
+
+;; (setq vertico-multiform-commands
+;;       '((consult-line
+;;          posframe
+;;          (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+;;          (vertico-posframe-border-width . 10)
+;;          ;; NOTE: This is useful when emacs is used in both in X and
+;;          ;; terminal, for posframe do not work well in terminal, so
+;;          ;; vertico-buffer-mode will be used as fallback at the
+;;          ;; moment.
+;;          (vertico-posframe-fallback-mode . vertico-buffer-mode))
+;;         (t posframe)))
+;; (vertico-multiform-mode 1)
 
 ;;;; function to highlight enabled modes similar to counsel-M-x
 (defvar +vertico-transform-functions nil)
