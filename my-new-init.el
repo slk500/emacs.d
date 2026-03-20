@@ -1223,6 +1223,13 @@ is already narrowed."
   (require 'org-eldoc)
   (global-eldoc-mode 1))
 
+;;;; org-autolist
+
+(use-package org-autolist
+  :hook (org-mode . org-autolist-mode))
+
+(add-hook 'org-mode-hook (lambda () (org-autolist-mode)))
+
 ;;;; org-note
 
 ;; remove Insert note for this entry.
