@@ -382,6 +382,35 @@ The DWIM behaviour of this command is as follows:
 
 (global-set-key (kbd "<f6>") 'my/org-clock-toggle)
 
+(setq org-clock-mode-line-total-settings
+      '((current . "time spent in this chunk on the current task")
+	(today . "time spent today on the current task")
+	(all . "total time spent on the current task")))
+(setq org-clock-mode-line-total-setting-number 0)
+
+(defun toggle-org-clock-mode-line-total-setting (setting-number)
+  "Toggle between org-clock-mode-line-total settings.
+With a numeric argument, use setting SETTING-NUMBER."
+  (interactive "P")
+  (if (numberp setting-number)
+      (setq org-clock-mode-line-total-setting-number
+	    (mod setting-number (length org-clock-mode-line-total-settings)))
+    (setq org-clock-mode-line-total-setting-number
+	  (mod (1+ org-clock-mode-line-total-setting-number)
+	       (length org-clock-mode-line-total-settings))))
+  (let ((org-clock-mode-line-total-setting (nth org-clock-mode-line-total-setting-number
+						org-clock-mode-line-total-settings)))
+    (setq org-clock-mode-line-total (car org-clock-mode-line-total-setting))
+    (when (org-clocking-p)
+      (setq org-clock-total-time
+	    (with-current-buffer (marker-buffer org-clock-hd-marker)
+	      (save-excursion (goto-char org-clock-hd-marker)
+			      (org-clock-sum-current-item
+			       (org-clock-get-sum-start)))))
+      (org-clock-update-mode-line))
+    (message "Modeline shows %s."
+	     (cdr org-clock-mode-line-total-setting))))
+
 ;;; diff
 
 ; https://difftastic.wilfred.me.uk/
