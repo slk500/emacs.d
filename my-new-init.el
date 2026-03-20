@@ -762,38 +762,6 @@ reuse it's window, otherwise create new one."
                (region-beginning) (region-end))))
     (kill-new (replace-regexp-in-string "^[\\+\\-]" "" text))))
 
-;;; pomodoro
-
-(use-package hammy)
-
-(use-package svg-lib)
-
-(setq image-types '(svg png gif tiff jpeg xpm xbm pbm))
-
-(defun my/org-pomodoro-clock-in ()
-  (interactive)
-  (if (derived-mode-p 'org-agenda-mode)
-      ;; For org-agenda buffers
-      (let ((marker (or (org-get-at-bol 'org-hd-marker)
-                        (org-get-at-bol 'org-marker))))
-        (when marker
-          (with-current-buffer (marker-buffer marker)
-            (goto-char marker)
-            (if (org-entry-get nil "Effort")
-                (org-clock-in)
-              (org-pomodoro)))))
-    ;; For org-mode buffers
-    (if (org-entry-get nil "Effort")
-        (org-clock-in)
-      (org-pomodoro))))
-
-(use-package org-pomodoro
-  :config
-  (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil))))
-  (setq org-pomodoro-format "%s")
-  :bind
-  ("<f6>" . my/org-pomodoro-clock-in))
-
 ;;; savehist
 
 (use-package savehist
