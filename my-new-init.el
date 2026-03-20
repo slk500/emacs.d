@@ -373,6 +373,15 @@ The DWIM behaviour of this command is as follows:
 
 ; org-clock-in into any task in your org files. To create a parallel clock use the omc-make-new-parallel-clock. This clock will be the active clock.
 
+(defun my/org-clock-toggle ()
+  "Toggle clocking in and out for the current task."
+  (interactive)
+  (if (org-clock-is-active)
+      (org-clock-out)
+    (org-clock-in)))
+
+(global-set-key (kbd "<f6>") 'my/org-clock-toggle)
+
 ;;; diff
 
 ; https://difftastic.wilfred.me.uk/
