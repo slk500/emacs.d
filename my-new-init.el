@@ -368,17 +368,29 @@ The DWIM behaviour of this command is as follows:
 
 ;;; clock
 
+(use-package org-mru-clock)
+(setq org-mru-clock-files #'org-agenda-files)
+
 (use-package org-multi-clock
   :straight (org-multi-clock :type git :host gitlab :repo "OlMon/org-multi-clock" :branch "master"))
 
 ; org-clock-in into any task in your org files. To create a parallel clock use the omc-make-new-parallel-clock. This clock will be the active clock.
 
 (defun my/org-clock-toggle ()
-  "Toggle clocking in and out for the current task."
+  "Toggle clocking in and out for the current task, even in Org Agenda."
   (interactive)
-  (if (org-clock-is-active)
-      (org-clock-out)
-    (org-clock-in)))
+  (if (eq major-mode 'org-agenda-mode)
+      (let* ((marker (or (org-get-at-bol 'org-hd-marker)
+                         (org-agenda-error)))
+             (hdmarker (copy-marker marker)))
+        (with-current-buffer (marker-buffer hdmarker)
+          (goto-char hdmarker)
+          (if (org-clock-is-active)
+              (org-clock-out)
+            (org-mru-clock-in))))
+    (if (org-clock-is-active)
+        (org-clock-out)
+      (org-mru-clock-in))))
 
 (global-set-key (kbd "<f6>") 'my/org-clock-toggle)
 
@@ -1046,6 +1058,11 @@ timestamp."
       (message "No overlays at point."))))
 
 ;;; ui
+
+(use-package golden-ratio)
+
+(use-package spacious-padding)
+(spacious-padding-mode)
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
@@ -1791,8 +1808,7 @@ from elsewhere."
     ("<prior>" . 'vertico-scroll-down)
     ("<next>"  . 'vertico-scroll-up)))
 
-;; (use-package vertico-postrame
-;;   :straight (:host github :repo "tumashu/vertico-posframe"))
+;;(use-package vertico-postrame)
 
 ;; (setq vertico-multiform-commands
 ;;       '((consult-line
@@ -2039,6 +2055,10 @@ from elsewhere."
 (add-to-list 'display-buffer-alist
 	     '("\\*Help\\*" (display-buffer-reuse-window)))
 
+(add-to-list 'display-buffer-alist
+	     '("\\*Org Note\\*" (display-buffer-reuse-window
+				 display-buffer-below-selected)
+	       (window-height . 0.3)))
 
 ;;; dictionary
 
