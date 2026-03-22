@@ -10,7 +10,7 @@
 
 ;;; kill all buffers
 
-(defun kill-other-buffers ()
+(defun kill-all-buffers ()
   "Kill all other buffers."
   (interactive)
   (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
@@ -272,7 +272,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; copy/paste
 
-  (defun my-copy-to-next-window (b e)
+  (defun my/copy-to-next-window (b e)
   "Copy text in the region to next window."
   (interactive "r")
   (pcase (window-list)
@@ -738,7 +738,42 @@ reuse it's window, otherwise create new one."
 
 (which-key-mode 1)
 
-;; (setq which-key-persistent-popup t)
+(defvar my-keypad-map (make-sparse-keymap))
+
+;; Pojedyncze klawisze, nie sekwencje!
+(define-key my-keypad-map (kbd "e") 'save-buffers-kill-terminal)
+(define-key my-keypad-map (kbd "f") 'find-file)
+(define-key my-keypad-map (kbd "k") 'kill-buffer)
+(define-key my-keypad-map (kbd "b") 'list-buffers)
+(define-key my-keypad-map (kbd "0") 'delete-window)
+(define-key my-keypad-map (kbd "o") 'other-window)
+
+(which-key-add-keymap-based-replacements my-keypad-map
+  "e" "File › exit"
+  "f" "File › find"
+  "k" "Buffer › kill"
+  "b" "Buffer › list"
+  "0" "Window › close"
+  "o" "Window › other")
+
+(defvar my-keypad-visible nil)
+
+(defun my-toggle-keypad ()
+  (interactive)
+  (cond
+   (my-keypad-visible
+    (setq which-key-persistent-popup nil
+          which-key-sort-order 'which-key-key-order  ; przywróć domyślne
+          my-keypad-visible nil)
+    (which-key--hide-popup))
+   (t
+    (setq which-key-persistent-popup t
+          which-key-sort-order 'which-key-description-order  ; grupuje po opisie
+          which-key-max-display-columns 3  ; tyle grup ile masz
+          my-keypad-visible t)
+    (which-key-show-keymap 'my-keypad-map))))
+
+(global-set-key (kbd "<f7>") 'my-toggle-keypad)
 
 ;;; text language
 ;;;; translate
@@ -1034,9 +1069,19 @@ timestamp."
 (defun my/column-view ()
   (interactive)
   (hl-line-mode -1)  ;; Disable first, so the setting can be made before it starts
-  (setq-local hl-line-overlay-priority +50)  ;; this overlay needs higher priority than column-view’s
+  (setq-local hl-line-overlay-priority 1) ;; this overlay needs higher priority than column-view’s
   (hl-line-mode)
   (org-columns))
+
+(defun my/column-view-quit ()
+  (interactive)
+  (hl-line-mode -1)  ;; Disable first, so the setting can be made before it starts
+  (setq-local hl-line-overlay-priority -50)
+  (hl-line-mode)
+  (org-columns-quit))
+
+(global-set-key [remap org-columns-quit]
+                'my/column-view-quit)
 
 (global-set-key [remap org-columns]
                 'my/column-view)
@@ -1060,6 +1105,20 @@ timestamp."
 ;;; ui
 
 (use-package golden-ratio)
+
+(with-eval-after-load "which-key"
+  (add-to-list 'golden-ratio-inhibit-functions
+               (lambda ()
+                 (and which-key--buffer
+                      (window-live-p (get-buffer-window which-key--buffer))))))
+
+(with-eval-after-load "which-key"
+  (add-to-list 'golden-ratio-inhibit-functions
+               (lambda ()
+                 (or (and which-key--buffer
+                          (window-live-p (get-buffer-window which-key--buffer)))
+                     (string= (buffer-name) "*Org Note*")))))
+
 
 (use-package spacious-padding)
 (spacious-padding-mode)
@@ -1245,6 +1304,10 @@ is already narrowed."
     (require 'org-tempo)
   (require 'org-eldoc)
   (global-eldoc-mode 1))
+
+
+(use-package org-modern)
+
 
 ;;;; org-autolist
 
