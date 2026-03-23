@@ -1105,7 +1105,8 @@ timestamp."
 
 ;;; ui
 
-(use-package golden-ratio)
+(use-package golden-ratio
+  :init (golden-ratio-mode))
 
 (with-eval-after-load "which-key"
   (add-to-list 'golden-ratio-inhibit-functions
@@ -1267,6 +1268,7 @@ is already narrowed."
   :straight (:host github :repo "sheijk/org-menu"))
 
 (keymap-global-set "C-c !" #'org-timestamp-inactive)
+(global-set-key (kbd "C-c l") 'org-store-link)
 
 (use-package org
   :config
@@ -1468,8 +1470,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 
 (global-set-key (kbd "<f9>") (lambda () (interactive) (org-agenda nil "g")))
 
-(global-set-key (kbd "C-c l") 'org-store-link)
-
 (defadvice org-agenda (around split-vertically activate)
   (let ((split-width-threshold 80))  ; or whatever width makes sense for you
     ad-do-it))
@@ -1539,7 +1539,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 (keymap-global-set "C-c a" #'org-agenda)
 (setq org-agenda-skip-scheduled-if-done t
       org-agenda-skip-deadline-if-done t
-      org-deadline-warning-days 14
+      org-deadline-warning-days 0
       org-agenda-show-future-repeats nil)
 
 (setq org-default-notes-file "~/aamystuff/life/todos.org.gpg")
