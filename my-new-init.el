@@ -597,14 +597,15 @@ Stole from aweshell"
 ;; Note: The customize interface is also supported.
 (setq rmh-elfeed-org-files (list "~/aamystuff/rss.org"))
 
-;;; gpt ai
+;;; gptel ai
 
 (use-package gptel
   :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key (gptel-api-key-from-auth-source)
-	gptel-model 'gpt-4o))
+	gptel-model 'gpt-4o)
+  (add-hook 'gptel-mode-hook #'visual-line-mode))
 
 ;;; tetris
 
@@ -1076,7 +1077,7 @@ timestamp."
 (defun my/column-view-quit ()
   (interactive)
   (hl-line-mode -1)  ;; Disable first, so the setting can be made before it starts
-  (setq-local hl-line-overlay-priority -50)
+  (setq-local hl-line-overlay-priority -50) ;; Restore the prev value otherwise text selecting on hl-line is not visible
   (hl-line-mode)
   (org-columns-quit))
 
@@ -1513,7 +1514,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	  (org-agenda-prefix-format "%(if (org-entry-get nil \"CLOSED\") (format \"%s \"(truncate-string-to-width (org-entry-get nil \"CLOSED\") 11 1)) \"\")")
 	  ) nil ("~/aamystuff/books.html"))
 	("s" "Someday" tags-todo "-book-video-emacs/SOMEDAY")
-	("e" "Emacs" tags-todo "+emacs/-SOMEDAY"
+	("e" "Emacs" tags-todo "+emacs"
 	 ((org-agenda-overriding-header
 	   (format "EMACSs (%s)" (org-agenda-count "elo")))))
 	("g" "Get Things Done (GTD)"
