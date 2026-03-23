@@ -1497,6 +1497,30 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	       )
 	  (if (eq cmp t) nil (my-signum cmp))))))
 
+(defun my/org-days-to-deadline ()
+  (let ((scheduled (org-entry-get nil "SCHEDULED"))
+        (deadline (org-entry-get nil "DEADLINE")))
+    (let ((sched-str
+           (when scheduled
+             (let ((days (org-time-stamp-to-now scheduled)))
+               (cond
+                ((< days 0)  (format "[%ds temu]" (abs days)))
+                ((= days 0)  "[dziś!s]")
+                (t           (format "[za %ds]" days))))))
+          (dead-str
+           (when deadline
+             (let ((days (org-time-stamp-to-now deadline)))
+               (cond
+                ((< days 0)  (format "[%dd temu]" (abs days)))
+                ((= days 0)  "[dziś!d]")
+                (t           (format "[za %dd]" days)))))))
+      (format "%-10s"
+              (cond
+               ((and sched-str dead-str) (format "%s %s" sched-str dead-str))
+               (sched-str sched-str)
+               (dead-str dead-str)
+               (t ""))))))
+
 (setq org-agenda-custom-commands
       '(("a" "default" agenda "" ((org-scheduled-past-days 1)
 				  (org-deadline-past-days 1)
@@ -1504,8 +1528,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 				  (org-deadline-warning-days 0)))
 	("Z" "org-ql test"
 	 ((org-ql-block '(or (ts-active :on today) (and (habit) (scheduled :to today))))))
-	;; use org-ql
-
 	("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
 	 ((org-agenda-files (append org-agenda-files (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")))
 	  (org-agenda-cmp-user-defined (cmp-date-property "CLOSED"))
@@ -1518,10 +1540,13 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	 ((org-agenda-overriding-header
 	   (format "EMACSs (%s)" (org-agenda-count "elo")))))
 	("g" "Get Things Done (GTD)"
-	 ((agenda "")
+	 ((agenda "" ((org-agenda-todo-keyword-format "")))
 	  (tags-todo "-book-video-emacs/TODO"
-		     ((org-agenda-overriding-header
-		       (format "TODOs (%s)" (org-agenda-count "bar")))))
+           ((org-agenda-overriding-header
+             (format "TODOs (%s)" (org-agenda-count "bar")))
+	    (org-agenda-todo-keyword-format "")
+            (org-agenda-prefix-format
+             "%?-12t% s %(my/org-days-to-deadline) ")))
 	  (tags-todo "-emacs/WAITING"
 		((org-agenda-overriding-header
 		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))
