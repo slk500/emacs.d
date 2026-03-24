@@ -1265,6 +1265,13 @@ is already narrowed."
 
 ;https://stackoverflow.com/questions/75900632/filter-custom-org-agenda-view-to-see-done-items-in-past-week TODO
 
+(setq org-refile-use-outline-path 'file)
+
+(setq org-refile-targets
+  '(("~/aamystuff/life/todos.org.gpg" :level . 1)))
+
+(setq org-reverse-note-order t)
+
 (use-package org-view-mode)
 
 (use-package org-menu
