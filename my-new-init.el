@@ -1106,6 +1106,8 @@ timestamp."
 
 ;;; ui
 
+ (setq fringe-mode 'minimal)
+
 (use-package golden-ratio
   :init (golden-ratio-mode))
 
