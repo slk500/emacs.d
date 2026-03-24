@@ -738,6 +738,7 @@ reuse it's window, otherwise create new one."
 ;;; which-key
 
 (which-key-mode 1)
+(setq which-key-sort-order 'which-key-description-order)
 
 (defvar my-keypad-map (make-sparse-keymap))
 
@@ -1504,15 +1505,15 @@ the same tree node, and the headline of the tree node in the Org-mode file."
            (when scheduled
              (let ((days (org-time-stamp-to-now scheduled)))
                (cond
-                ((< days 0)  (format "[%ds temu]" (abs days)))
-                ((= days 0)  "[dziś!s]")
+                ((< days 0)  (format "[po %ds]" (abs days)))
+                ((= days 0)  "[dziś]")
                 (t           (format "[za %ds]" days))))))
           (dead-str
            (when deadline
              (let ((days (org-time-stamp-to-now deadline)))
                (cond
-                ((< days 0)  (format "[%dd temu]" (abs days)))
-                ((= days 0)  "[dziś!d]")
+                ((< days 0)  (format "[po %dd]" (abs days)))
+                ((= days 0)  "[dziś]")
                 (t           (format "[za %dd]" days)))))))
       (format "%-10s"
               (cond
@@ -1750,65 +1751,22 @@ from elsewhere."
 (use-package ws-butler)
 (add-hook 'prog-mode-hook #'ws-butler-mode)
 
-;;; copy word
+;;; copy word, symbol
 
-(defun get-point (symbol &optional arg)
-  "get the point"
-  (funcall symbol arg)
-  (point))
+(defun copy-word ()
+  (interactive)
+  (let ((word (thing-at-point 'word t)))
+    (when word
+      (kill-new word))))
 
-(defun copy-thing (begin-of-thing end-of-thing &optional arg)
-  "Copy thing between beg & end into kill ring."
-  (save-excursion
-    (let ((beg (get-point begin-of-thing 1))
-	  (end (get-point end-of-thing arg)))
-      (copy-region-as-kill beg end))))
-
-(defun copy-word (&optional arg)
-  "Copy words at point into kill-ring"
-  (interactive "P")
-  (copy-thing 'backward-word 'forward-word arg))
-
-(defun beginning-of-string (&optional arg)
-  (when (re-search-backward "[ \t]" (line-beginning-position) :noerror 1)
-    (forward-char 1)))
-
-(defun end-of-string (&optional arg)
-  (when (re-search-forward "[ \t]" (line-end-position) :noerror arg)
-    (backward-char 1)))
-
-(defun thing-copy-string-to-mark(&optional arg)
-  " Try to copy a string and paste it to the mark
-     When used in shell-mode, it will paste string on shell prompt by default "
-  (interactive "P")
-  (copy-thing 'beginning-of-string 'end-of-string arg))
-
-(defun get-point (symbol &optional arg)
-  "get the point"
-  (funcall symbol arg)
-  (point))
-
-(defun copy-thing (begin-of-thing end-of-thing &optional arg)
-  "Copy thing between beg & end into kill ring."
-  (save-excursion
-    (let ((beg (get-point begin-of-thing 1))
-	  (end (get-point end-of-thing arg)))
-      (copy-region-as-kill beg end))))
-
-(defun paste-to-mark (&optional arg)
-  "Paste things to mark, or to the prompt in shell-mode."
-  (unless (eq arg 1)
-    (if (string= "shell-mode" major-mode)
-	(comint-next-prompt 25535)
-      (goto-char (mark)))
-    (yank)))
+(defun copy-symbol ()
+  (interactive)
+  (let ((word (thing-at-point 'symbol t)))
+    (when word
+      (kill-new word))))
 
 (keymap-global-set "C-c w" #'copy-word)
-
-(global-set-key (kbd "C-c s")
-   (lambda ()
-      (interactive)
-      (kill-new (thing-at-point 'symbol))))
+(keymap-global-set "C-c s" #'copy-symbol)
 
 ;;; pulsar
 
