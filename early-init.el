@@ -72,11 +72,14 @@
 ;; always select the help window
 (setq help-window-select t)
 
-;; disable
-(tool-bar-mode  0)
-(menu-bar-mode 0)
-(scroll-bar-mode 0)
-(setq 
+; Faster to disable these here (before they've been initialized)
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+(push '(left-fringe . 1) default-frame-alist)
+(push '(right-fringe . 1) default-frame-alist)
+
+(setq
  ;; needed for hotkey startup
  frame-title-format "emacs"
  ring-bell-function 'ignore

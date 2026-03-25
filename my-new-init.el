@@ -92,6 +92,8 @@ The DWIM behaviour of this command is as follows:
 
 ;;; habits
 
+(use-package org-habit-stats)
+
 (use-package org-habit-plus
   :straight (:host github :repo "myshevchuk/org-habit-plus"))
 
@@ -1106,8 +1108,6 @@ timestamp."
 
 ;;; ui
 
- (setq fringe-mode 'minimal)
-
 (use-package golden-ratio
   :init (golden-ratio-mode))
 
@@ -1632,7 +1632,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
          "* TODO %? :meeting:" :prepend t)
 	("t" "Task" entry
          (file "~/aamystuff/life/todos.org.gpg")
-         "* TODO [#B] %?" :prepend t)
+         "* TODO %?" :prepend t)
 	("v" "Event" entry
          (file "~/aamystuff/life/todos.org.gpg")
          "* %? :event:" :prepend t)
