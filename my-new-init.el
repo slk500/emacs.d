@@ -1108,6 +1108,8 @@ timestamp."
 
 ;;; ui
 
+(add-hook 'after-init-hook (lambda () (set-fringe-mode 1)))
+
 (use-package golden-ratio
   :init (golden-ratio-mode))
 
