@@ -1623,23 +1623,25 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 
 (keymap-global-set "<f10>" #'org-capture)
 
-(when (string= 'slk user-login-name)
-  (setq org-capture-templates
-	'(("r" "Email reply" entry
-	   (file "~/aamystuff/life/todos.org.gpg")
-	   "* TODO %a :email:" :prepend t)
-	  ("m" "Meeting" entry
-           (file "~/aamystuff/life/todos.org.gpg")
-           "* TODO %? :meeting:" :prepend t)
-	  ("t" "Task" entry
-           (file "~/aamystuff/life/todos.org.gpg")
-           "* TODO [#B] %?" :prepend t)
-	  ("v" "Event" entry
-           (file "~/aamystuff/life/todos.org.gpg")
-           "* %? :event:" :prepend t)
-	  ("e" "Emacs Task" entry
-           (file "~/aamystuff/life/todos.org.gpg")
-           "* TODO %? :emacs:" :prepend t))))
+(setq org-capture-templates
+      '(("r" "Email reply" entry
+	 (file "~/aamystuff/life/todos.org.gpg")
+	 "* TODO %a :email:" :prepend t)
+	("m" "Meeting" entry
+         (file "~/aamystuff/life/todos.org.gpg")
+         "* TODO %? :meeting:" :prepend t)
+	("t" "Task" entry
+         (file "~/aamystuff/life/todos.org.gpg")
+         "* TODO [#B] %?" :prepend t)
+	("v" "Event" entry
+         (file "~/aamystuff/life/todos.org.gpg")
+         "* %? :event:" :prepend t)
+	("e" "Emacs Task" entry
+         (file "~/aamystuff/life/todos.org.gpg")
+         "* TODO %? :emacs:" :prepend t)
+	("b" "Book" entry
+         (file+olp "~/aamystuff/mystuff/books.org" "to read")
+         "* TODO %? :book:\n:LOGBOOK:\n- State \"TODO\"       from \"\"           %U\n:END:")))
 
 ;;; shell here
 
@@ -2380,9 +2382,8 @@ from elsewhere."
     (org-entry-put pom "BIRDIE" "20")
     (org-entry-put pom "LYING-LEG-RAISE" "10")
     (org-entry-put pom "PLANK" "1")
-    (org-entry-put pom "KEGEL-FLOOR" "10")
-   ;; (org-entry-put pom "PUSHUP" "0")
-    ))
+    (org-entry-put pom "KEGEL-FLOOR" "")
+    (org-entry-put pom "PUSHUP" "5")))
 
 (with-eval-after-load 'org
    (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
