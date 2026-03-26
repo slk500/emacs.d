@@ -1576,6 +1576,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 (keymap-global-set "C-c a" #'org-agenda)
 (setq org-agenda-skip-scheduled-if-done t
       org-agenda-skip-deadline-if-done t
+      org-agenda-skip-timestamp-if-done t
       org-deadline-warning-days 0
       org-agenda-show-future-repeats nil)
 
@@ -2384,7 +2385,7 @@ from elsewhere."
     (org-entry-put pom "BIRDIE" "20")
     (org-entry-put pom "LYING-LEG-RAISE" "10")
     (org-entry-put pom "PLANK" "1")
-    (org-entry-put pom "KEGEL-FLOOR" "")
+    (org-entry-put pom "KEGEL-FLOOR" "10")
     (org-entry-put pom "PUSHUP" "5")))
 
 (with-eval-after-load 'org
