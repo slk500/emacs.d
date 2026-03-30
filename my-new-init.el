@@ -1,4 +1,36 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; my
+
+(defun my/org-insert-days-up ()
+  "Insert N consecutive days as org headings (*** level), counting up.
+Prompts for a start date using org inactive timestamp, then inserts
+days from start up to start+N-1, displayed in reverse (newest first)."
+  (interactive)
+  (let* ((start-time (org-read-date nil t nil "Chose start day: "))
+         (days '()))
+    (dotimes (i 7)
+      (push (time-add start-time (days-to-time i)) days))
+    (dolist (day days)
+      (insert (format "*** [%s]\n"
+                      (format-time-string "%Y-%m-%d %a" day))))))
+
+;;; errors atfer last update
+(setq org-modules (remove 'ol-gnus (bound-and-true-p org-modules)))
+
+(with-eval-after-load 'org-fold-core
+  (advice-add 'org-fold-core--isearch-show :before-while
+    (lambda (overlay)
+      (and (overlayp overlay)
+           (overlay-buffer overlay)))))
+
+(setq warning-minimum-level :error)
+
+(with-eval-after-load 'consult
+  (dolist (src '(consult--source-file-register
+                 consult--source-recent-file
+                 consult--source-project-recent-file))
+    (when (boundp src)
+      (consult-customize src :preview-key "M-."))))
 
 ;;; weather
 
@@ -378,6 +410,25 @@ The DWIM behaviour of this command is as follows:
 
 ; org-clock-in into any task in your org files. To create a parallel clock use the omc-make-new-parallel-clock. This clock will be the active clock.
 
+(defun my-org-clock-mode-line-both (&rest _)
+  "Show in mode line: current session time | today's total time."
+  (when (org-clocking-p)
+    (let* ((current-mins (floor (/ (float-time (time-since org-clock-start-time)) 60)))
+           (today-mins (with-current-buffer (marker-buffer org-clock-hd-marker)
+                         (save-excursion
+                           (goto-char org-clock-hd-marker)
+                           (let ((org-clock-mode-line-total 'today))
+                             (org-clock-sum-current-item
+                              (org-clock-get-sum-start))))))
+           (str (format " [%d:%02d | %d:%02d]"
+                        (/ current-mins 60) (mod current-mins 60)
+                        (/ today-mins 60) (mod today-mins 60))))
+      (setq org-mode-line-string
+            (propertize str
+                        'help-echo "Org clock: bieżące liczenie | dziś łącznie")))))
+
+(advice-add 'org-clock-update-mode-line :after #'my-org-clock-mode-line-both)
+
 (defun my/org-clock-toggle ()
   "Toggle clocking in and out for the current task, even in Org Agenda."
   (interactive)
@@ -395,35 +446,6 @@ The DWIM behaviour of this command is as follows:
       (org-mru-clock-in))))
 
 (global-set-key (kbd "<f6>") 'my/org-clock-toggle)
-
-(setq org-clock-mode-line-total-settings
-      '((current . "time spent in this chunk on the current task")
-	(today . "time spent today on the current task")
-	(all . "total time spent on the current task")))
-(setq org-clock-mode-line-total-setting-number 0)
-
-(defun toggle-org-clock-mode-line-total-setting (setting-number)
-  "Toggle between org-clock-mode-line-total settings.
-With a numeric argument, use setting SETTING-NUMBER."
-  (interactive "P")
-  (if (numberp setting-number)
-      (setq org-clock-mode-line-total-setting-number
-	    (mod setting-number (length org-clock-mode-line-total-settings)))
-    (setq org-clock-mode-line-total-setting-number
-	  (mod (1+ org-clock-mode-line-total-setting-number)
-	       (length org-clock-mode-line-total-settings))))
-  (let ((org-clock-mode-line-total-setting (nth org-clock-mode-line-total-setting-number
-						org-clock-mode-line-total-settings)))
-    (setq org-clock-mode-line-total (car org-clock-mode-line-total-setting))
-    (when (org-clocking-p)
-      (setq org-clock-total-time
-	    (with-current-buffer (marker-buffer org-clock-hd-marker)
-	      (save-excursion (goto-char org-clock-hd-marker)
-			      (org-clock-sum-current-item
-			       (org-clock-get-sum-start)))))
-      (org-clock-update-mode-line))
-    (message "Modeline shows %s."
-	     (cdr org-clock-mode-line-total-setting))))
 
 ;;; diff
 
@@ -1108,7 +1130,7 @@ timestamp."
 
 ;;; ui
 
-(add-hook 'after-init-hook (lambda () (set-fringe-mode 1)))
+(add-hook 'emacs-startup-hook (lambda () (set-fringe-mode 1)) t)
 
 (use-package golden-ratio
   :init (golden-ratio-mode))
@@ -1265,7 +1287,10 @@ is already narrowed."
 
 ;;; org-mode
 
-;https://stackoverflow.com/questions/75900632/filter-custom-org-agenda-view-to-see-done-items-in-past-week TODO
+;; corfu--debug((error "Face inheritance results in inheritance cycle" gnus-group-news-low))
+(with-eval-after-load 'org
+  (require 'ol)
+  (setq org-modules (delq 'ol-gnus org-modules)))
 
 (setq org-refile-use-outline-path 'file)
 
@@ -1784,15 +1809,15 @@ from elsewhere."
 
 ;;; pulsar
 
-  (use-package pulsar
-    :config
-    (setq pulsar-pulse t
-	  pulsar-delay 0.2
-	  pulsar-iterations 10
-	  pulsar-face 'pulsar-cyan
-	  pulsar-highlight-face 'pulsar-yellow))
+  ;; (use-package pulsar
+  ;;   :config
+  ;;   (setq pulsar-pulse t
+  ;; 	  pulsar-delay 0.2
+  ;; 	  pulsar-iterations 10
+  ;; 	  pulsar-face 'pulsar-cyan
+  ;; 	  pulsar-highlight-face 'pulsar-yellow))
 
-  (pulsar-global-mode 1)
+  ;; (pulsar-global-mode 1)
 
 ;;; crux
 
