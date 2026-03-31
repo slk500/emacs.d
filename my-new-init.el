@@ -627,7 +627,9 @@ Stole from aweshell"
   :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
   :config
   (setq gptel-default-mode 'org-mode)
-  (setq gptel-api-key (gptel-api-key-from-auth-source)
+  (setq gptel-backend (gptel-make-openai "ChatGPT"
+			:key #'gptel-api-key-from-auth-source
+			:models '(gpt-4o gpt-4o-mini))
 	gptel-model 'gpt-4o)
   (add-hook 'gptel-mode-hook #'visual-line-mode))
 
