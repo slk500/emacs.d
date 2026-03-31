@@ -411,7 +411,7 @@ The DWIM behaviour of this command is as follows:
 ; org-clock-in into any task in your org files. To create a parallel clock use the omc-make-new-parallel-clock. This clock will be the active clock.
 
 (defun my-org-clock-mode-line-both (&rest _)
-  "Show in mode line: current session time | today's total time."
+  "Show in mode line: task name | current session time | today's total time."
   (when (org-clocking-p)
     (let* ((current-mins (floor (/ (float-time (time-since org-clock-start-time)) 60)))
            (today-mins (with-current-buffer (marker-buffer org-clock-hd-marker)
@@ -420,12 +420,12 @@ The DWIM behaviour of this command is as follows:
                            (let ((org-clock-mode-line-total 'today))
                              (org-clock-sum-current-item
                               (org-clock-get-sum-start))))))
-           (str (format " [%d:%02d | %d:%02d]"
+           (str (format " [%s | %d:%02d | %d:%02d]"
+                        org-clock-heading
                         (/ current-mins 60) (mod current-mins 60)
                         (/ today-mins 60) (mod today-mins 60))))
       (setq org-mode-line-string
-            (propertize str
-                        'help-echo "Org clock: bieżące liczenie | dziś łącznie")))))
+            (propertize str)))))
 
 (advice-add 'org-clock-update-mode-line :after #'my-org-clock-mode-line-both)
 
@@ -1096,15 +1096,21 @@ timestamp."
 
 (defun my/column-view ()
   (interactive)
-  (hl-line-mode -1)  ;; Disable first, so the setting can be made before it starts
-  (setq-local hl-line-overlay-priority 1) ;; this overlay needs higher priority than column-view’s
+  (hl-line-mode -1)
+  (setq-local hl-line-overlay-priority 1)
+  (setq-local hl-line-range-function
+              (lambda ()
+                (unless (use-region-p)
+                  (cons (line-beginning-position)
+                        (line-beginning-position 2)))))
   (hl-line-mode)
   (org-columns))
 
 (defun my/column-view-quit ()
   (interactive)
-  (hl-line-mode -1)  ;; Disable first, so the setting can be made before it starts
-  (setq-local hl-line-overlay-priority -50) ;; Restore the prev value otherwise text selecting on hl-line is not visible
+  (hl-line-mode -1)
+  (setq-local hl-line-overlay-priority -50)
+  (setq-local hl-line-range-function nil)
   (hl-line-mode)
   (org-columns-quit))
 
@@ -1150,9 +1156,9 @@ timestamp."
                           (window-live-p (get-buffer-window which-key--buffer)))
                      (string= (buffer-name) "*Org Note*")))))
 
-
-(use-package spacious-padding)
-(spacious-padding-mode)
+;; problems with displaying
+;; (use-package spacious-padding)
+;; (spacious-padding-mode)
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
