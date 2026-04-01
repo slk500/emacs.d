@@ -124,10 +124,10 @@ The DWIM behaviour of this command is as follows:
 
 ;;; habits
 
-(use-package org-habit-stats)
+;(use-package org-habit-stats)
 
-(use-package org-habit-plus
-  :straight (:host github :repo "myshevchuk/org-habit-plus"))
+;; (use-package org-habit-plus
+;;   :straight (:host github :repo "myshevchuk/org-habit-plus"))
 
 ;; https://github.com/vberezhnev/better-org-habit.el
 ;; https://github.com/colonelpanic8/org-window-habit
@@ -886,6 +886,19 @@ reuse it's window, otherwise create new one."
 
 (setq display-time-mail-string "") ;; remove "Mail" in mode line
 
+(defun my/notmuch-poll-async ()
+  (interactive)
+  (let ((buf (get-buffer-create " *notmuch-poll*")))
+    (make-process
+     :name "notmuch-poll"
+     :buffer buf
+     :command (list notmuch-command "new")
+     :sentinel (lambda (proc event)
+                 (when (string= event "finished\n")
+                   (run-hooks 'notmuch-after-tag-change-hook)
+                   (notmuch-refresh-all-buffers)
+                   (message "notmuch: nowe wiadomości"))))))
+
 (use-package notmuch
   :bind
   (:map global-map
@@ -894,7 +907,9 @@ reuse it's window, otherwise create new one."
 	("C-s" . notmuch-draft-save)
 	:map notmuch-show-mode-map
 	("r" . notmuch-show-reply)
-	("t" . capture-mail))
+	("t" . capture-mail)
+	:map notmuch-common-keymap
+	("G" . my/notmuch-poll-async))
   :init
   (setq-default notmuch-search-oldest-first nil)
   (setq notmuch-show-logo nil)
@@ -1094,6 +1109,29 @@ timestamp."
 
 ;;; hl-line-mode
 
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            (setq-local hl-line-range-function
+                        (lambda ()
+                          (unless (use-region-p)
+                            (let* ((bol (line-beginning-position))
+                                   (marker (get-text-property (point) 'org-marker))
+                                   (is-habit
+                                    (and marker
+                                         (buffer-live-p (marker-buffer marker))
+                                         (with-current-buffer (marker-buffer marker)
+                                           (save-excursion
+                                             (goto-char marker)
+                                             (org-is-habit-p))))))
+                              (if is-habit
+                                  (cons bol
+                                        (save-excursion
+                                          (goto-char bol)
+                                          (move-to-column org-habit-graph-column)
+                                          (point)))
+                                (cons bol (line-beginning-position 2)))))))))
+
+
 (defun my/column-view ()
   (interactive)
   (hl-line-mode -1)
@@ -1137,6 +1175,10 @@ timestamp."
       (message "No overlays at point."))))
 
 ;;; ui
+
+(set-face-attribute 'highlight nil
+                    :background "#3a3a5a"   ; hover background color
+                    :foreground nil)
 
 (add-hook 'emacs-startup-hook (lambda () (set-fringe-mode 1)) t)
 
@@ -2294,6 +2336,21 @@ from elsewhere."
          (title (string-trim (shell-command-to-string (format "yt-dlp --get-title '%s' 2>/dev/null" link)))))
     (save-excursion
       (insert (format "[[%s][%s]]" link title)))))
+
+(defun my/youtube-url-p (url)
+  "Zwraca t jeśli URL jest linkiem do YouTube."
+  (and (stringp url)
+       (string-match-p
+        (rx (or "youtube.com/watch" "youtu.be/"))
+        url)))
+
+(defun my/cua-paste-youtube-advice (orig-fun &rest args)
+  (let ((clip (current-kill 0 t)))
+    (if (my/youtube-url-p clip)
+        (youtube-link-insert)
+      (apply orig-fun args))))
+
+(advice-add 'cua-paste :around #'my/cua-paste-youtube-advice)
 
 ;;; gpg
 
