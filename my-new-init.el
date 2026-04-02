@@ -420,10 +420,15 @@ The DWIM behaviour of this command is as follows:
                            (let ((org-clock-mode-line-total 'today))
                              (org-clock-sum-current-item
                               (org-clock-get-sum-start))))))
-           (str (format " [%s | %d:%02d | %d:%02d]"
-                        org-clock-heading
-                        (/ current-mins 60) (mod current-mins 60)
-                        (/ today-mins 60) (mod today-mins 60))))
+           (current-str (format "%d:%02d"
+                                (/ current-mins 60) (mod current-mins 60)))
+           (current-str-colored (if (>= current-mins 10)
+                                    (propertize current-str 'face '(:foreground "#f07178" :weight bold))
+                                  current-str))
+           (str (concat (format " [%s | " org-clock-heading)
+                        current-str-colored
+                        (format " | %d:%02d]"
+                                (/ today-mins 60) (mod today-mins 60)))))
       (setq org-mode-line-string
             (propertize str)))))
 
