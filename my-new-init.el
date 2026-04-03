@@ -14,6 +14,24 @@ days from start up to start+N-1, displayed in reverse (newest first)."
       (insert (format "*** [%s]\n"
                       (format-time-string "%Y-%m-%d %a" day))))))
 
+(defun my/end-of-line-or-defun ()
+  "Jeśli na końcu linii, skocz na koniec funkcji. Inaczej idź na koniec linii."
+  (interactive)
+  (if (eolp)  ; eolp = end of line predicate
+      (end-of-defun)
+    (move-end-of-line 1)))
+
+(global-set-key (kbd "C-e") 'my/end-of-line-or-defun)
+
+(defun my/beginning-of-line-or-defun ()
+  "Jeśli na początku linii, skocz na początek funkcji. Inaczej idź na początek linii."
+  (interactive)
+  (if (bolp)  ; bolp = beginning of line predicate
+      (beginning-of-defun)
+    (move-beginning-of-line 1)))
+
+(global-set-key (kbd "C-a") 'my/beginning-of-line-or-defun)
+
 ;;; errors atfer last update
 (setq org-modules (remove 'ol-gnus (bound-and-true-p org-modules)))
 
@@ -562,6 +580,36 @@ Stole from aweshell"
 (window-divider-mode 1)
 
 ;;; youtube
+
+(defun spook-org--follow-yt-link (path _prefix)
+  (let* ((file (expand-file-name path)))
+    (make-process
+     :name "mpv"
+     :buffer " *mpv*"
+     :command `("mpv" ,file))))
+
+
+(defun my/youtube-download-and-link (url)
+  "Download YouTube URL to ~/Videos/youtube/ and insert org link."
+  (interactive "sURL: ")
+  (let* ((dir (expand-file-name "~/Videos/youtube/"))
+         (template (file-name-concat dir "%(title)s [%(id)s].%(ext)s"))
+         (filename (string-trim
+                    (shell-command-to-string
+                     (format "yt-dlp --get-filename -o %s %s"
+                             (shell-quote-argument template)
+                             (shell-quote-argument url))))))
+    (make-directory dir t)
+    (start-process
+     "yt-dlp" " *yt-dlp*"
+     "yt-dlp"
+     "--quiet" "--no-progress" "--no-colors"
+     "-S" "height:1080"
+     "--write-description"
+     "-o" template
+     url)
+    (insert (format "[[file:%s][%s]]" filename (file-name-base filename)))
+    (message "Downloading: %s" (file-name-base filename))))
 
 (use-package yeetube)
 
@@ -2365,10 +2413,12 @@ from elsewhere."
         url)))
 
 (defun my/cua-paste-youtube-advice (orig-fun &rest args)
-  (let ((clip (current-kill 0 t)))
-    (if (my/youtube-url-p clip)
-        (youtube-link-insert)
-      (apply orig-fun args))))
+  (if (minibufferp)
+      (apply orig-fun args)
+    (let ((clip (current-kill 0 t)))
+      (if (my/youtube-url-p clip)
+          (youtube-link-insert)
+        (apply orig-fun args)))))
 
 (advice-add 'cua-paste :around #'my/cua-paste-youtube-advice)
 
