@@ -871,6 +871,18 @@ reuse it's window, otherwise create new one."
 :bind
 (("C-x g" . magit-status)))
 
+(defun my/magit-gptel-commit-message ()
+  "Generate commit message using gptel based on staged diff."
+  (interactive)
+  (let ((diff (shell-command-to-string "git diff --cached")))
+    (gptel-request
+     (concat "Write a concise git commit message for this diff. "
+             "First line max 50 chars, imperative mood, no period. "
+             "Only the commit message, nothing else.\n\n" diff)
+     :callback (lambda (response _)
+                 (with-current-buffer (magit-commit-message-buffer)
+                   (erase-buffer)
+                   (insert response))))))
 
 (defun copy-diff-region ()
   "Copy diff region without + or - markers."
@@ -1350,7 +1362,8 @@ is already narrowed."
 (setq org-refile-use-outline-path 'file)
 
 (setq org-refile-targets
-  '(("~/aamystuff/life/todos.org.gpg" :level . 1)))
+  '((nil :maxlevel . 3) ;; file from which org-refile is invoke
+    ("~/aamystuff/life/todos.org.gpg" :level . 1)))
 
 (setq org-reverse-note-order t)
 
@@ -1525,6 +1538,8 @@ is already narrowed."
                   "|" "CANCELED(c@)" "DONE(d!)"))) ;; WAIT not WAITING
  
 ;;;; org-agenda
+
+(setq org-agenda-restore-windows-after-quit t)
 
 (setq org-overriding-columns-format "%60ITEM(item) %CLOCKSUM(time) %DEADLINE(deadline)")
 
