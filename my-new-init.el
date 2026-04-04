@@ -1,4 +1,9 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; expand-region
+
+(use-package expand-region
+  :bind (("C-q" . er/expand-region)))
+
 ;;; my
 
 (defun my/org-insert-days-up ()
