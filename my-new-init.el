@@ -443,11 +443,25 @@ The DWIM behaviour of this command is as follows:
                            (let ((org-clock-mode-line-total 'today))
                              (org-clock-sum-current-item
                               (org-clock-get-sum-start))))))
+           (warn-prop (with-current-buffer (marker-buffer org-clock-hd-marker)
+                        (save-excursion
+                          (goto-char org-clock-hd-marker)
+                          (org-entry-get (point) "CLOCK_WARN_MINS"))))
            (current-str (format "%d:%02d"
                                 (/ current-mins 60) (mod current-mins 60)))
-           (current-str-colored (if (>= current-mins 10)
-                                    (propertize current-str 'face '(:foreground "#f07178" :weight bold))
-                                  current-str))
+           (current-str-colored
+            (if warn-prop
+                ;; property ustawiony – tylko czerwony
+                (if (>= current-mins (string-to-number warn-prop))
+                    (propertize current-str 'face '(:foreground "#f07178" :weight bold))
+                  current-str)
+              ;; brak property – żółty + czerwony
+              (cond
+               ((>= current-mins 50)
+                (propertize current-str 'face '(:foreground "#f07178" :weight bold)))
+               ((>= current-mins 25)
+                (propertize current-str 'face '(:foreground "#ffb454" :weight bold)))
+               (t current-str))))
            (str (concat (format " [%s | " org-clock-heading)
                         current-str-colored
                         (format " | %d:%02d]"
