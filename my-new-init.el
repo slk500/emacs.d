@@ -1443,6 +1443,8 @@ is already narrowed."
 (global-set-key (kbd "C-c l") 'org-store-link)
 
 (use-package org
+  :custom
+  (org-ellipsis "⤵")
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-mode-hook 'org-indent-mode)
@@ -1464,7 +1466,6 @@ is already narrowed."
 	                       ;; jak jest komentarz to idzie na koniec komentarza
 	org-treat-insert-todo-heading-as-state-change t
 	initial-major-mode 'org-mode
-	org-ellipsis "⤵"
 	org-agenda-sticky t
 	org-checkbox-hierarchical-statistics nil
 	bookmark-set-fringe-mark nil
