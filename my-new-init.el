@@ -434,6 +434,11 @@ The DWIM behaviour of this command is as follows:
 (use-package org-mru-clock)
 (setq org-mru-clock-files #'org-agenda-files)
 
+(defun my/org-mru-clock-format (s)
+  (replace-regexp-in-string " ([^()]+)$" "" s))
+
+(setq org-mru-clock-format-function #'my/org-mru-clock-format)
+
 (use-package org-multi-clock
   :straight (org-multi-clock :type git :host gitlab :repo "OlMon/org-multi-clock" :branch "master"))
 
@@ -1955,15 +1960,15 @@ from elsewhere."
 
 ;;; pulsar
 
-  ;; (use-package pulsar
-  ;;   :config
-  ;;   (setq pulsar-pulse t
-  ;; 	  pulsar-delay 0.2
-  ;; 	  pulsar-iterations 10
-  ;; 	  pulsar-face 'pulsar-cyan
-  ;; 	  pulsar-highlight-face 'pulsar-yellow))
+  (use-package pulsar
+    :config
+    (setq pulsar-pulse t
+	  pulsar-delay 0.2
+	  pulsar-iterations 10
+	  pulsar-face 'pulsar-cyan
+	  pulsar-highlight-face 'pulsar-yellow))
 
-  ;; (pulsar-global-mode 1)
+  (pulsar-global-mode 1)
 
 ;;; crux
 
