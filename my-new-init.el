@@ -1,4 +1,10 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; meta-functions
+
+(use-package meta-functions
+  :straight (:host github :repo "yantar92/meta-functions"))
+
+
 ;;; expand-region
 
 (use-package expand-region
@@ -1432,8 +1438,6 @@ is already narrowed."
   '((nil :maxlevel . 3) ;; file from which org-refile is invoke
     ("~/aamystuff/life/todos.org.gpg" :level . 1)))
 
-(setq org-reverse-note-order t)
-
 (use-package org-view-mode)
 
 (use-package org-menu
@@ -1451,6 +1455,7 @@ is already narrowed."
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (use-package org-contrib)
   (setq org-M-RET-may-split-line '((default . nil)) ;; don't split line, just create the new heading
+	org-log-states-order-reversed nil
 	org-insert-heading-respect-content nil
 	org-adapt-indentation t
 	org-clock-mode-line-total 'today
@@ -1606,6 +1611,9 @@ is already narrowed."
                   "|" "CANCELED(c@)" "DONE(d!)"))) ;; WAIT not WAITING
  
 ;;;; org-agenda
+
+(setq org-agenda-clockreport-parameter-plist
+      '(:link t :maxlevel 2 :hidefiles t :tags t))
 
 (setq org-agenda-restore-windows-after-quit t)
 
@@ -2423,7 +2431,9 @@ from elsewhere."
   (let* ((link (or (current-kill 0) (read-from-minibuffer "Youtube-Link:")))
          (title (string-trim (shell-command-to-string (format "yt-dlp --get-title '%s' 2>/dev/null" link)))))
     (save-excursion
-      (insert (format "[[%s][%s]]" link title)))))
+      (insert (format "[[%s][%s]]" link title)))
+    (when (org-at-heading-p)
+      (org-toggle-tag "video" 'on))))
 
 (defun my/youtube-url-p (url)
   "Zwraca t jeśli URL jest linkiem do YouTube."
