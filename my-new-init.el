@@ -132,14 +132,14 @@ The DWIM behaviour of this command is as follows:
 
 ;;; backward-forward
 
-(use-package backward-forward
-  :demand t
-  :config
-  (backward-forward-mode t)
-  :bind
-  (:map backward-forward-mode-map
-   ("M-C-<left>" . backward-forward-previous-location)
-   ("M-C-<right>" . backward-forward-next-location)))
+;; (use-package backward-forward
+;;   :demand t
+;;   :config
+;;   (backward-forward-mode t)
+;;   :bind
+;;   (:map backward-forward-mode-map
+;;    ("M-C-<left>" . backward-forward-previous-location)
+;;    ("M-C-<right>" . backward-forward-next-location)))
 
 ;;; org-super-agenda
 
@@ -1965,8 +1965,8 @@ from elsewhere."
     (setq pulsar-pulse t
 	  pulsar-delay 0.2
 	  pulsar-iterations 10
-	  pulsar-face 'pulsar-cyan
-	  pulsar-highlight-face 'pulsar-yellow))
+	  pulsar-face 'pulsar-cyan))
+	  ;; pulsar-highlight-face 'pulsar-cyan))
 
   (pulsar-global-mode 1)
 
