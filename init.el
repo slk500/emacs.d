@@ -182,37 +182,37 @@
    '(eev debbugs centered-window bongo diredfl simpleclip
 	 dired-subtree php-mode ivy-rich which-key counsel
 	 conunsel swiper org-plus-contrib use-package))
- '(pulsar-pulse-functions
-   '(smartscan-symbol-go-forward smartscan-symbol-go-backward
-				 recenter-top-bottom
-				 move-to-window-line-top-bottom
-				 reposition-window
-				 bookmark-jump other-window
-				 delete-window
-				 delete-other-windows
-				 forward-page backward-page
-				 scroll-up-command
-				 scroll-down-command
-				 next-buffer previous-buffer
-				 windmove-right
-				 windmove-left windmove-up
-				 windmove-down
-				 windmove-swap-states-right
-				 windmove-swap-states-left
-				 windmove-swap-states-up
-				 windmove-swap-states-down
-				 tab-new tab-close tab-next
-				 org-next-visible-heading
-				 org-previous-visible-heading
-				 org-forward-heading-same-level
-				 org-backward-heading-same-level
-				 outline-backward-same-level
-				 outline-forward-same-level
-				 outline-next-visible-heading
-				 outline-previous-visible-heading
-				 outline-up-heading
-				 xref-pulse-momentarily
-				 pop-global-mark))
+ ;; '(pulsar-pulse-functions
+ ;;   '(smartscan-symbol-go-forward smartscan-symbol-go-backward
+ ;; 				 recenter-top-bottom
+ ;; 				 move-to-window-line-top-bottom
+ ;; 				 reposition-window
+ ;; 				 bookmark-jump other-window
+ ;; 				 delete-window
+ ;; 				 delete-other-windows
+ ;; 				 forward-page backward-page
+ ;; 				 scroll-up-command
+ ;; 				 scroll-down-command
+ ;; 				 next-buffer previous-buffer
+ ;; 				 windmove-right
+ ;; 				 windmove-left windmove-up
+ ;; 				 windmove-down
+ ;; 				 windmove-swap-states-right
+ ;; 				 windmove-swap-states-left
+ ;; 				 windmove-swap-states-up
+ ;; 				 windmove-swap-states-down
+ ;; 				 tab-new tab-close tab-next
+ ;; 				 org-next-visible-heading
+ ;; 				 org-previous-visible-heading
+ ;; 				 org-forward-heading-same-level
+ ;; 				 org-backward-heading-same-level
+ ;; 				 outline-backward-same-level
+ ;; 				 outline-forward-same-level
+ ;; 				 outline-next-visible-heading
+ ;; 				 outline-previous-visible-heading
+ ;; 				 outline-up-heading
+ ;; 				 xref-pulse-momentarily
+ ;; 				 pop-global-mark))
  '(safe-local-variable-values
    '((etags-regen-ignores "test/manual/etags/")
      (etags-regen-regexp-alist

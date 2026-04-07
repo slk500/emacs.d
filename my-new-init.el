@@ -4,7 +4,6 @@
 (use-package meta-functions
   :straight (:host github :repo "yantar92/meta-functions"))
 
-
 ;;; expand-region
 
 (use-package expand-region
@@ -1960,15 +1959,14 @@ from elsewhere."
 
 ;;; pulsar
 
-  (use-package pulsar
-    :config
-    (setq pulsar-pulse t
-	  pulsar-delay 0.2
-	  pulsar-iterations 10
-	  pulsar-face 'pulsar-cyan))
-	  ;; pulsar-highlight-face 'pulsar-cyan))
+  ;; (use-package pulsar
+  ;;   :config
+  ;;   (setq pulsar-pulse t
+  ;; 	  pulsar-delay 0.1
+  ;; 	  pulsar-iterations 10
+  ;; 	  pulsar-face 'pulsar-cyan
+  ;; 	  pulsar-highlight-face 'pulsar-cyan))
 
-  (pulsar-global-mode 1)
 
 ;;; crux
 
@@ -2581,7 +2579,7 @@ from elsewhere."
     (org-entry-put pom "LYING-LEG-RAISE" "10")
     (org-entry-put pom "PLANK" "1")
     (org-entry-put pom "KEGEL-FLOOR" "10")
-    (org-entry-put pom "PUSHUP" "5")))
+    (org-entry-put pom "PUSHUP" "7")))
 
 (with-eval-after-load 'org
    (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
