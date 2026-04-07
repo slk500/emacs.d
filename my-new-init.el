@@ -1,4 +1,33 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; faster mark popping
+
+;; The mark ring is one of Emacs’s most underused navigation features.
+;; Every time you jump somewhere – isearch, M-<, M->, goto-line, imenu, and
+;; many more – Emacs pushes your old position onto the mark ring. C-u C-SPC pops it, jumping you back.
+;; The annoyance: you need C-u C-SPC every single time. With this setting, after the first C-u C-SPC you can keep pressing just C-SPC to continue popping:
+
+(setq set-mark-command-repeat-pop t)
+
+;;; reversible C-x 1
+
+(winner-mode +1)
+
+(defun toggle-delete-other-windows ()
+  "Delete other windows in frame if any, or restore previous window config."
+  (interactive)
+  (if (and winner-mode
+           (equal (selected-window) (next-window)))
+      (winner-undo)
+    (delete-other-windows)))
+
+(global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
+
+;;; disable bidirectional text scanning
+
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
 ;;; meta-functions
 
 (use-package meta-functions
