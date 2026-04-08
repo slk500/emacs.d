@@ -1,4 +1,25 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; icons
+
+(use-package all-the-icons)
+
+(defun my/org-agenda-replace-scheduled-deadline-symbols ()
+  "Replace SCHEDULED and DEADLINE in agenda with icons."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "SCHEDULED:" nil t)
+      (replace-match (all-the-icons-octicon "calendar" :v-adjust 0.1) t t))
+    (goto-char (point-min))
+    (while (re-search-forward "DEADLINE:" nil t)
+      (replace-match (all-the-icons-material "alarm_on" :v-adjust 0.1) t t))))
+
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-replace-scheduled-deadline-symbols)
+
+(setq org-agenda-category-icon-alist
+  '(("scheduled" ,(all-the-icons-octicon "calendar") nil nil :ascent center)
+    ("deadline" ,(all-the-icons-material "alarm_on") nil nil :ascent center)))
+
+
 ;;; faster mark popping
 
 ;; The mark ring is one of Emacs’s most underused navigation features.
