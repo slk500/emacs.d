@@ -1,4 +1,33 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; ansi color - remove
+
+(defun org-babel-strip-ansi-result ()
+  (when (eq major-mode 'org-mode)
+    (ansi-color-filter-region (point-min) (point-max))))
+
+(add-hook 'org-babel-after-execute-hook 'org-babel-strip-ansi-result)
+
+;;; eldoc clocksum
+
+(defun my/org-clock-eldoc ()
+  "Pokaż CLOCKSUM przez eldoc."
+  (when (and (derived-mode-p 'org-mode)
+             (org-at-heading-p))
+    (let ((clocksum (org-entry-get (point) "CLOCK" t))
+          (headline (org-entry-get (point) "ITEM")))
+      (when clocksum
+        (format "⏱ %s: %s" headline clocksum)))))
+
+(defun my/org-clock-eldoc ()
+   "Siema")
+
+;; (add-hook 'org-mode-hook
+;;           (lambda ()
+;;             (add-hook 'eldoc-documentation-functions
+;;                       #'my/org-clock-eldoc nil t)))
+
+(setq eldoc-documentation-strategy #'eldoc-documentation-compose)
+
 ;;; icons
 
 (use-package all-the-icons)
@@ -81,7 +110,8 @@ days from start up to start+N-1, displayed in reverse (newest first)."
       (end-of-defun)
     (move-end-of-line 1)))
 
-(global-set-key (kbd "C-e") 'my/end-of-line-or-defun)
+;;FIXME
+;;(global-set-key (kbd "C-e") 'my/end-of-line-or-defun) ;; Make C-a and C-e go to beginning or ending of logical line.
 
 (defun my/beginning-of-line-or-defun ()
   "Jeśli na początku linii, skocz na początek funkcji. Inaczej idź na początek linii."
@@ -90,7 +120,7 @@ days from start up to start+N-1, displayed in reverse (newest first)."
       (beginning-of-defun)
     (move-beginning-of-line 1)))
 
-(global-set-key (kbd "C-a") 'my/beginning-of-line-or-defun)
+;;(global-set-key (kbd "C-a") 'my/beginning-of-line-or-defun)
 
 ;;; errors atfer last update
 (setq org-modules (remove 'ol-gnus (bound-and-true-p org-modules)))
@@ -337,10 +367,13 @@ The DWIM behaviour of this command is as follows:
 
 ;;; indent
 
-  (setq electric-indent-mode nil)
+(setq electric-indent-mode nil)
+(keymap-global-set "C-<tab>" #'indent-rigidly)
 
 ;;; babel
 ;;;; php
+
+(use-package ob-php)
 
 (use-package php-mode)
 (defun org-babel-execute:php (body params)
@@ -1640,6 +1673,7 @@ is already narrowed."
   (org-babel-do-load-languages
    'org-babel-load-languages 
    '((shell . t)
+     (php .t)
      (sql . t)
      (http . t)
      (clojure . t)
@@ -1705,7 +1739,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   (interactive)
   (org-agenda nil "a"))
 
-(global-set-key (kbd "<f9>") (lambda () (interactive) (org-agenda nil "g")))
+(global-set-key (kbd "<f9>") 'my-gtd)
 
 (defadvice org-agenda (around split-vertically activate)
   (let ((split-width-threshold 80))  ; or whatever width makes sense for you
@@ -2072,7 +2106,14 @@ from elsewhere."
   :ensure t
   :custom
   (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-pcm-leading-wildcard t))
+
+(defun orderless-word-boundary (str)
+  (format "\\<%s\\>" str))
+
+(add-to-list 'orderless-affix-dispatch-alist
+             '(?@ . orderless-word-boundary))
 
 ;;; vertico, consult
 
