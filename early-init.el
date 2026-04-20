@@ -60,6 +60,7 @@
 (global-set-key (kbd "C-c 5") (lambda() (interactive)(find-file "~/aamystuff/mystuff/software.org")))
 (global-set-key (kbd "C-c i") (lambda() (interactive)(find-file (expand-file-name "my-new-init.el" user-emacs-directory))))
 (global-set-key (kbd "C-c t") (lambda() (interactive)(find-file "~/aamystuff/life/todos.org.gpg")))
+(keymap-global-set "C-c q" (lambda() (interactive)(find-file "~/aamystuff/life/ledger.dat")))
 (global-set-key (kbd "C-c r") (lambda() (interactive)(find-file (expand-file-name "init.el" user-emacs-directory))))
 
 (blink-cursor-mode 0)

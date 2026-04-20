@@ -1,4 +1,67 @@
 ;;; ...  -*- lexical-binding: t -*-
+
+;;; whisper
+
+(use-package whisper
+  :vc (:url "https://github.com/natrys/whisper.el" :branch "master")
+  :bind ("C-c C-r" . whisper-run)
+  :config
+  (setopt whisper-install-directory "/tmp/"
+          whisper-model "base"
+          whisper-language "pl"
+          whisper-translate nil
+          whisper-cursor-return 'start
+          whisper-use-threads (/ (num-processors) 2)))
+
+;;; org-clock
+
+(setq org-clock-idle-time 10          ; próg bezczynności w minutach
+      org-clock-sound t               ; dźwięk przy powrocie (opcjonalnie)
+      org-clock-persist t             ; zachowaj clock między sesjami
+      org-clock-persist-query-resume nil) ; nie pytaj o wznowienie
+
+;;; sort
+
+(defun my/sort-logbook-entries ()
+  "Sortuje wpisy :LOGBOOK: w bieżącym buforze od najnowszego do najstarszego."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward ":LOGBOOK:" nil t)
+      (let* ((logbook-start (point))
+             (logbook-end (progn
+                            (re-search-forward ":END:")
+                            (line-beginning-position)))
+             (entries '())
+             (pos logbook-start))
+        ;; Zbierz wszystkie wpisy (każdy zaczyna się od "- [")
+        (goto-char logbook-start)
+        (while (re-search-forward "^[ \t]*- \\[" logbook-end t)
+          (push (line-beginning-position) entries))
+        (setq entries (nreverse entries))
+        ;; Wyodrębnij tekst każdego wpisu
+        (let ((entry-texts
+               (cl-loop for (start next) on entries
+                        collect (buffer-substring-no-properties
+                                 start
+                                 (or next logbook-end)))))
+          ;; Posortuj po timestamp (najnowszy pierwszy)
+          (setq entry-texts
+                (sort entry-texts
+                      (lambda (a b)
+                        (string> (or (and (string-match "\\[\\([0-9-: A-Za-z]+\\)\\]" a)
+                                         (match-string 1 a)) "")
+                                 (or (and (string-match "\\[\\([0-9-: A-Za-z]+\\)\\]" b)
+                                          (match-string 1 b)) "")))))
+          ;; Zastąp zawartość logbooka posortowanymi wpisami
+          (delete-region logbook-start logbook-end)
+          (goto-char logbook-start)
+          (insert (apply #'concat entry-texts)))))))
+
+;;; safe local variable
+
+(put 'org-log-states-order-reversed 'safe-local-variable #'booleanp)
+
 ;;; ansi color - remove
 
 (defun org-babel-strip-ansi-result ()
@@ -396,6 +459,13 @@ The DWIM behaviour of this command is as follows:
 
 ;;; music
 
+(use-package health-template
+  :straight (:host gitlab :repo "dto/health-template"))
+
+
+(use-package listen
+  :straight (:host github :repo "alphapapa/listen.el"))
+
     (use-package bongo
     :ensure t :defer t
     :init (progn
@@ -405,6 +475,7 @@ The DWIM behaviour of this command is as follows:
                   bongo-action-track-icon nil
                   bongo-display-header-icons nil
                   bongo-logo nil
+		  bongo-enabled-backends '(mpv)
                   bongo-display-track-icons nil))
     :bind (:map bongo-mode-map ("<delete>" . bongo-kill-line)))
 
@@ -509,7 +580,19 @@ The DWIM behaviour of this command is as follows:
 
 ;;; ledger
 
+(add-to-list 'auto-mode-alist '("ledger\\.dat\\'" . ledger-mode))
+
+(advice-add 'ledger-xact-find-slot :override
+  (lambda (date) (goto-char (point-min))))
+
 (use-package ledger-mode)
+
+(defun my/ledger-bal ()
+  (interactive)
+  (ledger-report "bal" nil))
+
+(with-eval-after-load 'ledger-mode
+  (define-key ledger-mode-map (kbd "C-c b") #'my/ledger-bal))
 
 ;;; clock
 
@@ -729,7 +812,6 @@ Stole from aweshell"
 
 ;;; fill-mode
 
-(setq-default fill-column 60)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
 ;;; palimpset
@@ -1535,14 +1617,14 @@ is already narrowed."
 
 (use-package org
   :custom
-  (org-ellipsis "⤵")
+  (setq org-ellipsis "⤵")
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-mode-hook 'org-indent-mode)
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (use-package org-contrib)
   (setq org-M-RET-may-split-line '((default . nil)) ;; don't split line, just create the new heading
-	org-log-states-order-reversed nil
+	org-log-states-order-reversed t
 	org-insert-heading-respect-content nil
 	org-adapt-indentation t
 	org-clock-mode-line-total 'today
@@ -1573,9 +1655,7 @@ is already narrowed."
   (require 'org-eldoc)
   (global-eldoc-mode 1))
 
-
 (use-package org-modern)
-
 
 ;;;; org-autolist
 
