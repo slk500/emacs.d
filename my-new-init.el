@@ -15,6 +15,17 @@
 
 ;;; org-clock
 
+(require 'dbus)
+(dbus-register-signal
+ :system
+ "org.freedesktop.login1"
+ "/org/freedesktop/login1"
+ "org.freedesktop.login1.Manager"
+ "PrepareForSleep"
+ (lambda (going-to-sleep)
+   (when (and going-to-sleep (org-clocking-p))
+     (org-clock-out nil t))))
+
 (setq org-clock-idle-time 10          ; próg bezczynności w minutach
       org-clock-sound t               ; dźwięk przy powrocie (opcjonalnie)
       org-clock-persist t             ; zachowaj clock między sesjami
