@@ -1,5 +1,17 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+;;; md to org
+
+(defun my/markdown-to-org-region (start end)
+  "Convert Markdown formatted text in region (START, END) to Org.
+
+This command requires that pandoc (man page `pandoc(1)') be
+installed."
+  (interactive "r")
+  (shell-command-on-region
+   start end
+   "pandoc -f markdown -t org --wrap=preserve" t t))
+
 ;;; whisper
 
 (use-package whisper
@@ -2856,7 +2868,7 @@ Where possible, use the standard interface for changing this line."
       (org-move-to-column col)))))
 
 ;;;; rest
-(setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" "" "[^]"))
+(setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" ""))
 
 (defun org-columns-switch-columns ()
   (interactive)
@@ -2920,7 +2932,7 @@ current specifications.  This function also sets
        ((or (equal b "[X]") (equal b "[X]*") (equal b "[X]!") (equal b "[X]^"))
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
-       ((or (equal b "[^]") (equal b "[-]^")) nil)
+       ((or (equal b "[→]") (equal b "[/]")) nil)
        ((string-match (rx "[" (one-or-more digit) "]") b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
