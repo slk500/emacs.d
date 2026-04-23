@@ -95,24 +95,39 @@ installed."
 
 ;;; eldoc clocksum
 
-(defun my/org-clock-eldoc ()
-  "Pokaż CLOCKSUM przez eldoc."
-  (when (and (derived-mode-p 'org-mode)
-             (org-at-heading-p))
-    (let ((clocksum (org-entry-get (point) "CLOCK" t))
-          (headline (org-entry-get (point) "ITEM")))
-      (when clocksum
-        (format "⏱ %s: %s" headline clocksum)))))
+(defun my/org-task-time-eldoc (callback &rest _)
+  "Heading + zalogowany czas w jednej linii."
+  (when (derived-mode-p 'org-mode)
+    (save-excursion
+      (when (ignore-errors (org-back-to-heading t))
+        (let* ((path (org-format-outline-path (org-get-outline-path t)))
+               (logged (org-clock-sum-current-item))
+               (running (if (and (org-clocking-p)
+                                 (equal (marker-buffer org-clock-marker)
+                                        (current-buffer))
+                                 (<= (point) (marker-position org-clock-marker))
+                                 (>= (save-excursion (org-end-of-subtree t t))
+                                     (marker-position org-clock-marker)))
+                            (floor (/ (float-time
+                                       (time-since org-clock-start-time))
+                                      60))
+                          0))
+               (total (+ logged running)))
+          (funcall callback
+                   (if (> total 0)
+                       (format "/%s — %s%s"
+                               path
+                               (org-duration-from-minutes total)
+                               (if (> running 0) " ●" ""))
+                     (format "/%s" path))))))))
 
-(defun my/org-clock-eldoc ()
-   "Siema")
+(add-hook 'org-mode-hook
+          (lambda ()
+            (remove-hook 'eldoc-documentation-functions
+                         #'org-eldoc-documentation-function t)
+            (add-hook 'eldoc-documentation-functions
+                      #'my/org-task-time-eldoc nil t)))
 
-;; (add-hook 'org-mode-hook
-;;           (lambda ()
-;;             (add-hook 'eldoc-documentation-functions
-;;                       #'my/org-clock-eldoc nil t)))
-
-(setq eldoc-documentation-strategy #'eldoc-documentation-compose)
 
 ;;; icons
 
@@ -1635,7 +1650,7 @@ is already narrowed."
 (use-package org-menu
   :straight (:host github :repo "sheijk/org-menu"))
 
-(keymap-global-set "C-c !" #'org-timestamp-inactive)
+(keymap-global-set "C-c >" #'org-timestamp-inactive)
 (global-set-key (kbd "C-c l") 'org-store-link)
 
 (use-package org
@@ -2773,7 +2788,7 @@ from elsewhere."
     (org-entry-put pom "LYING-LEG-RAISE" "10")
     (org-entry-put pom "PLANK" "1")
     (org-entry-put pom "KEGEL-FLOOR" "10")
-    (org-entry-put pom "PUSHUP" "7")))
+    (org-entry-put pom "PUSHUP" "10")))
 
 (with-eval-after-load 'org
    (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
