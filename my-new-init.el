@@ -2770,7 +2770,39 @@ from elsewhere."
     (while (re-search-forward "^[ \t]*:.*:" nil t)
       (org-flag-drawer t))))
 
+;;;; emoji
+
+
+
 ;;;; excercise
+
+(defun my/org-columns--summary-mean-clock (values _printf)
+  "Circular mean godzin w formacie HH:MM.
+Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające północ."
+  (let* ((angles
+          (delq nil
+                (mapcar (lambda (v)
+                          (when (string-match
+                                 "\\`\\s-*\\([0-9]+\\):\\([0-9]+\\)\\s-*\\'" v)
+                            (let ((mins (+ (* 60 (string-to-number
+                                                  (match-string 1 v)))
+                                           (string-to-number
+                                            (match-string 2 v)))))
+                              (/ (* mins 2 float-pi) 1440.0))))
+                        values)))
+         (n (length angles)))
+    (if (zerop n)
+        ""
+      (let* ((sum-x (apply #'+ (mapcar #'cos angles)))
+             (sum-y (apply #'+ (mapcar #'sin angles)))
+             (mean-angle (atan sum-y sum-x))       ; atan2
+             (mean-min  (round (/ (* mean-angle 1440.0) (* 2 float-pi)))))
+        (when (< mean-min 0)
+          (setq mean-min (+ mean-min 1440)))
+        (format "%02d:%02d" (/ mean-min 60) (% mean-min 60))))))
+
+(add-to-list 'org-columns-summary-types
+             '("mean-clock" . my/org-columns--summary-mean-clock))
 
 (defun my/string-in-brackets-to-number (string)
   "Convert a string in the format '[X]' to an integer."
