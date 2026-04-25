@@ -891,8 +891,9 @@ Stole from aweshell"
 
 ;;; latitude
 
-(setq calendar-latitude 52.237049
-      calendar-longitude 21.017532)
+(setq calendar-latitude 52.23
+      calendar-longitude 21.01
+      calendar-location-name "Warsaw, PL")
 
 ;;; elfeed, rss
 
@@ -989,7 +990,31 @@ When enabled, the value of `point' is displayed in the
 mode-line (after the line and column numbers, if those are being
 displayed too).")
 
+;;; sunrise
 
+(require 'solar)
+
+(setq calendar-time-display-form '(24-hours ":" minutes))
+
+(defvar my/sunrise-sunset-string ""
+  "Cached sunrise/sunset string shown in the modeline.")
+
+(defun my/update-sunrise-sunset ()
+  "Recompute today's sunrise/sunset for the modeline."
+  (let* ((data (solar-sunrise-sunset (calendar-current-date)))
+         (rise (car data))
+         (set  (cadr data)))
+    (setq my/sunrise-sunset-string
+          (format " %s-%s "
+                  (if rise (apply #'solar-time-string rise) "—")
+                  (if set  (apply #'solar-time-string set)  "—"))))
+  (force-mode-line-update t))
+
+(my/update-sunrise-sunset)
+
+(add-to-list 'mode-line-misc-info
+             '(:eval my/sunrise-sunset-string)
+             t)
 
 ;;; help
 
