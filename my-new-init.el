@@ -3001,7 +3001,7 @@ current specifications.  This function also sets
 	(total 0))
     (dolist (b check-boxes)
       (cond
-       ((or (equal b "[X]") (equal b "[X]*") (equal b "[X]!") (equal b "[X]^"))
+       ( (string-prefix-p "[X]" b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
        ((or (equal b "[→]") (equal b "[/]")) nil)
@@ -3042,32 +3042,35 @@ ORIGINAL is the real string, i.e., before it is modified by
 		  (lambda (m) (propertize m 'face (org-get-tag-face m)))
 		  v nil nil 1)))
 	      ("TODO" (propertize v 'face (org-get-todo-face original)))
-	      (_ (if (string-match (rx (and "["
-					    (group (one-or-more digit))
-					    "/"
-					    (group (or (one-or-more digit) "?"))
-					    "]")) v)
-		     (let* ((first-number (string-to-number (match-string 1 v)))
-			    (second-number (string-to-number (match-string 2 v))))
-		       (cond
-			((and (eq first-number 0) (eq second-number 0))
-			 (propertize v 'face '(:foreground "white")))
-			((eq first-number 0)
-			 (propertize v 'face 'error))
-			((or (> first-number second-number) (= first-number second-number) (= 0 second-number))
-			 (propertize v 'face (org-get-todo-face original))) ;; 0 because (string-to-number "?") => 0
-			(t
-			 (let* ((color (nth (- first-number 1) (color-gradient
-								(color-values (face-foreground 'error))
-								(color-values (face-foreground 'org-todo))
-								(- second-number 1))))
-				(hex-color (apply #'format "#%02x%02x%02x"
-						  (mapcar (lambda (c) (/ c 256)) color))))
-			   (propertize v 'face `(:foreground ,hex-color ))))
-			))
-		   (if (string-match (rx "[" (or (one-or-more digit) "X") "]") v)
-		       (propertize v 'face (org-get-todo-face original))
-		     v)))))))
+	      (_ (cond
+		  ((string-match (rx (and "["
+					  (group (one-or-more digit))
+					  "/"
+					  (group (or (one-or-more digit) "?"))
+					  "]")) v)
+		   (let* ((first-number (string-to-number (match-string 1 v)))
+			  (second-number (string-to-number (match-string 2 v))))
+		     (cond
+		      ((and (eq first-number 0) (eq second-number 0))
+		       (propertize v 'face '(:foreground "white")))
+		      ((eq first-number 0)
+		       (propertize v 'face 'error))
+		      ((or (> first-number second-number) (= first-number second-number) (= 0 second-number))
+		       (propertize v 'face (org-get-todo-face original))) ;; 0 because (string-to-number "?") => 0
+		      (t
+		       (let* ((color (nth (- first-number 1) (color-gradient
+							      (color-values (face-foreground 'error))
+							      (color-values (face-foreground 'org-todo))
+							      (- second-number 1))))
+			      (hex-color (apply #'format "#%02x%02x%02x"
+						(mapcar (lambda (c) (/ c 256)) color))))
+			 (propertize v 'face `(:foreground ,hex-color))))
+		      )))
+		  ((string-match (rx "[-]") v)
+		   (propertize v 'face 'error))
+		  ((string-match (rx "[" (or (one-or-more digit) "X") "]") v)
+		   (propertize v 'face (org-get-todo-face original)))
+		  (t v)))))))
 
 (defun my/org-columns--displayed-value (spec value &optional no-star)
   "Return displayed value for specification SPEC in current entry.
