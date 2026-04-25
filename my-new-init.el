@@ -2851,10 +2851,10 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
              (mean-min  (round (/ (* mean-angle 1440.0) (* 2 float-pi)))))
         (when (< mean-min 0)
           (setq mean-min (+ mean-min 1440)))
-        (format "%02d:%02d" (/ mean-min 60) (% mean-min 60))))))
+        (format "%2d:%02d" (/ mean-min 60) (% mean-min 60))))))
 
-(add-to-list 'org-columns-summary-types
-             '("mean-clock" . my/org-columns--summary-mean-clock))
+(with-eval-after-load 'org-colview (add-to-list 'org-columns-summary-types
+						'("mean-clock" . my/org-columns--summary-mean-time-clock)))
 
 (defun my/string-in-brackets-to-number (string)
   "Convert a string in the format '[X]' to an integer."
