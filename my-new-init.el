@@ -2824,6 +2824,19 @@ from elsewhere."
 
 ;;; colview
 
+(setq org-columns-modify-value-for-display-function
+      (lambda (column-title value)
+        (let ((v (if (string-match "\\`\\[\\([0-9]+\\(?:/[0-9]+\\|%\\)\\)\\]\\'" value)
+                     (match-string 1 value)
+                   value)))
+          (if (string= column-title "date")
+              (replace-regexp-in-string
+               "\\([<[]\\)[0-9]\\{4\\}-\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)\\([]>]\\)"
+               "\\1\\2\\3"
+               v)
+            v))))
+
+
 (defun org-hide-all-drawers ()
   "Hide all drawers in the buffer."
   (interactive)
@@ -3107,11 +3120,9 @@ ORIGINAL is the real string, i.e., before it is modified by
 		  v nil nil 1)))
 	      ("TODO" (propertize v 'face (org-get-todo-face original)))
 	      (_ (cond
-		  ((string-match (rx (and "["
-					  (group (one-or-more digit))
-					  "/"
-					  (group (or (one-or-more digit) "?"))
-					  "]")) v)
+		  ((string-match (rx (group (one-or-more digit))
+				     "/"
+				     (group (or (one-or-more digit) "?"))) v)
 		   (let* ((first-number (string-to-number (match-string 1 v)))
 			  (second-number (string-to-number (match-string 2 v))))
 		     (cond
@@ -3135,43 +3146,6 @@ ORIGINAL is the real string, i.e., before it is modified by
 		  ((string-match (rx "[" (or (one-or-more digit) "X") "]") v)
 		   (propertize v 'face (org-get-todo-face original)))
 		  (t v)))))))
-
-(defun my/org-columns--displayed-value (spec value &optional no-star)
-  "Return displayed value for specification SPEC in current entry.
-
-SPEC is a column format specification as stored in
-`org-columns-current-fmt-compiled'.  VALUE is the real value to
-display, as a string.
-
-When NO-STAR is non-nil, do not add asterisks before displayed
-value for ITEM property."
-  (or (and (functionp org-columns-modify-value-for-display-function)
-	   (funcall org-columns-modify-value-for-display-function
-		    (nth 1 spec)	;column name
-		    value))
-      (pcase spec
-	(`("ITEM" . ,_)
-	 (let ((stars
-		(and (not no-star)
-		     (concat (make-string (1- (org-current-level))
-					  (if org-hide-leading-stars ?\s ?*))
-			     "* ")))
-	       ;; usuwa rok z timestamp
-	       (value-without-year (replace-regexp-in-string "\\[\\([0-9]\\{4\\}-\\)?\\(.*?\\)\\]" "[\\2]" value)))
-	   (concat stars (org-link-display-format value-without-year))))
-	(`(,(or "DEADLINE" "SCHEDULED" "TIMESTAMP") . ,_)
-	 (replace-regexp-in-string org-ts-regexp "[\\1]" value))
-	(`(,_ ,_ ,_ ,_ nil) value)
-	;; If PRINTF is set, assume we are displaying a number and
-	;; obey to the format string.
-	(`(,_ ,_ ,_ ,_ ,printf)
-         (if (string-empty-p value) ;; empty string if empty value - aby nie wyświetlał zer w kolumnie z wagą
-             ""
-           (format printf (string-to-number value))))
-	(_ (error "Invalid column specification format: %S" spec)))))
-
-(with-eval-after-load 'org
-  (advice-add 'org-columns--displayed-value :override 'my/org-columns--displayed-value))
 
 (with-eval-after-load 'org
   (advice-add 'org-columns--overlay-text :override 'my/org-columns--overlay-text))
