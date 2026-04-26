@@ -224,7 +224,6 @@ days from start up to start+N-1, displayed in reverse (newest first)."
 ;;(global-set-key (kbd "C-a") 'my/beginning-of-line-or-defun)
 
 ;;; errors atfer last update
-(setq org-modules (remove 'ol-gnus (bound-and-true-p org-modules)))
 
 (with-eval-after-load 'org-fold-core
   (advice-add 'org-fold-core--isearch-show :before-while
@@ -435,7 +434,7 @@ The DWIM behaviour of this command is as follows:
     affects the sort order.
 
     See `sort-regexp-fields'."
-      (interactive ";;;P\nr")
+      (interactive "P\nr")
       (sort-regexp-fields reverse "\\w+" "\\&" beg end))
 
 ;;; replace+
@@ -521,7 +520,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; cursor
 
-(setq-default cursor-type 'hollowe)
+(setq-default cursor-type 'hollow)
 (set-face-attribute 'cursor nil :background "#FDDA0D")
 
 ;;; copy/paste
@@ -546,7 +545,7 @@ The DWIM behaviour of this command is as follows:
   (setq erc-prompt-for-nickserv-password nil)
 
   (setq erc-autojoin-channels-alist
-	'(( "#emacs" "#systemcrafters")))
+	'(("irc.libera.chat" "#emacs" "#systemcrafters")))
 
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
@@ -734,9 +733,6 @@ The DWIM behaviour of this command is as follows:
 ;;; healh-template
 
 (use-package gnuplot)
-
-(use-package health-template
-  :straight (:host gitlab :repo "dto/health-template"))
 
 ;;; centered-window-mode
 
@@ -1395,7 +1391,6 @@ timestamp."
    (format format-string
            (if (string-match "slawomir.grochowski@gmail.com" author)
                (concat "↦ " (notmuch-tree-clean-address to))
-               (notmuch-tree-clean-address to)
              author))
    'face face)))
 
@@ -1717,7 +1712,7 @@ is already narrowed."
 
 (use-package org
   :custom
-  (setq org-ellipsis "⤵")
+  (org-ellipsis "⤵")
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-mode-hook 'org-indent-mode)
@@ -1761,8 +1756,6 @@ is already narrowed."
 
 (use-package org-autolist
   :hook (org-mode . org-autolist-mode))
-
-(add-hook 'org-mode-hook (lambda () (org-autolist-mode)))
 
 ;;;; org-note
 
@@ -1909,8 +1902,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 ;; Bo teraz jest tak, że pokazuje się cały tydzień czyli jeśli jest niedziela to widzę wszystkie dni od poniedziałku do niedzieli
 ;; raczej powinno to się samo przesuwąć żeby zawsze widział parę dni do przodu, a dopiero czekam na poniedziałek i nagle przewracasz stronę
 ;; a tam masa tasków o których nie byłeś do końca świadomy.
-(setq org-agenda-show-future-repeats nil)
-
 (defun my-gtd ()  
   (interactive)
   (org-agenda nil "g"))
@@ -2115,8 +2106,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 
 ;;; long lines
 
-(setq-default bidi-paragraph-direction 'left-to-right)
-(setq-default bidi-inhibit-bpa t)
 (global-so-long-mode 1)
 
 ;;; smooth scroll
@@ -2192,8 +2181,6 @@ from elsewhere."
             #'adviced:edebug-previous-result)
 
 ;;; savehist
-
-(savehist-mode 1)
 
 ;;; point mode
 
@@ -3383,10 +3370,10 @@ Use `\\[org-edit-special]' to edit table.el tables")))
 	(_
 	 (user-error
 	  (substitute-command-keys
-	   "`\\[org-ctrl-c-ctrl-c]' can do nothing useful here")))))))
+	   "`\\[org-ctrl-c-ctrl-c]' can do nothing useful here"))))))))
 
-  (set-face-attribute 'org-column-title nil
-		      :inherit 'default))
+(set-face-attribute 'org-column-title nil
+		    :inherit 'default)
 
 (with-eval-after-load 'org
   (advice-add 'org-ctrl-c-ctrl-c :override 'my/org-ctrl-c-ctrl-c))
