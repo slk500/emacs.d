@@ -1662,6 +1662,40 @@ is already narrowed."
 
 ;;; org-mode
 
+(defun my/org-toggle-emphasis (char)
+  "Toggle emphasis CHAR wokół regionu. Bez regionu po prostu wstaw CHAR."
+  (if (use-region-p)
+      (let* ((beg (region-beginning))
+             (end (region-end))
+             (text (buffer-substring-no-properties beg end))
+             (s (char-to-string char)))
+        (cond
+         ;; Zaznaczenie zawiera markery: *tekst*  ->  tekst
+         ((and (>= (length text) 2)
+               (string-prefix-p s text)
+               (string-suffix-p s text))
+          (delete-region beg end)
+          (insert (substring text 1 -1)))
+         ;; Markery są tuż obok zaznaczenia: *|tekst|*  ->  tekst
+         ((and (> beg (point-min))
+               (< end (point-max))
+               (eq (char-before beg) char)
+               (eq (char-after end) char))
+          (save-excursion
+            (goto-char end) (delete-char 1)
+            (goto-char (1- beg)) (delete-char 1)))
+         ;; W przeciwnym razie dodaj emfazę
+         (t (org-emphasize char))))
+    (insert (char-to-string char))))
+
+(defun my/org-make-toggle (char)
+  "Zwróć interaktywne polecenie toggle dla danego znaku emfazy."
+  (lambda ()
+    (interactive)
+    (my/org-toggle-emphasis char)))
+
+(define-key org-mode-map (kbd "*") (my/org-make-toggle ?*))
+
 ;; corfu--debug((error "Face inheritance results in inheritance cycle" gnus-group-news-low))
 (with-eval-after-load 'org
   (require 'ol)
