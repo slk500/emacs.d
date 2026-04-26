@@ -2824,6 +2824,10 @@ from elsewhere."
 
 ;;; colview
 
+(let ((personal-settings (expand-file-name "testing.el" user-emacs-directory)))
+ (when (file-exists-p personal-settings)
+   (load-file personal-settings)))
+
 (setq org-columns-modify-value-for-display-function
       (lambda (column-title value)
         (let ((v (if (string-match "\\`\\[\\([0-9]+\\(?:/[0-9]+\\|%\\)\\)\\]\\'" value)
@@ -2844,37 +2848,6 @@ from elsewhere."
     (goto-char (point-min))
     (while (re-search-forward "^[ \t]*:.*:" nil t)
       (org-flag-drawer t))))
-
-;;;; cache
-
-(defun org-columns--set-widths (cache)
-  "Compute the maximum column widths from the format and CACHE.
-This function sets `org-columns-current-maxwidths' as a vector of
-integers greater than 0."
-  (let* ((fmt org-columns-current-fmt-compiled)
-         ;; Initialize widths from explicit format widths or column name lengths.
-         (widths (vconcat
-                  (mapcar (lambda (spec)
-                            (pcase spec
-                              (`(,_ ,_ ,(and w (pred wholenump)) . ,_) w)
-                              (`(,_ ,name . ,_) (length name))))
-                          fmt)))
-         ;; Mark columns whose width is fixed by the format (must not grow).
-         (fixed (vconcat
-                 (mapcar (lambda (spec)
-                           (pcase spec
-                             (`(,_ ,_ ,(pred wholenump) . ,_) t)
-                             (_ nil)))
-                         fmt))))
-    ;; Single pass through cache: O(n*m) instead of O(n^2*m).
-    ;; Triplets in each entry are in the same order as fmt specs.
-    (dolist (entry cache)
-      (cl-loop for i from 0
-               for triplet in (cdr entry)
-               unless (aref fixed i)
-               do (aset widths i
-                        (max (aref widths i) (length (nth 2 triplet))))))
-    (setq org-columns-current-maxwidths widths)))
 
 ;;;; excercise
 
