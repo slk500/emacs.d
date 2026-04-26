@@ -814,6 +814,9 @@ Stole from aweshell"
 
 ;;; youtube
 
+(use-package insidious
+  :straight (:type git :host nil :repo "https://codeberg.org/MonadicSheep/insidious.git"))
+
 (defun spook-org--follow-yt-link (path _prefix)
   (let* ((file (expand-file-name path)))
     (make-process
