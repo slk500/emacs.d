@@ -2815,19 +2815,6 @@ from elsewhere."
  (when (file-exists-p personal-settings)
    (load-file personal-settings)))
 
-(setq org-columns-modify-value-for-display-function
-      (lambda (column-title value)
-        (let ((v (if (string-match "\\`\\[\\([0-9]+\\(?:/[0-9]+\\|%\\)\\)\\]\\'" value)
-                     (match-string 1 value)
-                   value)))
-          (if (string= column-title "date")
-              (replace-regexp-in-string
-               "\\([<[]\\)[0-9]\\{4\\}-\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)\\([]>]\\)"
-               "\\1\\2\\3"
-               v)
-            v))))
-
-
 (defun org-hide-all-drawers ()
   "Hide all drawers in the buffer."
   (interactive)
@@ -3060,55 +3047,65 @@ current specifications.  This function also sets
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
 
-(defun my/org-columns--overlay-text (value fmt width property original)
-  "Return decorated VALUE string for columns overlay display.
-FMT is a format string.  WIDTH is the width of the column, as an
-integer.  PROPERTY is the property being displayed, as a string.
-ORIGINAL is the real string, i.e., before it is modified by
-`org-columns--displayed-value'."
-  (format fmt
-	  (let ((v (org-columns-add-ellipses value width)))
-	    (pcase property
-	      ("PRIORITY"
-	       (propertize v 'face (org-get-priority-face original)))
-	      ("TAGS"
-	       (if (not org-tags-special-faces-re)
-		   (propertize v 'face 'org-tag)
-		 (replace-regexp-in-string
-		  org-tags-special-faces-re
-		  (lambda (m) (propertize m 'face (org-get-tag-face m)))
-		  v nil nil 1)))
-	      ("TODO" (propertize v 'face (org-get-todo-face original)))
-	      (_ (cond
-		  ((string-match (rx (group (one-or-more digit))
-				     "/"
-				     (group (or (one-or-more digit) "?"))) v)
-		   (let* ((first-number (string-to-number (match-string 1 v)))
-			  (second-number (string-to-number (match-string 2 v))))
-		     (cond
-		      ((and (eq first-number 0) (eq second-number 0))
-		       (propertize v 'face '(:foreground "white")))
-		      ((eq first-number 0)
-		       (propertize v 'face 'error))
-		      ((or (> first-number second-number) (= first-number second-number) (= 0 second-number))
-		       (propertize v 'face (org-get-todo-face original))) ;; 0 because (string-to-number "?") => 0
-		      (t
-		       (let* ((color (nth (- first-number 1) (color-gradient
-							      (color-values (face-foreground 'error))
-							      (color-values (face-foreground 'org-todo))
-							      (- second-number 1))))
-			      (hex-color (apply #'format "#%02x%02x%02x"
-						(mapcar (lambda (c) (/ c 256)) color))))
-			 (propertize v 'face `(:foreground ,hex-color))))
-		      )))
-		  ((string-match (rx "[-]") v)
-		   (propertize v 'face 'error))
-		  ((string-match (rx "[" (or (one-or-more digit) "X") "]") v)
-		   (propertize v 'face (org-get-todo-face original)))
-		  (t v)))))))
+(defun my/org-columns-display (column-title value)
+  (let ((v (if (string= column-title "date")
+             (replace-regexp-in-string
+              "[<[]\\([0-9]\\{4\\}-\\)?\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)[]>]"
+              "\\2"
+              value)
+           value)))
+    (setq v (replace-regexp-in-string "\\[\\([^] ]+\\)\\]" "\\1" v))
+    (setq v
+          (cond
+           ((string-match (rx (group (one-or-more digit))
+                              "/"
+                              (group (or (one-or-more digit) "?"))) v)
+            (let ((first-number  (string-to-number (match-string 1 v)))
+                  (second-number (string-to-number (match-string 2 v))))
+              (cond
+               ((and (eq first-number 0) (eq second-number 0))
+                (propertize v 'face '(:foreground "white")))
+               ((eq first-number 0)
+                (propertize v 'face 'error))
+               ((or (>= first-number second-number) (= 0 second-number))
+                (propertize v 'face 'org-todo))
+               (t
+                (let* ((color (nth (- first-number 1)
+                                   (color-gradient
+                                    (color-values (face-foreground 'error))
+                                    (color-values (face-foreground 'org-todo))
+                                    (- second-number 1))))
+                       (hex-color (apply #'format "#%02x%02x%02x"
+                                         (mapcar (lambda (c) (/ c 256)) color))))
+                  (propertize v 'face `(:foreground ,hex-color)))))))
+	   ((string-match-p (rx bos "-" eos) v)
+	    (propertize v 'face 'error))
+	   ((string-match-p (rx bos (or (one-or-more digit) "X") eos) v)
+	    (propertize v 'face 'org-todo))
+	   ((string= v "[ ]")
+	    (propertize v 'face 'shadow))
+           (t v)))
+    ;; Wyszarzenie prefiksu daty: "MM-DD Day" + weekendy na czerwono
+    (when (and (string= column-title "date")
+               (string-match (rx bos
+                  (group (= 2 digit) "-" (= 2 digit)) " "
+                  (group (= 3 (any "A-Za-z"))))
+              v))
+      (let* ((date    (match-string 1 v))
+	     (weekday (match-string 2 v))
+	     (today   (format-time-string "%m-%d"))
+             (prefix-end (match-end 0))
+             (face (cond
+		    ((string= date today)
+                     '(:weight bold :foreground "gold"))
+                    ((member weekday '("Sun"))
+                     '(:inherit shadow :foreground "indianred"))
+                    (t 'shadow))))
+        (setq v (copy-sequence v))
+        (add-face-text-property 0 prefix-end face nil v)))
+    v))
 
-(with-eval-after-load 'org
-  (advice-add 'org-columns--overlay-text :override 'my/org-columns--overlay-text))
+(setq org-columns-modify-value-for-display-function #'my/org-columns-display)
 
 (defun my/org-columns-toggle-or-columns-quit ()
   "Quit column view."
