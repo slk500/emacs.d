@@ -2825,6 +2825,39 @@ from elsewhere."
 
 ;;;; excercise
 
+(defun my/org-columns-gradient-weight ()
+  "Gradient zielony→czerwony dla wartości w kolumnie WEIGHT."
+  (let (values pairs)
+    (dolist (ov (overlays-in (point-min) (point-max)))
+      (let ((key (overlay-get ov 'org-columns-key)))
+        (when (and key (string= key "WEIGHT"))
+          (let* ((s (overlay-get ov 'org-columns-value))
+                 (n (and s
+                         (string-match "[0-9]+\\(?:\\.[0-9]+\\)?" s)
+                         (string-to-number (match-string 0 s)))))
+            (when (and n (> n 0))
+              (push n values)
+              (push (cons n ov) pairs))))))
+    (when (cdr values)            ; co najmniej 2 wartości
+      (let* ((vmin (apply #'min values))
+             (vmax (apply #'max values))
+             (range (- vmax vmin)))
+        (dolist (p pairs)
+          (let* ((v (car p)) (ov (cdr p))
+                 (k (if (zerop range) 0.5 (/ (- v vmin) range)))
+                 (r (round (* 255 k)))
+                 (g (round (* 255 (- 1 k))))
+                 (color (format "#%02x%02x00" r g))
+                 (disp (overlay-get ov 'display)))
+            (when (stringp disp)
+              (let ((s (copy-sequence disp)))
+                (add-face-text-property 0 (length s)
+                                        `(:foreground ,color :weight bold)
+                                        nil s)
+                (overlay-put ov 'display s)))))))))
+
+(advice-add 'org-columns :after (lambda (&rest _) (my/org-columns-gradient-weight)))
+
 (defun my/org-columns--summary-mean-time-clock (values _printf)
   "Circular mean godzin w formacie HH:MM.
 Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające północ."
