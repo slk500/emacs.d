@@ -2894,6 +2894,22 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
                    (string-to-number trimmed-string)))) ; Convert to number
     number))
 
+(let ((personal-settings (expand-file-name "private.el" user-emacs-directory)))
+ (when (file-exists-p personal-settings)
+   (load-file personal-settings)))
+
+(defun my/org-columns-after-edit (&rest _)
+  "Run extra updates after `org-columns-edit-value`."
+  (let* ((pom (or (get-text-property (line-beginning-position) 'org-hd-marker)
+                  (point)))
+         (key (get-char-property (point) 'org-columns-key))
+         (nval (get-char-property (point) 'org-columns-value)))
+    (when key
+      (my/org-columns-excercise-update pom key nval)
+      (my/org-columns-done-update pom key nval))))
+
+(advice-add 'org-columns-edit-value :after #'my/org-columns-after-edit)
+
 (defun my/org-columns-excercise-update (pom key nval)
   (when (and nval (string-equal key "EXCERCISE") (< 0 (my/string-in-brackets-to-number nval)))
     (org-entry-put pom "PLANK-SHOULDER" "20")
@@ -2904,97 +2920,11 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
     (org-entry-put pom "KEGEL-FLOOR" "10")
     (org-entry-put pom "PUSHUP" "10")))
 
-(with-eval-after-load 'org
-   (advice-add 'org-columns-edit-value :override 'my/org-columns-edit-value))
-
 (defun my/org-columns-done-update (pom key nval)
   (when (and nval (string-equal key "DONE") (< 0 (my/string-in-brackets-to-number nval)))
     (org-entry-put pom "NOCOFFE" "[X]")
     (org-entry-put pom "SX" "[X]")
     (org-entry-put pom "S-FOOD-CHECK" "[X]")))
-
-(let ((personal-settings (expand-file-name "private.el" user-emacs-directory)))
- (when (file-exists-p personal-settings)
-   (load-file personal-settings)))
-
-(defun my/org-columns-edit-value (&optional key)
-  "Edit the value of the property at point in column view.
-Where possible, use the standard interface for changing this line."
-  (interactive)
-  (org-columns-check-computed)
-  (let* ((col (current-column))
-	 (bol (line-beginning-position))
-	 (eol (line-end-position))
-	 (pom (or (get-text-property bol 'org-hd-marker) (point)))
-	 (key (or key (get-char-property (point) 'org-columns-key)))
-	 (org-columns--time (float-time))
-	 (action
-	  (pcase key
-	    ("CLOCKSUM"
-	     (user-error "This special column cannot be edited"))
-	    ("ITEM"
-	     (lambda () (org-with-point-at pom (org-edit-headline))))
-	    ("TODO"
-	     (lambda ()
-	       (org-with-point-at pom (call-interactively #'org-todo))))
-	    ("PRIORITY"
-	     (lambda ()
-	       (org-with-point-at pom
-		 (call-interactively #'org-priority))))
-	    ("TAGS"
-	     (lambda ()
-	       (org-with-point-at pom
-		 (let ((org-fast-tag-selection-single-key
-			(if (eq org-fast-tag-selection-single-key 'expert)
-			    t
-			  org-fast-tag-selection-single-key)))
-		   (call-interactively #'org-set-tags-command)))))
-	    ("DEADLINE"
-	     (lambda ()
-	       (org-with-point-at pom (call-interactively #'org-deadline))))
-	    ("SCHEDULED"
-	     (lambda ()
-	       (org-with-point-at pom (call-interactively #'org-schedule))))
-	    ("BEAMER_ENV"
-	     (lambda ()
-	       (org-with-point-at pom
-		 (call-interactively #'org-beamer-select-environment))))
-	    (_
-	     (let* ((allowed (org-property-get-allowed-values pom key 'table))
-		    (value (get-char-property (point) 'org-columns-value))
-		    (nval (org-trim
-			   (if (null allowed) (read-string "Edit: " value)
-			     (completing-read
-			      "Value: " allowed nil
-			      (not (get-text-property
-				    0 'org-unrestricted (caar allowed))))))))
-	       (and (not (equal nval value))
-		    (lambda () (org-entry-put pom key nval)
-		      (my/org-columns-excercise-update pom key nval)
-		      (my/org-columns-done-update pom key nval))))))))
-    (cond
-     ((null action))
-     ((eq major-mode 'org-agenda-mode)
-      (org-columns--call action)
-      ;; The following let preserves the current format, and makes
-      ;; sure that in only a single file things need to be updated.
-      (let* ((org-overriding-columns-format org-columns-current-fmt)
-	     (buffer (marker-buffer pom))
-	     (org-agenda-contributing-files
-	      (list (with-current-buffer buffer
-		      (buffer-file-name (buffer-base-buffer))))))
-	(org-agenda-columns)))
-     (t
-      (let ((inhibit-read-only t))
-	(with-silent-modifications
-	  (remove-text-properties (max (point-min) (1- bol)) eol '(read-only t)))
-	(org-columns--call action))
-      ;; Some properties can modify headline (e.g., "TODO"), and
-      ;; possible shuffle overlays.  Make sure they are still all at
-      ;; the right place on the current line.
-      (let ((org-columns-inhibit-recalculation)) (org-columns-redo))
-      (org-columns-update key)
-      (org-move-to-column col)))))
 
 ;;;; rest
 (setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" ""))
@@ -3150,12 +3080,3 @@ current specifications.  This function also sets
 
 (set-face-attribute 'org-column-title nil
 		    :inherit 'default)
-
-(defun my/org-columns-checkbox-only ()
-  (interactive)
-  (when (string-match-p "\\`\\[[ xX-]\\]\\'"
-                        (or (get-char-property (point) 'org-columns-value) ""))
-    (org-columns-next-allowed-value)))
-
-(with-eval-after-load 'org-colview
-  (define-key org-columns-map (kbd "C-c C-c") #'my/org-columns-checkbox-only))
