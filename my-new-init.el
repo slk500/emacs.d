@@ -1,5 +1,109 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+;;; org columns - hydra
+
+;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
+
+(require 'cl-lib)
+
+(defvar my/org-columns-groups
+  '(("Change value"
+     ("n / S-←" . "prev value")
+     ("p / S-→" . "next value")
+     ("0..9"    . "set value")
+     ("e"       . "edit value")
+     ("a"       . "edit allowed")
+     ("s"       . "edit attrs"))
+    ("Move col/row"
+     ("M-← / M-→" . "col ←/→")
+     ("M-↑ / M-↓" . "row ↑/↓")
+     ("S-M-→"     . "new col")
+     ("S-M-←"     . "delete col"))
+    ("Width / Toggle"
+     ("<"       . "narrow")
+     (">"       . "widen")
+     ("C-c C-c" . "toggle/quit"))
+    ("Misc"
+     ("c"       . "content view")
+     ("o"       . "overview")
+     ("v"       . "show value")
+     ("r / g"   . "refresh")
+     ("C-c C-t" . "TODO")
+     ("C-c C-o" . "open link")
+     ("q"       . "quit")))
+  "Grupy bindingów dla popupu org-columns.")
+
+(defun my/wk--width (s)
+  (string-width (substring-no-properties s)))
+
+(defun my/wk--pad (s width)
+  (concat s (make-string (max 0 (- width (my/wk--width s))) ?\s)))
+
+(defun my/wk--render-column (group)
+  (let* ((header (car group))
+         (entries (cdr group))
+         (key-w (if entries
+                    (apply #'max (mapcar (lambda (e) (my/wk--width (car e)))
+                                         entries))
+                  0))
+         (sep " : "))
+    (cons
+     (propertize header 'face 'font-lock-keyword-face)
+     (mapcar (lambda (e)
+               (concat
+                (propertize (my/wk--pad (car e) key-w)
+                            'face 'font-lock-constant-face)
+                (propertize sep 'face 'font-lock-comment-face)
+                (cdr e)))
+             entries))))
+
+(defun my/wk-build-hint (groups)
+  (let* ((cols   (mapcar #'my/wk--render-column groups))
+         (widths (mapcar (lambda (col)
+                           (apply #'max (mapcar #'my/wk--width col)))
+                         cols))
+         (rows   (apply #'max (mapcar #'length cols)))
+         (gap    "    "))
+    (mapconcat
+     (lambda (i)
+       (mapconcat #'identity
+                  (cl-mapcar (lambda (col w)
+                               (my/wk--pad (or (nth i col) "") w))
+                             cols widths)
+                  gap))
+     (number-sequence 0 (1- rows))
+     "\n")))
+
+(defvar my/org-columns-hint-visible nil
+  "Czy popup org-columns jest aktualnie pokazany.")
+
+;;;###autoload
+(defun my/org-columns-hint-show ()
+  "Pokaż popup z bindingami org-columns."
+  (interactive)
+  (lv-message "%s" (my/wk-build-hint my/org-columns-groups))
+  (setq my/org-columns-hint-visible t))
+
+;;;###autoload
+(defun my/org-columns-hint-hide ()
+  "Schowaj popup org-columns."
+  (interactive)
+  (lv-delete-window)
+  (setq my/org-columns-hint-visible nil))
+
+;;;###autoload
+(defun my/org-columns-hint-toggle ()
+  "Przełącz popup org-columns."
+  (interactive)
+  (require 'hydra)
+  (require 'lv)
+  (if my/org-columns-hint-visible
+      (my/org-columns-hint-hide)
+    (my/org-columns-hint-show)))
+
+(with-eval-after-load 'org-colview
+  (org-defkey org-columns-map "?" #'my/org-columns-hint-toggle))
+
 ;;; md to org
 
 (defun my/markdown-to-org-region (start end)
@@ -1071,6 +1175,20 @@ reuse it's window, otherwise create new one."
 (set-language-environment 'utf-8)
 
 ;;; which-key
+
+(defun my/org-columns-show-which-key ()
+  "Pokaż sticky popup which-key z bindingami org-columns-map."
+  (interactive)
+  (require 'which-key)
+  (setq which-key-persistent-popup t)
+  (which-key--create-buffer-and-show nil org-columns-map))
+
+(defun my/org-columns-hide-which-key (&rest _)
+  "Schowaj popup which-key i wyłącz tryb persistent."
+  (setq which-key-persistent-popup nil)
+  (which-key--hide-popup-ignore-command))
+
+
 
 (which-key-mode 1)
 (setq which-key-sort-order 'which-key-description-order)
@@ -2825,9 +2943,35 @@ from elsewhere."
 
 ;;;; excercise
 
+(defun my/apply-weight-gradient (entries)
+  "Aplikuj gradient szary→zielony do listy ENTRIES — plistów (:n :ov)."
+  (when (cdr entries)
+    (let* ((values (mapcar (lambda (e) (plist-get e :n)) entries))
+           (vmin (apply #'min values))
+           (vmax (apply #'max values))
+           (range (- vmax vmin))
+           (c-bad  (color-values (face-foreground 'shadow)))
+           (c-good (color-values (face-foreground 'org-todo))))
+      (dolist (e entries)
+        (let* ((v (plist-get e :n))
+               (ov (plist-get e :ov))
+               (k (if (zerop range) 0.5 (/ (- v vmin) range)))
+               (mix (cl-mapcar (lambda (a b)
+                                 (round (+ (* (- 1 k) b) (* k a))))
+                               c-bad c-good))
+               (color (apply #'format "#%02x%02x%02x"
+                             (mapcar (lambda (c) (/ c 256)) mix)))
+               (disp (overlay-get ov 'display)))
+          (when (stringp disp)
+            (let ((s (copy-sequence disp)))
+              (add-face-text-property 0 (length s)
+                                      `(:foreground ,color :weight bold)
+                                      nil s)
+              (overlay-put ov 'display s))))))))
+
 (defun my/org-columns-gradient-weight ()
-  "Gradient zielony→czerwony dla wartości w kolumnie WEIGHT."
-  (let (values pairs)
+  "Gradient WEIGHT: oddzielnie dla dni w tygodniu, oddzielnie między tygodniami."
+  (let (entries)
     (dolist (ov (overlays-in (point-min) (point-max)))
       (let ((key (overlay-get ov 'org-columns-key)))
         (when (and key (string= key "WEIGHT"))
@@ -2836,25 +2980,33 @@ from elsewhere."
                          (string-match "[0-9]+\\(?:\\.[0-9]+\\)?" s)
                          (string-to-number (match-string 0 s)))))
             (when (and n (> n 0))
-              (push n values)
-              (push (cons n ov) pairs))))))
-    (when (cdr values)            ; co najmniej 2 wartości
-      (let* ((vmin (apply #'min values))
-             (vmax (apply #'max values))
-             (range (- vmax vmin)))
-        (dolist (p pairs)
-          (let* ((v (car p)) (ov (cdr p))
-                 (k (if (zerop range) 0.5 (/ (- v vmin) range)))
-                 (r (round (* 255 k)))
-                 (g (round (* 255 (- 1 k))))
-                 (color (format "#%02x%02x00" r g))
-                 (disp (overlay-get ov 'display)))
-            (when (stringp disp)
-              (let ((s (copy-sequence disp)))
-                (add-face-text-property 0 (length s)
-                                        `(:foreground ,color :weight bold)
-                                        nil s)
-                (overlay-put ov 'display s)))))))))
+              (save-excursion
+                (goto-char (overlay-start ov))
+                (let* ((level (org-current-level))
+                       (parent (when level
+                                 (save-excursion
+                                   (when (org-up-heading-safe) (point))))))
+                  (when level
+                    (push (list :n n :ov ov :level level :parent parent)
+                          entries)))))))))
+    (when entries
+      (let* ((levels (mapcar (lambda (e) (plist-get e :level)) entries))
+             (max-level  (apply #'max levels))      ; dni  (liście)
+             (week-level (1- max-level))            ; tygodnie
+             (day-groups (make-hash-table :test 'equal))
+             week-entries)
+        (dolist (e entries)
+          (let ((lvl (plist-get e :level)))
+            (cond
+             ((= lvl max-level)
+              (push e (gethash (plist-get e :parent) day-groups)))
+             ((= lvl week-level)
+              (push e week-entries)))))
+        ;; gradient w obrębie każdego tygodnia
+        (maphash (lambda (_p es) (my/apply-weight-gradient es)) day-groups)
+        ;; gradient pomiędzy tygodniami
+        (my/apply-weight-gradient week-entries)))))
+
 
 (advice-add 'org-columns :after (lambda (&rest _) (my/org-columns-gradient-weight)))
 
@@ -2905,8 +3057,7 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
          (key (get-char-property (point) 'org-columns-key))
          (nval (get-char-property (point) 'org-columns-value)))
     (when key
-      (my/org-columns-excercise-update pom key nval)
-      (my/org-columns-done-update pom key nval))))
+      (my/org-columns-excercise-update pom key nval))))
 
 (advice-add 'org-columns-edit-value :after #'my/org-columns-after-edit)
 
@@ -2919,12 +3070,6 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
     (org-entry-put pom "PLANK" "1")
     (org-entry-put pom "KEGEL-FLOOR" "10")
     (org-entry-put pom "PUSHUP" "10")))
-
-(defun my/org-columns-done-update (pom key nval)
-  (when (and nval (string-equal key "DONE") (< 0 (my/string-in-brackets-to-number nval)))
-    (org-entry-put pom "NOCOFFE" "[X]")
-    (org-entry-put pom "SX" "[X]")
-    (org-entry-put pom "S-FOOD-CHECK" "[X]")))
 
 ;;;; rest
 (setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" ""))
@@ -3029,18 +3174,20 @@ current specifications.  This function also sets
                ((and (eq first-number 0) (eq second-number 0))
                 (propertize v 'face '(:foreground "white")))
                ((eq first-number 0)
-                (propertize v 'face 'error))
+                (propertize v 'face 'shadow))
                ((or (>= first-number second-number) (= 0 second-number))
                 (propertize v 'face 'org-todo))
                (t
-                (let* ((color (nth (- first-number 1)
-                                   (color-gradient
-                                    (color-values (face-foreground 'error))
-                                    (color-values (face-foreground 'org-todo))
-                                    (- second-number 1))))
-                       (hex-color (apply #'format "#%02x%02x%02x"
-                                         (mapcar (lambda (c) (/ c 256)) color))))
-                  (propertize v 'face `(:foreground ,hex-color)))))))
+		(let* ((k-raw (/ (float (- first-number 1)) (- second-number 1)))
+		       (k (expt k-raw 0.35))
+		       (c-bad  (color-values (face-foreground 'shadow)))
+		       (c-good (color-values (face-foreground 'success)))
+		       (mix (cl-mapcar (lambda (a b)
+					 (round (+ (* (- 1 k) a) (* k b))))
+				       c-bad c-good))
+		       (hex-color (apply #'format "#%02x%02x%02x"
+					 (mapcar (lambda (c) (/ c 256)) mix))))
+		  (propertize v 'face `(:foreground ,hex-color)))))))
 	   ((string-match-p (rx bos "-" eos) v)
 	    (propertize v 'face 'error))
 	   ((string-match-p (rx bos (or (one-or-more digit) "X") eos) v)
