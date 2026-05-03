@@ -1835,15 +1835,6 @@ is already narrowed."
 
 ;;; org-mode
 
-(use-package org-colview
-  :straight nil
-  :load-path "~/work/org-colview.el"
-  :demand t)
-
-(use-package org
-  :straight t
-  :after org-colview)
-
 (defun my/org-toggle-emphasis (char)
   "Toggle emphasis CHAR wokół regionu. Bez regionu po prostu wstaw CHAR."
   (if (use-region-p)
@@ -2995,6 +2986,20 @@ from elsewhere."
 	'font-lock-face 'calendar-iso-week-face))
 
 ;;; colview
+
+     (defun my-org-columns-hide-properties-drawers-completely (&rest _)
+       "Całkowicie ukrywa szuflady PROPERTIES (bez kropek i pustych linii) podczas działania widoku kolumn."
+       (save-excursion
+         (goto-char (point-min))
+         (while (re-search-forward "^[ \t]*:PROPERTIES:[ \t]*$" nil t)
+           (let ((beg (1- (match-beginning 0))))
+             (when (re-search-forward "^[ \t]*:END:[ \t]*$" nil t)
+               (let ((ov (make-overlay beg (match-end 0))))
+                 (overlay-put ov 'invisible 'org-link)
+                (push ov org-columns-overlays)))))))
+
+    (advice-remove 'org-columns #'my-org-columns-hide-properties-drawers-completely)
+    (advice-add 'org-columns :after #'my-org-columns-hide-properties-drawers-completely)
 
 ;; (let ((personal-settings (expand-file-name "testing.el" user-emacs-directory)))
 ;;  (when (file-exists-p personal-settings)
