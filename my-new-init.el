@@ -1,5 +1,54 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+;;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
+
+(use-package major-mode-hydra
+  :bind
+  ("M-SPC" . major-mode-hydra))
+
+(major-mode-hydra-define emacs-lisp-mode nil
+  ("Eval"
+   (("b" eval-buffer "buffer")
+    ("e" eval-defun "defun")
+    ("r" eval-region "region"))
+   "REPL"
+   (("I" ielm "ielm"))
+   "Test"
+   (("t" ert "prompt")
+    ("T" (ert t) "all")
+    ("F" (ert :failed) "failed"))
+   "Doc"
+   (("d" describe-foo-at-point "thing-at-pt")
+    ("f" describe-function "function")
+    ("v" describe-variable "variable")
+    ("i" info-lookup-symbol "info lookup"))))
+
+;;(defvar jp-toggles--title (with-favicon "toggle-on" "Toggles" 1 -0.05))
+
+(pretty-hydra-define jp-toggles
+  (:color amaranth :quit-key "q" :title jp-toggles--title)
+  ("Basic"
+   (("n" linum-mode "line number" :toggle t)
+    ("w" whitespace-mode "whitespace" :toggle t)
+    ("W" whitespace-cleanup-mode "whitespace cleanup" :toggle t)
+    ("r" rainbow-mode "rainbow" :toggle t)
+    ("L" page-break-lines-mode "page break lines" :toggle t))
+   "Highlight"
+   (("s" symbol-overlay-mode "symbol" :toggle t)
+    ("l" hl-line-mode "line" :toggle t)
+    ("x" highlight-sexp-mode "sexp" :toggle t)
+    ("t" hl-todo-mode "todo" :toggle t))
+   "UI"
+   (("d" jp-themes-toggle-light-dark "dark theme" :toggle jp-current-theme-dark-p))
+   "Coding"
+   (("p" smartparens-mode "smartparens" :toggle t)
+    ("P" smartparens-strict-mode "smartparens strict" :toggle t)
+    ("S" show-smartparens-mode "show smartparens" :toggle t)
+    ("f" flycheck-mode "flycheck" :toggle t))
+   "Emacs"
+   (("D" toggle-debug-on-error "debug on error" :toggle (default-value 'debug-on-error))
+    ("X" toggle-debug-on-quit "debug on quit" :toggle (default-value 'debug-on-quit)))))
+
 ;;; org columns - hydra
 
 ;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
@@ -236,6 +285,8 @@ installed."
 ;;; icons
 
 (use-package all-the-icons)
+
+
 
 (defun my/org-agenda-replace-scheduled-deadline-symbols ()
   "Replace SCHEDULED and DEADLINE in agenda with icons."
@@ -1323,6 +1374,15 @@ reuse it's window, otherwise create new one."
 ;;; mail, email, notmuch
 ;; https://myaccount.google.com/apppasswords
 
+(defun my/notmuch-open-message-at-point ()
+  "Otwiera wiadomość o Message-ID pod kursorem w Notmuch."
+  (interactive)
+  (let ((msg-id (thing-at-point 'url t))) ; lub inna detekcja
+    ;; Jeśli potrzebujesz usunąć ewentualne nawiasy <>
+    (when (string-match "<\\(.*\\)>" msg-id)
+      (setq msg-id (match-string 1 msg-id)))
+    (notmuch-search (concat "id:" msg-id))))
+
 (setq display-time-mail-string "") ;; remove "Mail" in mode line
 
 (defun my/notmuch-poll-async ()
@@ -1775,6 +1835,15 @@ is already narrowed."
 
 ;;; org-mode
 
+(use-package org-colview
+  :straight nil
+  :load-path "~/work/org-colview.el"
+  :demand t)
+
+(use-package org
+  :straight t
+  :after org-colview)
+
 (defun my/org-toggle-emphasis (char)
   "Toggle emphasis CHAR wokół regionu. Bez regionu po prostu wstaw CHAR."
   (if (use-region-p)
@@ -1829,8 +1898,6 @@ is already narrowed."
 (global-set-key (kbd "C-c l") 'org-store-link)
 
 (use-package org
-  :custom
-  (org-ellipsis "⤵")
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-mode-hook 'org-indent-mode)
@@ -2109,10 +2176,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
              "%?-12t% s %(my/org-days-to-deadline) ")))
 	  (tags-todo "-emacs/WAITING"
 		((org-agenda-overriding-header
-		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))
-	  (tags "constant"
-		     ((org-agenda-overriding-header
-		       (format "Constant (%s)" (org-agenda-count "book")))))))))
+		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))))))
 
 (setq org-agenda-prefix-format '((agenda . " %i %?-12t% s")
 				 (todo . " ")
@@ -2181,6 +2245,9 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	("m" "Meeting" entry
          (file "~/aamystuff/life/todos.org.gpg")
          "* TODO %? :meeting:" :prepend t)
+	("s" "Someday" entry
+         (file "~/aamystuff/life/todos.org.gpg")
+         "* SOMEDAY %?" :prepend t)
 	("t" "Task" entry
          (file "~/aamystuff/life/todos.org.gpg")
          "* TODO %?" :prepend t)
@@ -2929,9 +2996,9 @@ from elsewhere."
 
 ;;; colview
 
-(let ((personal-settings (expand-file-name "testing.el" user-emacs-directory)))
- (when (file-exists-p personal-settings)
-   (load-file personal-settings)))
+;; (let ((personal-settings (expand-file-name "testing.el" user-emacs-directory)))
+;;  (when (file-exists-p personal-settings)
+;;    (load-file personal-settings)))
 
 (defun org-hide-all-drawers ()
   "Hide all drawers in the buffer."
@@ -3162,7 +3229,10 @@ current specifications.  This function also sets
               "\\2"
               value)
            value)))
-    (setq v (replace-regexp-in-string "\\[\\([^] ]+\\)\\]" "\\1" v))
+    (setq v (replace-regexp-in-string
+             "\\[\\([^] ]+\\)\\]"
+             (lambda (m) (if (string= m "[-]") m (substring m 1 -1)))
+             v))
     (setq v
           (cond
            ((string-match (rx (group (one-or-more digit))
@@ -3178,22 +3248,22 @@ current specifications.  This function also sets
                ((or (>= first-number second-number) (= 0 second-number))
                 (propertize v 'face 'org-todo))
                (t
-		(let* ((k-raw (/ (float (- first-number 1)) (- second-number 1)))
-		       (k (expt k-raw 0.35))
-		       (c-bad  (color-values (face-foreground 'shadow)))
-		       (c-good (color-values (face-foreground 'success)))
-		       (mix (cl-mapcar (lambda (a b)
-					 (round (+ (* (- 1 k) a) (* k b))))
-				       c-bad c-good))
-		       (hex-color (apply #'format "#%02x%02x%02x"
-					 (mapcar (lambda (c) (/ c 256)) mix))))
-		  (propertize v 'face `(:foreground ,hex-color)))))))
-	   ((string-match-p (rx bos "-" eos) v)
-	    (propertize v 'face 'error))
-	   ((string-match-p (rx bos (or (one-or-more digit) "X") eos) v)
-	    (propertize v 'face 'org-todo))
-	   ((string= v "[ ]")
-	    (propertize v 'face 'shadow))
+                (let* ((k-raw (/ (float first-number) second-number))
+                       (k (expt k-raw 0.35))
+                       (c-bad  (color-values (face-foreground 'shadow)))
+                       (c-good (color-values (face-foreground 'success)))
+                       (mix (cl-mapcar (lambda (a b)
+                                         (round (+ (* (- 1 k) a) (* k b))))
+                                       c-bad c-good))
+                       (hex-color (apply #'format "#%02x%02x%02x"
+                                         (mapcar (lambda (c) (/ c 256)) mix))))
+                  (propertize v 'face `(:foreground ,hex-color)))))))
+           ((string= v "[-]")
+            (propertize v 'face 'shadow))
+           ((string-match-p (rx bos (or (one-or-more digit) "X") eos) v)
+            (propertize v 'face 'org-todo))
+           ((string= v "[ ]")
+            (propertize v 'face 'shadow))
            (t v)))
     ;; Wyszarzenie prefiksu daty: "MM-DD Day" + weekendy na czerwono
     (when (and (string= column-title "date")

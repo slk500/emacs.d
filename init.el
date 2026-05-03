@@ -224,7 +224,8 @@
  '(send-mail-function 'sendmail-send-it)
  '(treemacs-no-png-images t)
  '(warning-suppress-types '((org)))
- '(xref-after-jump-hook '(recenter xref-pulse-momentarily pulsar-pulse-line)))
+; '(xref-after-jump-hook '(recenter xref-pulse-momentarily pulsar-pulse-line))
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
