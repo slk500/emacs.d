@@ -1155,6 +1155,7 @@ displayed too).")
 
 (defun my/update-sunrise-sunset ()
   "Recompute today's sunrise/sunset for the modeline."
+  (interactive)
   (let* ((data (solar-sunrise-sunset (calendar-current-date)))
          (rise (car data))
          (set  (cadr data)))
@@ -1165,6 +1166,8 @@ displayed too).")
   (force-mode-line-update t))
 
 (my/update-sunrise-sunset)
+
+(advice-add 'org-columns :after #'my/update-sunrise-sunset)
 
 (add-to-list 'mode-line-misc-info
              '(:eval my/sunrise-sunset-string)
@@ -3004,14 +3007,6 @@ from elsewhere."
 ;; (let ((personal-settings (expand-file-name "testing.el" user-emacs-directory)))
 ;;  (when (file-exists-p personal-settings)
 ;;    (load-file personal-settings)))
-
-(defun org-hide-all-drawers ()
-  "Hide all drawers in the buffer."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "^[ \t]*:.*:" nil t)
-      (org-flag-drawer t))))
 
 ;;;; excercise
 
