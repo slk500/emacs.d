@@ -1,5 +1,62 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+;;; modeline font increase/decrease
+
+;; Initialize the variable for the mode-line indicator
+(defvar my-font-size-lighter ""
+  "Font size indicator displayed in the mode-line.")
+
+;; Track the active timer to prevent multiple timers running at once
+(defvar my-font-size-timer nil
+  "Timer used to clear the font size indicator.")
+
+;; Add the indicator to mode-line-format if it's not already there
+(or (member 'my-font-size-lighter mode-line-format)
+    (setq mode-line-format
+          (append mode-line-format '("" my-font-size-lighter))))
+
+;; Define wrapper functions to update the mode-line indicator dynamically
+(defun my-text-scale-increase ()
+  "Increase the font size, update the indicator in the mode-line, and set a timer to hide it."
+  (interactive)
+  (text-scale-increase 1)
+  ;; Calculate the new size based on the baseline size of 14pt
+  (let ((current-size (+ 14 text-scale-mode-amount)))
+    (setq my-font-size-lighter (format " Font: %dpt" current-size)))
+  (force-mode-line-update)
+
+  ;; Cancel any existing timer to avoid premature clearing
+  (when (timerp my-font-size-timer)
+    (cancel-timer my-font-size-timer))
+  ;; Set a new timer to clear only the indicator after 3 seconds
+  (setq my-font-size-timer
+        (run-at-time 3 nil
+                     (lambda ()
+                       (setq my-font-size-lighter "")
+                       (force-mode-line-update)))))
+
+(defun my-text-scale-decrease ()
+  "Decrease the font size, update the indicator in the mode-line, and set a timer to hide it."
+  (interactive)
+  (text-scale-decrease 1)
+  ;; Calculate the new size based on the baseline size of 14pt
+  (let ((current-size (+ 14 text-scale-mode-amount)))
+    (setq my-font-size-lighter (format " Font: %dpt" current-size)))
+  (force-mode-line-update)
+
+  ;; Cancel any existing timer to avoid premature clearing
+  (when (timerp my-font-size-timer)
+    (cancel-timer my-font-size-timer))
+  ;; Set a new timer to clear only the indicator after 3 seconds
+  (setq my-font-size-timer
+        (run-at-time 3 nil
+                     (lambda ()
+                       (setq my-font-size-lighter "")
+                       (force-mode-line-update)))))
+
+(keymap-global-set "C--" #'my-text-scale-decrease)
+(keymap-global-set "C-=" #'my-text-scale-increase)
+
 ;;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
 
 (use-package major-mode-hydra
