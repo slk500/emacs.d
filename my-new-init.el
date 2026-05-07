@@ -3325,68 +3325,89 @@ current specifications.  This function also sets
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
 
+;;; --- Helpers ---------------------------------------------------------------
+
+(defun my/org-columns--strip-date-brackets (value)
+  "Strip Org timestamp brackets and leading year from VALUE."
+  (replace-regexp-in-string
+   "[<[]\\([0-9]\\{4\\}-\\)?\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)[]>]"
+   "\\2" value))
+
+(defun my/org-columns--strip-link-brackets (value)
+  "Strip square brackets from links like [foo], but keep [-] intact."
+  (replace-regexp-in-string
+   "\\[\\([^] ]+\\)\\]"
+   (lambda (m) (if (string= m "[-]") m (substring m 1 -1)))
+   value))
+
+(defun my/org-columns--progress-color (ratio)
+  "Hex color interpolated between `shadow' and `success' faces, gamma-curved."
+  (let* ((k      (expt ratio 0.35))
+         (c-bad  (color-values (face-foreground 'shadow)))
+         (c-good (color-values (face-foreground 'success)))
+         (mix    (cl-mapcar (lambda (a b) (round (+ (* (- 1 k) a) (* k b))))
+                            c-bad c-good)))
+    (apply #'format "#%02x%02x%02x" (mapcar (lambda (c) (/ c 256)) mix))))
+
+(defun my/org-columns--fontify-progress (value)
+  "If VALUE looks like N/M progress, propertize it; else return nil."
+  (when (string-match
+         (rx (group (one-or-more digit)) "/"
+             (group (or (one-or-more digit) "?")))
+         value)
+    (let ((done  (string-to-number (match-string 1 value)))
+          (total (string-to-number (match-string 2 value))))
+      (propertize value 'face
+                  (cond
+                   ((and (zerop done) (zerop total)) '(:foreground "white"))
+                   ((zerop done)        'shadow)
+                   ((>= done total)     'org-todo)
+                   (t `(:foreground ,(my/org-columns--progress-color
+                                      (/ (float done) total)))))))))
+
+(defun my/org-columns--fontify-checkbox (value original)
+  "Propertize checkbox-like VALUEs based on ORIGINAL pattern."
+  (cond
+   ((string-prefix-p "[-]" original) (propertize value 'face 'shadow))
+   ((string-prefix-p "[ ]" original) (propertize value 'face 'shadow))
+   ((string-match-p (rx bos "[" (or "X" (one-or-more digit)) "]") original)
+    (propertize value 'face 'org-todo))))
+
+(defun my/org-columns--date-prefix-face (date weekday)
+  "Face for the \"MM-DD Day\" prefix."
+  (cond
+   ((string= date (format-time-string "%m-%d"))
+    '(:weight bold :foreground "gold"))
+   ((string= weekday "Sun")
+    '(:inherit shadow :foreground "indianred"))
+   (t 'shadow)))
+
+(defun my/org-columns--fontify-date-prefix (value)
+  "Dim the \"MM-DD Day \" prefix in VALUE; highlight today and Sundays."
+  (if (string-match
+       (rx bos (group (= 2 digit) "-" (= 2 digit)) " "
+               (group (= 3 (any "A-Za-z"))))
+       value)
+      (let ((v (copy-sequence value)))
+        (add-face-text-property
+         0 (match-end 0)
+         (my/org-columns--date-prefix-face
+          (match-string 1 value) (match-string 2 value))
+         nil v)
+        v)
+    value))
+
+;;; --- Entry point -----------------------------------------------------------
+
 (defun my/org-columns-display (column-title value)
-  (let ((v (if (string= column-title "date")
-             (replace-regexp-in-string
-              "[<[]\\([0-9]\\{4\\}-\\)?\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)[]>]"
-              "\\2"
-              value)
-           value)))
-    (setq v (replace-regexp-in-string
-             "\\[\\([^] ]+\\)\\]"
-             (lambda (m) (if (string= m "[-]") m (substring m 1 -1)))
-             v))
-    (setq v
-          (cond
-           ((string-match (rx (group (one-or-more digit))
-                              "/"
-                              (group (or (one-or-more digit) "?"))) v)
-            (let ((first-number  (string-to-number (match-string 1 v)))
-                  (second-number (string-to-number (match-string 2 v))))
-              (cond
-               ((and (eq first-number 0) (eq second-number 0))
-                (propertize v 'face '(:foreground "white")))
-               ((eq first-number 0)
-                (propertize v 'face 'shadow))
-               ((or (>= first-number second-number) (= 0 second-number))
-                (propertize v 'face 'org-todo))
-               (t
-                (let* ((k-raw (/ (float first-number) second-number))
-                       (k (expt k-raw 0.35))
-                       (c-bad  (color-values (face-foreground 'shadow)))
-                       (c-good (color-values (face-foreground 'success)))
-                       (mix (cl-mapcar (lambda (a b)
-                                         (round (+ (* (- 1 k) a) (* k b))))
-                                       c-bad c-good))
-                       (hex-color (apply #'format "#%02x%02x%02x"
-                                         (mapcar (lambda (c) (/ c 256)) mix))))
-                  (propertize v 'face `(:foreground ,hex-color)))))))
-           ((string= v "[-]")
-            (propertize v 'face 'shadow))
-           ((string-match-p (rx bos (or (one-or-more digit) "X") eos) v)
-            (propertize v 'face 'org-todo))
-           ((string= v "[ ]")
-            (propertize v 'face 'shadow))
-           (t v)))
-    ;; Wyszarzenie prefiksu daty: "MM-DD Day" + weekendy na czerwono
-    (when (and (string= column-title "date")
-               (string-match (rx bos
-                  (group (= 2 digit) "-" (= 2 digit)) " "
-                  (group (= 3 (any "A-Za-z"))))
-              v))
-      (let* ((date    (match-string 1 v))
-	     (weekday (match-string 2 v))
-	     (today   (format-time-string "%m-%d"))
-             (prefix-end (match-end 0))
-             (face (cond
-		    ((string= date today)
-                     '(:weight bold :foreground "gold"))
-                    ((member weekday '("Sun"))
-                     '(:inherit shadow :foreground "indianred"))
-                    (t 'shadow))))
-        (setq v (copy-sequence v))
-        (add-face-text-property 0 prefix-end face nil v)))
-    v))
+  "Format VALUE for display in Org column COLUMN-TITLE."
+  (let* ((date? (string= column-title "date"))
+         (stripped (my/org-columns--strip-link-brackets
+                    (if date? (my/org-columns--strip-date-brackets value) value)))
+         (v (or (my/org-columns--fontify-progress stripped)
+                (my/org-columns--fontify-checkbox stripped value)
+                (if date? stripped (propertize stripped 'face 'shadow)))))
+    (if date? (my/org-columns--fontify-date-prefix v) v)))
 
 (setq org-columns-modify-value-for-display-function #'my/org-columns-display)
 
