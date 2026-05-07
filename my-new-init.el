@@ -1957,14 +1957,12 @@ is already narrowed."
 
 (define-key org-mode-map (kbd "*") (my/org-make-toggle ?*))
 
-(with-eval-after-load 'gnus-group
-  (face-spec-reset-face 'gnus-group-news-low)
-  (face-spec-reset-face 'gnus-group-news-low-empty))
-
-;; corfu--debug((error "Face inheritance results in inheritance cycle" gnus-group-news-low))
-(with-eval-after-load 'org
-  (require 'ol)
-  (setq org-modules (delq 'ol-gnus org-modules)))
+(advice-add 'set-face-attribute :around
+            (lambda (orig face &rest args)
+              (condition-case nil
+                  (apply orig face args)
+                (error (when (string-match-p "gnus-group-news" (symbol-name face))
+                         nil)))))
 
 (setq org-refile-use-outline-path 'file)
 
@@ -2024,7 +2022,9 @@ is already narrowed."
 
 ;;;; org-autolist
 
+;; https://github.com/slk500/org-autolist
 (use-package org-autolist
+  :load-path "~/work/elisp/org-autolist/"
   :hook (org-mode . org-autolist-mode))
 
 ;;;; org-note
