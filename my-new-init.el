@@ -237,6 +237,30 @@ installed."
 
 ;;; org-clock
 
+;; (defun my-org-clock-in-if-active ()
+;;   "Resume the active (hanging) clock on the heading it belongs to."
+;;   (interactive)
+;;   (when (and org-agenda-files (file-exists-p (car org-agenda-files)))
+;;     (let* ((agenda-file (car org-agenda-files))
+;;            (agenda-buf (find-file-noselect agenda-file)))
+;;       (with-current-buffer agenda-buf
+;;         (save-excursion
+;;           (goto-char (point-min))
+;;           ;; Szukamy wiszącego zegara (linii bez czasu zakończenia)
+;;           (if (re-search-forward "^[ \t]*CLOCK: \\(\\[[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}[^]]*\\]\\)$" nil t)
+;;               (progn
+;;                 ;; Cofamy się do nagłówka, pod którym znajduje się ten zegar
+;;                 (org-back-to-heading t)
+
+;;                 ;; Uruchamiamy org-clock-in, ale przekazujemy argument '(4) (C-u)',
+;;                 ;; co pozwala wybrać ostatnio używany/wiszący zegar bez pytania o zadanie.
+;;                 (org-clock-in '(4))
+;;                 (message "Wznawianie wiszącego zegara..."))
+;;             (message "Brak wiszącego zegara do wznowienia.")))))))
+
+;; ;; Run the function after Emacs initialization is complete
+;; (add-hook 'after-init-hook #'my-org-clock-in-if-active)
+
 (require 'dbus)
 (dbus-register-signal
  :system
@@ -1210,21 +1234,28 @@ displayed too).")
 (defvar my/sunrise-sunset-string ""
   "Cached sunrise/sunset string shown in the modeline.")
 
-(defun my/update-sunrise-sunset ()
-  "Recompute today's sunrise/sunset for the modeline."
+(defun my/update-sunrise-sunset (&rest _args)
+  "Recompute today's sunrise/sunset for the modeline.
+Accepts any arguments to be compatible with advice-add."
   (interactive)
   (let* ((data (solar-sunrise-sunset (calendar-current-date)))
          (rise (car data))
          (set  (cadr data)))
     (setq my/sunrise-sunset-string
           (format " %s-%s "
-                  (if rise (apply #'solar-time-string rise) "—")
-                  (if set  (apply #'solar-time-string set)  "—"))))
+                  (if rise (solar-time-string (car rise) (nth 4 rise)) "—")
+                  (if set  (solar-time-string (car set)  (nth 4 set))  "—"))))
   (force-mode-line-update t))
 
+;; Inicjalizacja zmiennej, jeśli jeszcze nie istnieje
+(defvar my/sunrise-sunset-string "")
+
+;; Wywołanie początkowe
 (my/update-sunrise-sunset)
 
+;; Dodanie porady (bezpiecznie ignoruje argumenty org-columns)
 (advice-add 'org-columns :after #'my/update-sunrise-sunset)
+
 
 (add-to-list 'mode-line-misc-info
              '(:eval my/sunrise-sunset-string)
@@ -1509,6 +1540,7 @@ reuse it's window, otherwise create new one."
 	    "a")))
 
 (setq message-send-mail-function 'smtpmail-send-it
+      send-mail-function 'smtpmail-send-it
       user-mail-address "slawomir.grochowski@gmail.com"
       user-full-name "Slawomir Grochowski"
       smtpmail-stream-type 'ssl
@@ -1929,6 +1961,10 @@ is already narrowed."
 
 (define-key org-mode-map (kbd "*") (my/org-make-toggle ?*))
 
+(with-eval-after-load 'gnus-group
+  (face-spec-reset-face 'gnus-group-news-low)
+  (face-spec-reset-face 'gnus-group-news-low-empty))
+
 ;; corfu--debug((error "Face inheritance results in inheritance cycle" gnus-group-news-low))
 (with-eval-after-load 'org
   (require 'ol)
@@ -1949,6 +1985,8 @@ is already narrowed."
 (global-set-key (kbd "C-c l") 'org-store-link)
 
 (use-package org
+  :bind (:map org-mode-map
+	      ("C-v" . org-paste-special))
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-mode-hook 'org-indent-mode)
@@ -2390,6 +2428,8 @@ from elsewhere."
       eval-expression-print-level 50
       eval-expression-print-length 1000)
 
+(setq edebug-initial-mode 'run)
+
 ;;;; eros
 ; https://xenodium.com/inline-previous-result-and-why-you-should-edebug/
 
@@ -2734,26 +2774,48 @@ from elsewhere."
 
 ;;;; kill buffer in `consult-buffer
 
+(defvar my-vertico-restore-index nil
+  "Zmienna do przekazywania indeksu pomiędzy restartami minibuffera.")
+
+(defun my-vertico-restore-index-setup ()
+  "Przywraca indeks w nowym minibufferze po restarcie przez Embark."
+  (when my-vertico-restore-index
+    (run-at-time 0 nil
+                 (lambda (idx)
+                   (when (and (bound-and-true-p vertico--total) (> vertico--total 0))
+                     ;; Przywracamy indeks, dbając by nie wykroczyć poza nową listę
+                     (setq vertico--index (min idx (1- vertico--total)))
+                     (vertico--exhibit)))
+                 my-vertico-restore-index)
+    (setq my-vertico-restore-index nil)
+    (remove-hook 'minibuffer-setup-hook #'my-vertico-restore-index-setup)))
+
 (defun my-embark-M-k (&optional arg)
   (interactive "P")
   (require 'embark)
-  (if-let ((targets (embark--targets)))
-      (let* ((target
-              (or (nth
-                  (if (or (null arg) (minibufferp))
-                      0
-                    (mod (prefix-numeric-value arg) (length targets)))
-                  targets)))
-            (type (plist-get target :type)))
-        (cond
-         ((eq type 'buffer)
-          (let ((embark-pre-action-hooks))
-            (embark--act 'kill-buffer target)))))))
+  (when-let ((targets (embark--targets)))
+    ;; ZMIANA: Szukamy w liście targets elementu, który ma typ 'buffer
+    (let* ((target (seq-find (lambda (tga)
+                               (eq (plist-get tga :type) 'buffer))
+                             targets))
+           (v-idx (bound-and-true-p vertico--index)))
 
+      (if (not target)
+          (message "To nie jest bufor (typ: %s)" (plist-get (car targets) :type))
+
+        ;; Jeśli znaleźliśmy cel typu buffer, przystępujemy do usuwania
+        (setq my-vertico-restore-index v-idx)
+        (add-hook 'minibuffer-setup-hook #'my-vertico-restore-index-setup)
+
+        (let ((embark-pre-action-hooks nil))
+          (embark--act 'kill-buffer target))))))
+
+;; Twoje bindowanie pozostaje bez zmian:
 (defvar my/consult-buffer-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-k" #'my-embark-M-k)
+    (define-key map (kbd "C-<delete>") #'my-embark-M-k)
     map))
+
 
 ;;; marginalia
 
@@ -2854,24 +2916,6 @@ from elsewhere."
 (use-package eros)
 (eros-mode 1)
 
-;;;; ert
-
-; emacs -batch -l ert -l *-test.el -f ert-run-tests-batch-and-exit
-
-;; (defun my-eval-and-run-all-tests-in-buffer ()
-;;   "Delete all loaded tests from the runtime, evaluate the current buffer and run all loaded tests with ert."
-;;   (interactive)
-;;   (ert-delete-all-tests)
-;;   (eval-buffer)
-;;   (ert 't))
-
-;; (defun ert-run-all-tests ()
-;;   (interactive)
-;;   (ert "t")
-;;   (other-window -1))
-
-;(keymap-global-set "<f7>" #'ert-run-all-tests)
-
 ;;;; nameless
 
 (use-package nameless
@@ -2879,6 +2923,12 @@ from elsewhere."
     (emacs-lisp-mode . nameless-mode)
     :config
     (setq nameless-prefix "-"))
+
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (when (and (buffer-file-name)
+                       (string-match-p "colview\\.el\\'" (buffer-file-name)))
+              (setq-local nameless-current-name "org-columns"))))
 
 ;;; moving around code
 ;;;; smart scan
