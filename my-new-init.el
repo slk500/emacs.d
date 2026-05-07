@@ -877,11 +877,6 @@ The DWIM behaviour of this command is as follows:
 
 (setq org-mru-clock-format-function #'my/org-mru-clock-format)
 
-(use-package org-multi-clock
-  :straight (org-multi-clock :type git :host gitlab :repo "OlMon/org-multi-clock" :branch "master"))
-
-; org-clock-in into any task in your org files. To create a parallel clock use the omc-make-new-parallel-clock. This clock will be the active clock.
-
 (defun my-org-clock-mode-line-both (&rest _)
   "Show in mode line: task name | current session time | today's total time."
   (when (org-clocking-p)
@@ -1549,6 +1544,7 @@ reuse it's window, otherwise create new one."
       smtpmail-smtp-service 465
       smtpmail-debug-verb t
       mail-user-agent 'sendmail-user-agent
+      sendmail-coding-system 'utf-8-unix
       smtpmail-debug-info t
       message-signature "Slawomir Grochowski")
 
