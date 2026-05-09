@@ -1137,7 +1137,12 @@ Stole from aweshell"
 ;; Note: The customize interface is also supported.
 (setq rmh-elfeed-org-files (list "~/aamystuff/rss.org"))
 
-;;; gptel ai
+;;;  ai
+;;;; claude
+
+;;(use-package claude-code)
+
+;;;; gptel
 
 (use-package gptel
   :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
@@ -1174,6 +1179,7 @@ Stole from aweshell"
 	 :sitemap-filename "index.org"
 	 :sitemap-title "Slawomir Grochowski homepage"
 	 :sitemap-style tree
+	 :exclude "draft/"
 	 :sitemap-sort-files anti-chronologically
 	 :sitemap-format-entry m/org-publish-org-sitemap-format-entry
          :base-directory "~/aamystuff/slawomir-grochowski.com/org"
@@ -1460,14 +1466,17 @@ reuse it's window, otherwise create new one."
 ;;; mail, email, notmuch
 ;; https://myaccount.google.com/apppasswords
 
-(defun my/notmuch-open-message-at-point ()
-  "Otwiera wiadomość o Message-ID pod kursorem w Notmuch."
-  (interactive)
-  (let ((msg-id (thing-at-point 'url t))) ; lub inna detekcja
-    ;; Jeśli potrzebujesz usunąć ewentualne nawiasy <>
-    (when (string-match "<\\(.*\\)>" msg-id)
-      (setq msg-id (match-string 1 msg-id)))
-    (notmuch-search (concat "id:" msg-id))))
+(defun my/notmuch-open-public-inbox-link (url &rest _)
+  "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
+  (if (string-match "/\\([^/]+@[^/]+\\)/?\\(?:#.*\\)?$" url)
+      (notmuch-show (concat "id:" (match-string 1 url)))
+    (browse-url-default-browser url)))
+
+(setq browse-url-handlers
+      '(("\\`https?://list\\.orgmode\\.org/" . my/notmuch-open-public-inbox-link)
+        ("\\`https?://lists\\.gnu\\.org/archive/html/\\(emacs-orgmode\\|help-gnu-emacs\\|emacs-devel\\|bug-gnu-emacs\\)/"
+         . my/notmuch-open-public-inbox-link)
+        ("\\`https?://yhetil\\.org/\\(emacs\\|orgmode\\)/" . my/notmuch-open-public-inbox-link)))
 
 (setq display-time-mail-string "") ;; remove "Mail" in mode line
 
@@ -1922,6 +1931,21 @@ is already narrowed."
     :straight (:host github :repo "emacs-php/php-ts-mode"))
 
 ;;; org-mode
+
+(defun my/org-cc-done-or-default (&optional arg)
+  "Na nagłówku TODO ustaw DONE; w innym kontekście wywołaj zwykłe C-c C-c.
+Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
+  (interactive "P")
+  (cond
+   ((and (eq major-mode 'org-mode)
+         (org-at-heading-p))
+    (let ((org-log-done (if arg 'note org-log-done)))
+      (org-todo "DONE")))
+   (t
+    (call-interactively 'org-ctrl-c-ctrl-c))))
+
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c C-c") #'my/org-cc-done-or-default))
 
 (defun my/org-toggle-emphasis (char)
   "Toggle emphasis CHAR wokół regionu. Bez regionu po prostu wstaw CHAR."
@@ -3325,8 +3349,6 @@ current specifications.  This function also sets
 (with-eval-after-load 'org-colview
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
 
-;;; --- Helpers ---------------------------------------------------------------
-
 (defun my/org-columns--strip-date-brackets (value)
   "Strip Org timestamp brackets and leading year from VALUE."
   (replace-regexp-in-string
@@ -3396,8 +3418,6 @@ current specifications.  This function also sets
          nil v)
         v)
     value))
-
-;;; --- Entry point -----------------------------------------------------------
 
 (defun my/org-columns-display (column-title value)
   "Format VALUE for display in Org column COLUMN-TITLE."
