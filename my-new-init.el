@@ -1433,6 +1433,18 @@ reuse it's window, otherwise create new one."
                  magit-unstaged-section-map
                  magit-staged-section-map))
   (define-key m (kbd "C-c") 'cua-copy-region))
+  ;; 1. Usuwanie brancha pod Delete (gdy kursor jest na branchu)
+  (define-key magit-branch-section-map (kbd "<delete>") 'magit-delete-thing)
+
+  ;; 2. Magit-discard pod Delete (dla plików, hunków i sekcji)
+  ;; Dodajemy to do map, w których klawisz "k" zazwyczaj wywołuje discard
+  (dolist (m (list magit-file-section-map
+                   magit-hunk-section-map
+                   magit-unstaged-section-map))
+    (define-key m (kbd "<delete>") 'magit-discard))
+
+  ;; Opcjonalnie: jeśli chcesz, aby Delete działał też w widoku Diffa
+  (define-key magit-diff-mode-map (kbd "<delete>") 'magit-discard)
 :bind
 (("C-x g" . magit-status)))
 
@@ -3117,6 +3129,8 @@ from elsewhere."
 
 ;;; colview
 
+; (setq org-columns-default-format-for-agenda )
+
      (defun my-org-columns-hide-properties-drawers-completely (&rest _)
        "Całkowicie ukrywa szuflady PROPERTIES (bez kropek i pustych linii) podczas działania widoku kolumn."
        (save-excursion
@@ -3330,7 +3344,7 @@ current specifications.  This function also sets
        ( (string-prefix-p "[X]" b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
-       ((or (equal b "[→]") (equal b "[/]")) nil)
+       ((or (string-prefix-p "[→]" b) (equal b "[/]")) nil)
        ((string-match (rx "[" (one-or-more digit) "]") b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
