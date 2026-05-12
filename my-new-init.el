@@ -1,5 +1,4 @@
 ;;; ...  -*- lexical-binding: t -*-
-
 ;;; modeline font increase/decrease
 
 ;; Initialize the variable for the mode-line indicator
@@ -109,6 +108,17 @@
 ;;; org columns - hydra
 
 ;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
+
+
+
+(defun my/org-columns-hint ()
+  (interactive)
+  (let ((help-quick-sections my/org-columns-help-sections)
+        (help-quick-use-map  org-columns-map))
+    (help-quick-toggle)))
+
+  (with-eval-after-load 'org-colview
+    (org-defkey org-columns-map "?" #'my/org-columns-hint))
 
 (require 'cl-lib)
 
@@ -1145,14 +1155,26 @@ Stole from aweshell"
 ;;;; gptel
 
 (use-package gptel
-  :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
+  :defer t
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-backend (gptel-make-openai "ChatGPT"
 			:key #'gptel-api-key-from-auth-source
 			:models '(gpt-4o gpt-4o-mini))
-	gptel-model 'gpt-4o)
-  (add-hook 'gptel-mode-hook #'visual-line-mode))
+	gptel-model 'gpt-4o))
+
+(use-package gptel
+  :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
+  :hook (gptel-mode . visual-line-mode)
+  :config
+  (setq gptel-default-mode 'org-mode)
+  (setq gptel-model 'deepseek-v4-flash
+	gptel-backend (gptel-make-deepseek "DeepSeek"
+			:stream t
+			:key #'gptel-api-key-from-auth-source))
+  (gptel-make-openai "ChatGPT"
+    :key #'gptel-api-key-from-auth-source
+    :models '(gpt-4o gpt-4o-mini)))
 
 ;;; tetris
 
@@ -1420,6 +1442,37 @@ reuse it's window, otherwise create new one."
 
 ;;; magit
 
+(defun moj/gptel-commit-message ()
+  "Wygeneruj propozycję commit message na podstawie zastashowanego diffa."
+  (interactive)
+  (let* ((diff (shell-command-to-string "git diff --cached --no-color"))
+         (prompt (concat
+                  "Jesteś pomocnikiem do pisania commit messages w stylu Conventional Commits. "
+                  "Na podstawie poniższego diffa wygeneruj zwięzły commit message:\n"
+                  "- pierwsza linia: max 72 znaki, format `typ(scope): opis` (typ: feat/fix/refactor/docs/chore/test/style)\n"
+                  "- jeśli zmiana jest złożona, dodaj pustą linię i body z bullet pointami\n"
+                  "- pisz w trybie rozkazującym (\"add\", \"fix\", nie \"added\", \"fixes\")\n"
+                  "- zwróć TYLKO commit message, bez dodatkowych komentarzy ani bloków markdown\n\n"
+                  "Diff:\n```\n" diff "\n```")))
+    (if (string-empty-p (string-trim diff))
+        (message "Brak zmian w staging area — najpierw `git add`.")
+      (message "Generuję commit message...")
+      (gptel-request
+       prompt
+       :callback (lambda (response info)
+                   (if (not response)
+                       (message "Błąd gptel: %s" (plist-get info :status))
+                     (with-current-buffer (or (get-buffer "COMMIT_EDITMSG")
+                                              (current-buffer))
+                       (save-excursion
+                         (goto-char (point-min))
+                         (insert (string-trim response) "\n\n"))
+                       (message "Gotowe — sprawdź i ewentualnie popraw."))))))))
+
+;; Skrót w buforze commit message
+(with-eval-after-load 'git-commit
+  (define-key git-commit-mode-map (kbd "C-c C-g") #'moj/gptel-commit-message))
+
 ;;Symbolic link to Git-controlled source file; follow link?
 (setq vc-follow-symlinks t)
 
@@ -1477,6 +1530,24 @@ reuse it's window, otherwise create new one."
 
 ;;; mail, email, notmuch
 ;; https://myaccount.google.com/apppasswords
+
+;; (defun notmuch-show/format-date (args)
+;;   "Filter-args advice: reformat :Date in the msg plist passed to
+;; `notmuch-show-insert-headerline'."
+;;   (let* ((msg (nth 0 args))
+;;          (date (and (listp msg) (plist-get msg :Date))))
+;;     (when (stringp date)
+;;       (condition-case nil
+;;           (let* ((parsed (parse-time-string date))
+;;                  (time   (apply #'encode-time parsed))
+;;                  (fmt    (format-time-string "%a, %d.%m.%Y" time)))
+;;             (setq args (cons (plist-put (copy-sequence msg) :Date fmt)
+;;                              (cdr args))))
+;;         (error nil)))
+;;     args))
+
+;; (advice-add 'notmuch-show-insert-headerline
+;;             :filter-args #'notmuch-show/format-date)
 
 (defun my/notmuch-open-public-inbox-link (url &rest _)
   "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
@@ -2029,6 +2100,7 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 	org-clock-mode-line-total 'today
 	org-startup-folded t
 	org-hide-leading-stars t
+	org-fold-core-style 'overlays
 	org-hide-emphasis-markers t
 	org-log-done 'time
 	org-log-reschudle 'time
@@ -2798,11 +2870,8 @@ from elsewhere."
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-;; Consult users will also want the embark-consult package.
 (use-package embark-consult
-  :ensure t ; only need to install it, embark loads it after consult if found
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
+  :ensure t)
 
 ;;;; kill buffer in `consult-buffer
 
@@ -3395,7 +3464,6 @@ current specifications.  This function also sets
           (total (string-to-number (match-string 2 value))))
       (propertize value 'face
                   (cond
-                   ((and (zerop done) (zerop total)) '(:foreground "white"))
                    ((zerop done)        'shadow)
                    ((>= done total)     'org-todo)
                    (t `(:foreground ,(my/org-columns--progress-color

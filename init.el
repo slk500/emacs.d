@@ -19,7 +19,8 @@
   (load bootstrap-file nil 'nomessage))
 
 (setq straight-use-package-by-default t)
-(straight-use-package 'org)
+(straight-use-package
+ '(org :type git :build (:not compile)))
 
 (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14" ))
 
