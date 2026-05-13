@@ -1183,6 +1183,36 @@ Stole from aweshell"
     :key #'gptel-api-key-from-auth-source
     :models '(gpt-4o gpt-4o-mini)))
 
+(defun my/gptel-fast-reply ()
+  "Automatyzuje gptel-send: pyta o instrukcję, wysyła bieżący bufor do *scratch*."
+  (interactive)
+  (let* ((user-instruction (read-string "Instrukcja (np. 'odpisz krótko'): "))
+         (target-buffer (get-buffer-create "*scratch*")))
+    ;; Ustawiamy parametry tymczasowo dla tego jednego wywołania
+    (let ((gptel-buffer target-buffer)           ;; Gdzie ma trafić odpowiedź
+          (gptel--system-message user-instruction)) ;; Twoja instrukcja (zamiast 'd')
+      (gptel-send)
+      (message "Wysyłam do *scratch* z instrukcją: %s" user-instruction)
+      ;; Opcjonalnie: od razu przełącz na scratch, żeby widzieć jak pisze
+      (display-buffer target-buffer))))
+
+(defun my/gptel-ultra-reply ()
+  "Wysyła maila do GPT z predefiniowanym System Message i kontekstem do *scratch*."
+  (interactive)
+  (let* ((moj-system-prompt "Jesteś moim asystentem. Odpowiadaj zwięźle, profesjonalnie, po angielsku. Unikaj lania wody.")
+         (instrukcja-dla-maila (read-string "Szybki hint (np. 'odmów grzecznie'): "))
+         (target-buffer (get-buffer-create "*scratch*")))
+
+    (let ((gptel--system-message moj-system-prompt) ;; Stała rola AI
+          (gptel-buffer target-buffer))             ;; Cel: scratch
+
+      ;; Wysyłamy wiadomość.
+      ;; Jako treść idzie to, co masz w buforze + Twoja szybka instrukcja na początku.
+      (gptel-send (concat instrukcja-dla-maila "\n\n--- TREŚĆ MAILA ---\n"))
+
+      (message "GPT pracuje w *scratch*...")
+      (display-buffer target-buffer))))
+
 ;;; tetris
 
 (setq gamegrid-glyph-height-mm 10.0)
@@ -3035,7 +3065,9 @@ from elsewhere."
 
 ;;;; others
 
-(use-package paredit)
+(use-package paredit
+  :bind (:map paredit-mode-map
+	      ("C-<delete>" . 'paredit-kill)))
 (defun my-paredit-mode-hook ()
   (define-key paredit-mode-map (kbd "\C-c c") 'paredit-copy-as-kill)
   (keymap-set paredit-mode-map "M-/" #'xref-find-references))
@@ -3154,60 +3186,60 @@ from elsewhere."
 
 ;;; dired
 
+(defun my/dired-find-file-smart ()
+  "Use `dired-find-alternate-file' for directories, `dired-find-file' for files."
+  (interactive)
+  (let ((file (dired-get-file-for-visit)))
+    (if (file-directory-p file)
+        (dired-find-alternate-file)
+      (dired-find-file))))
+
+(put 'dired-find-alternate-file 'disabled nil)
+
 (use-package dired
   :ensure nil
   :straight (:type built-in)
   :custom ((dired-listing-switches "-alFh --group-directories-first")
-	   (dired-dwim-target t)
-	   (delete-by-moving-to-trash t)
-	   (dired-free-space nil)))
+           (dired-dwim-target t)
+           (delete-by-moving-to-trash t)
+           (dired-free-space nil)
+           (dired-omit-files
+            (rx (or (seq bol (? ".") "#")         ;; emacs autosave files
+                    (seq bol "." (not (any "."))) ;; dot-files
+                    (seq "~" eol)                 ;; backup-files
+                    (seq bol "CVS" eol)))))       ;; CVS dirs
+  :bind (:map dired-mode-map
+              ("RET" . my/dired-find-file-smart)
+              ("." . dired-omit-mode)
+              ("^" . (lambda () (interactive) (find-alternate-file ".."))))
+  :hook ((dired-mode . dired-hide-details-mode)
+         (dired-mode . dired-omit-mode))
+  :config
+  (require 'dired-x))
 
-;; Auto refresh buffers
+;; Auto refresh buffers (and dired quietly)
 (global-auto-revert-mode 1)
-;; Also auto refresh dired, but be quiet about it
-(setq global-auto-revert-non-file-buffers t)
-(setq auto-revert-verbose nil)
+(setq global-auto-revert-non-file-buffers t
+      auto-revert-verbose nil)
 
 (use-package dired-du)
 
 (use-package peep-dired
   :ensure t
-  :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+  :defer t
   :config
   (setq peep-dired-cleanup-eagerly t)
   :bind (:map dired-mode-map
-	      ("P" . peep-dired)))
+              ("P" . peep-dired)))
 
 (use-package dired-subtree
   :after dired
   :bind (:map dired-mode-map
-	      ("<tab>" . dired-subtree-toggle)
-	      ("<C-tab>" . dired-subtree-cycle)
-	      ("<S-iso-lefttab>" . dired-subtree-remove)))
+              ("<tab>" . dired-subtree-toggle)
+              ("<C-tab>" . dired-subtree-cycle)
+              ("<S-iso-lefttab>" . dired-subtree-remove)))
 
 (use-package dired-filter)
-
-;; Colourful columns
-(use-package diredfl
-  :config
-  (diredfl-global-mode 1))
-
-(require 'dired-x)
-(add-hook 'dired-mode-hook  #'dired-omit-mode)
-
-(setq dired-omit-files
-      (rx (or (seq bol (? ".") "#")     ;; emacs autosave files
-	      (seq bol "." (not (any "."))) ;; dot-files
-	      (seq "~" eol)                 ;; backup-files
-	      (seq bol "CVS" eol)           ;; CVS dirs
-	      )))
-
-(add-hook 'dired-mode-hook
-	  (lambda ()
-	    (dired-hide-details-mode) ; make dired use the same buffer for viewing directory
-	    (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
-	    (define-key dired-mode-map (kbd ".") 'dired-omit-mode) ; was dired-advertised-find-file
-	    (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))))
 
 ;;; calendar
 

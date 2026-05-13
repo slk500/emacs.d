@@ -67,6 +67,8 @@
 
 (blink-cursor-mode 0)
 
+(define-key y-or-n-p-map [return] 'act)
+
 ;; do not show the startup screen.
 (setq inhibit-startup-message t
       initial-scratch-message nil
