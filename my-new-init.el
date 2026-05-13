@@ -1,4 +1,18 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; dump-jump
+
+(defun slava/find-function-at-point ()
+  "Skocz do definicji funkcji/zmiennej, której nazwa jest pod kursorem.
+Działa w dowolnym buforze, nie tylko w trybach programistycznych."
+  (interactive)
+  (let ((sym (symbol-at-point)))
+    (cond
+     ((and sym (fboundp sym)) (find-function sym))
+     ((and sym (boundp sym))  (find-variable sym))
+     (t (call-interactively #'find-function)))))
+
+(global-set-key (kbd "M-.") #'slava/find-function-at-point)
+
 ;;; modeline font increase/decrease
 
 ;; Initialize the variable for the mode-line indicator
@@ -557,14 +571,16 @@ The DWIM behaviour of this command is as follows:
 
 ;;; backward-forward
 
-;; (use-package backward-forward
-;;   :demand t
-;;   :config
-;;   (backward-forward-mode t)
-;;   :bind
-;;   (:map backward-forward-mode-map
-;;    ("M-C-<left>" . backward-forward-previous-location)
-;;    ("M-C-<right>" . backward-forward-next-location)))
+(use-package backward-forward
+  :demand t
+  :config
+  (backward-forward-mode t)
+  :bind
+  (:map backward-forward-mode-map
+   ("S-<left>" . backward-forward-previous-location)
+   ("S-<right>" . backward-forward-next-location)))
+
+(setq shift-select-mode nil)
 
 ;;; org-super-agenda
 
@@ -1155,15 +1171,6 @@ Stole from aweshell"
 ;;;; gptel
 
 (use-package gptel
-  :defer t
-  :config
-  (setq gptel-default-mode 'org-mode)
-  (setq gptel-backend (gptel-make-openai "ChatGPT"
-			:key #'gptel-api-key-from-auth-source
-			:models '(gpt-4o gpt-4o-mini))
-	gptel-model 'gpt-4o))
-
-(use-package gptel
   :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
   :hook (gptel-mode . visual-line-mode)
   :config
@@ -1442,37 +1449,6 @@ reuse it's window, otherwise create new one."
 
 ;;; magit
 
-(defun moj/gptel-commit-message ()
-  "Wygeneruj propozycję commit message na podstawie zastashowanego diffa."
-  (interactive)
-  (let* ((diff (shell-command-to-string "git diff --cached --no-color"))
-         (prompt (concat
-                  "Jesteś pomocnikiem do pisania commit messages w stylu Conventional Commits. "
-                  "Na podstawie poniższego diffa wygeneruj zwięzły commit message:\n"
-                  "- pierwsza linia: max 72 znaki, format `typ(scope): opis` (typ: feat/fix/refactor/docs/chore/test/style)\n"
-                  "- jeśli zmiana jest złożona, dodaj pustą linię i body z bullet pointami\n"
-                  "- pisz w trybie rozkazującym (\"add\", \"fix\", nie \"added\", \"fixes\")\n"
-                  "- zwróć TYLKO commit message, bez dodatkowych komentarzy ani bloków markdown\n\n"
-                  "Diff:\n```\n" diff "\n```")))
-    (if (string-empty-p (string-trim diff))
-        (message "Brak zmian w staging area — najpierw `git add`.")
-      (message "Generuję commit message...")
-      (gptel-request
-       prompt
-       :callback (lambda (response info)
-                   (if (not response)
-                       (message "Błąd gptel: %s" (plist-get info :status))
-                     (with-current-buffer (or (get-buffer "COMMIT_EDITMSG")
-                                              (current-buffer))
-                       (save-excursion
-                         (goto-char (point-min))
-                         (insert (string-trim response) "\n\n"))
-                       (message "Gotowe — sprawdź i ewentualnie popraw."))))))))
-
-;; Skrót w buforze commit message
-(with-eval-after-load 'git-commit
-  (define-key git-commit-mode-map (kbd "C-c C-g") #'moj/gptel-commit-message))
-
 ;;Symbolic link to Git-controlled source file; follow link?
 (setq vc-follow-symlinks t)
 
@@ -1549,6 +1525,65 @@ reuse it's window, otherwise create new one."
 ;; (advice-add 'notmuch-show-insert-headerline
 ;;             :filter-args #'notmuch-show/format-date)
 
+(defun my-notmuch-short-date (format-string result)
+  "Skraca format daty dla wyników Notmuch, zostawiając samą godzinę dla dzisiejszych."
+  (let ((date (plist-get result :date_relative)))
+    (cond
+     ;; Zmienia "Today 14:15" na samo "14:15"
+     ((string-match "^Today \\(.*\\)" date)
+      (format format-string (match-string 1 date)))
+
+      ;; Zmienia "23 mins. ago" na "23 min"
+     ((string-match "^\\([0-9]+\\) mins?\\. ago" date)
+      (format format-string (concat (match-string 1 date) " min")))
+
+     ;; Dla innych dat (np. starszych) zostawia oryginalny format Notmuch
+     (t
+      (format format-string date)))))
+
+(defun my-notmuch-status-icons (format-string result)
+  "Sprawdza ukryte tagi wiadomości i generuje ikony w jednej wyrównanej kolumnie."
+  (let ((tags (plist-get result :tags))
+        ;; Spacje (zamiast pustego ciągu) zapewnią, że kolumny będą idealnie równe w pionie
+        (i-attach " "))
+
+    ;; Przypisujemy odpowiednie znaki, gdy dany tag istnieje
+    (when (member "attachment" tags) (setq i-attach "📎"))
+
+    ;; Łączymy ikony w jeden format
+    (format format-string (concat i-attach ))))
+
+(setq notmuch-tag-formats
+      '(("emacs" (nerd-icons-sucicon "nf-custom-emacs" :face '(:foreground "#9a7ecc")))
+        ("emacs-org" (nerd-icons-sucicon "nf-custom-orgmode" :face '(:foreground "#98be65")))
+        ("emacs-devel" (nerd-icons-mdicon "nf-md-code_tags" :face '(:foreground "#51afef")))
+        ;; Ukrywamy tagi techniczne, bo mają ikony po lewej
+        ("unread" "")
+        ("attachment" "")
+        ("signed" "")
+        ("inbox" "")))
+
+
+(setq notmuch-search-result-format
+      '(
+        ;; 1. Skrócona data (wymaga mniej miejsca, rezerwujemy 10 znaków)
+        (my-notmuch-short-date . "%12s ")
+
+        ;; 2. Nasze nowe ikony statusu (rezerwujemy 4 znaki)
+        (my-notmuch-status-icons . "%-4s ")
+
+        ;; 3. Ilość wiadomości w wątku
+        ("count" . "%-5s ")
+
+        ;; 4. Autor wiadomości
+        ("authors" . "%-20s ")
+
+        ;; 5. Temat (zajmuje pozostałą przestrzeń)
+        ("subject" . "%s ")
+
+        ;; 6. Tagi na samym końcu linii (np. nazwy list mailingowych)
+        ("tags" . "(%s)")))
+
 (defun my/notmuch-open-public-inbox-link (url &rest _)
   "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
   (if (string-match "/\\([^/]+@[^/]+\\)/?\\(?:#.*\\)?$" url)
@@ -1623,8 +1658,7 @@ reuse it's window, otherwise create new one."
 	    "d")
      (:name "work" :query "tag:work" :key
 	    "w")
-     (:name "all mail" :query "*" :key
-	    "a")))
+     (:name "all mail (last year)" :query "date:1Y.." :key "a")))
 
 (setq message-send-mail-function 'smtpmail-send-it
       send-mail-function 'smtpmail-send-it
