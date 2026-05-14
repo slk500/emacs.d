@@ -4,6 +4,8 @@
 (setq native-comp-async-report-warnings-errors nil)
 (setq native-comp-deferred-compilation-deny-list nil)
 (setq straight-disable-native-compile t)
+(setq straight-check-for-modifications nil)
+(setq load-prefer-newer t)
 
 ;; completion
 (setq completion-styles '(substring))

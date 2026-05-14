@@ -1,4 +1,77 @@
 ;;; ...  -*- lexical-binding: t -*-
+;;; move defun up down
+
+(defun slk-elisp--previous-top-level-sexp-bounds (pos)
+  "Return bounds of previous top-level sexp before POS."
+  (save-excursion
+    (goto-char pos)
+    (forward-comment (- (point-max)))
+    (condition-case nil
+        (progn
+          (backward-sexp 1)
+          (let ((beg (point)))
+            (forward-sexp 1)
+            (cons beg (point))))
+      (scan-error
+       (user-error "No previous top-level form")))))
+
+(defun slk-elisp--top-level-sexp-bounds ()
+  "Return bounds of current top-level sexp, without leading comments."
+  (save-excursion
+    (beginning-of-defun)
+    (forward-comment (point-max))
+    (let ((beg (point)))
+      (forward-sexp 1)
+      (cons beg (point)))))
+
+(defun slk-elisp--next-top-level-sexp-bounds (pos)
+  "Return bounds of next top-level sexp after POS."
+  (save-excursion
+    (goto-char pos)
+    (forward-comment (point-max))
+    (when (eobp)
+      (user-error "No next top-level form"))
+    (let ((beg (point)))
+      (forward-sexp 1)
+      (cons beg (point)))))
+
+(defun slk-elisp-move-defun-up (&optional n)
+  "Move current top-level Lisp form up by N forms."
+  (interactive "p")
+  (let ((n (or n 1)))
+    (dotimes (_ n)
+      (let* ((this (slk-elisp--top-level-sexp-bounds))
+             (beg (car this))
+             (end (cdr this))
+             (offset (- (point) beg))
+             (prev (slk-elisp--previous-top-level-sexp-bounds beg))
+             (prev-beg (car prev))
+             (prev-end (cdr prev)))
+        (transpose-regions prev-beg prev-end beg end)
+        (goto-char (+ prev-beg offset))))))
+
+(defun slk-elisp-move-defun-down (&optional n)
+  "Move current top-level Lisp form down by N forms."
+  (interactive "p")
+  (let ((n (or n 1)))
+    (dotimes (_ n)
+      (let* ((this (slk-elisp--top-level-sexp-bounds))
+             (beg (car this))
+             (end (cdr this))
+             (offset (- (point) beg))
+             (next (slk-elisp--next-top-level-sexp-bounds end))
+             (next-beg (car next))
+             (next-end (cdr next))
+             (next-len (- next-end next-beg))
+             (gap-len (- next-beg end)))
+        (transpose-regions beg end next-beg next-end)
+        (goto-char (+ beg next-len gap-len offset))))))
+
+(with-eval-after-load 'elisp-mode
+  (define-key emacs-lisp-mode-map (kbd "M-<up>") #'slk-elisp-move-defun-up)
+  (define-key emacs-lisp-mode-map (kbd "M-<down>") #'slk-elisp-move-defun-down))
+
+
 ;;; dump-jump
 
 (defun slava/find-function-at-point ()
@@ -16,12 +89,12 @@ Działa w dowolnym buforze, nie tylko w trybach programistycznych."
 ;;; modeline font increase/decrease
 
 ;; Initialize the variable for the mode-line indicator
-(defvar my-font-size-lighter ""
-  "Font size indicator displayed in the mode-line.")
-
-;; Track the active timer to prevent multiple timers running at once
 (defvar my-font-size-timer nil
   "Timer used to clear the font size indicator.")
+
+;; Track the active timer to prevent multiple timers running at once
+(defvar my-font-size-lighter ""
+  "Font size indicator displayed in the mode-line.")
 
 ;; Add the indicator to mode-line-format if it's not already there
 (or (member 'my-font-size-lighter mode-line-format)
@@ -1232,35 +1305,60 @@ Stole from aweshell"
          (file-name-nondirectory (directory-file-name entry)))
         (t entry)))
 
+(defvar m/site-root
+  (expand-file-name "~/aamystuff/slawomir-grochowski.com"))
+
+(defvar m/site-org-dir
+  (expand-file-name "org" m/site-root))
+
+(defvar m/site-static-dir
+  (expand-file-name "static" m/site-root))
+
+(defvar m/site-html-dir
+  (expand-file-name "html" m/site-root))
+
 (setq org-publish-project-alist
       `(("pages"
-	 :auto-sitemap t
-	 :sitemap-filename "index.org"
-	 :sitemap-title "Slawomir Grochowski homepage"
-	 :sitemap-style tree
-	 :exclude "draft/"
-	 :sitemap-sort-files anti-chronologically
-	 :sitemap-format-entry m/org-publish-org-sitemap-format-entry
-         :base-directory "~/aamystuff/slawomir-grochowski.com/org"
+         :auto-sitemap t
+         :sitemap-filename "index.org"
+         :sitemap-title "Slawomir Grochowski homepage"
+         :sitemap-style tree
+         :exclude "draft/"
+         :sitemap-sort-files anti-chronologically
+         :sitemap-format-entry m/org-publish-org-sitemap-format-entry
+
+         :base-directory ,m/site-org-dir
          :base-extension "org"
          :recursive t
-         :publishing-directory "/ssh:root@51.178.48.169:/var/www/slawomir-grochowski.com"
-;;         :publishing-directory "~/aamystuff/slawomir-grochowski.com/html"
-	 :html-doctype "html5"
-	 :html-html5-fancy t
-	 :html-head-include-scripts nil
-	 :html-head-include-default-style t
-	 :html-head "<link href= \"../static/style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+         :publishing-directory ,m/site-html-dir
+
+         :html-doctype "html5"
+         :html-html5-fancy t
+         :html-head-include-scripts nil
+         :html-head-include-default-style t
+         :html-head "<link href=\"../static/style.css\" rel=\"stylesheet\" type=\"text/css\" />"
+
          :publishing-function org-html-publish-to-html)
+
         ("static"
-         :base-directory "~/aamystuff/slawomir-grochowski.com/static"
-         :base-extension "css\\|txt\\|jpg\\|jpeg\\|gif\\|png"
+         :base-directory ,m/site-static-dir
+         :base-extension "css\\|txt\\|jpg\\|jpeg\\|gif\\|png\\|svg\\|webp\\|ico"
          :recursive t
-;;         :publishing-directory "~/aamystuff/slawomir-grochowski.com/static"
-         :publishing-directory  "/ssh:root@51.178.48.169:/var/www/slawomir-grochowski.com/static/"
+         :publishing-directory ,(expand-file-name "static" m/site-html-dir)
          :publishing-function org-publish-attachment)
 
-        ("slawomir-grochowski.com" :components ("pages" "static"))))
+        ("deploy"
+         :base-directory ,m/site-html-dir
+         :base-extension "html\\|css\\|txt\\|jpg\\|jpeg\\|gif\\|png\\|svg\\|webp\\|ico"
+         :recursive t
+         :publishing-directory "/ssh:root@51.178.48.169:/var/www/slawomir-grochowski.com/"
+         :publishing-function org-publish-attachment)
+
+        ("local"
+         :components ("pages" "static"))
+
+        ("slawomir-grochowski.com"
+         :components ("pages" "static" "deploy"))))
 
 ;;; modeline
 
