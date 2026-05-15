@@ -1638,6 +1638,24 @@ reuse it's window, otherwise create new one."
   (savehist-mode))
 
 ;;; mail, email, notmuch
+
+(defun my-mml-view-part-file ()
+  "Open file from nearest MML <#part ... filename=\"...\"> tag in View mode."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (unless (looking-at-p "<#part")
+      (re-search-backward "^<#part" nil t))
+    (if (looking-at ".*filename=\"\\([^\"]+\\)\"")
+        (view-file
+         (expand-file-name
+          (substitute-in-file-name (match-string 1))))
+      (user-error "No MML filename found here"))))
+
+(with-eval-after-load 'message
+  (define-key message-mode-map (kbd "C-c C-o") #'my-mml-view-part-file))
+
+
 ;; https://myaccount.google.com/apppasswords
 
 ;; (defun notmuch-show/format-date (args)
@@ -2049,9 +2067,12 @@ timestamp."
                           (window-live-p (get-buffer-window which-key--buffer)))
                      (string= (buffer-name) "*Org Note*")))))
 
-;; problems with displaying
-(use-package spacious-padding)
-(spacious-padding-mode)
+(use-package spacious-padding
+  :custom
+  (setq spacious-padding-widths
+      (plist-put spacious-padding-widths :header-line-width 0))
+  :config
+  (spacious-padding-mode 1))
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
