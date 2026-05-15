@@ -1,4 +1,7 @@
 ;;; ...  -*- lexical-binding: t -*-
+
+(setq org-ellipsis " ")
+
 ;;; move defun up down
 
 (defun slk-elisp--previous-top-level-sexp-bounds (pos)
@@ -1676,14 +1679,18 @@ reuse it's window, otherwise create new one."
 
 (defun my-notmuch-short-date (format-string result)
   "Skraca format daty dla wyników Notmuch, zostawiając samą godzinę dla dzisiejszych."
-  (let ((date (plist-get result :date_relative)))
+  (let* ((date (plist-get result :date_relative))
+         (date (replace-regexp-in-string "\\." "" date)))
     (cond
      ;; Zmienia "Today 14:15" na samo "14:15"
      ((string-match "^Today \\(.*\\)" date)
       (format format-string (match-string 1 date)))
-      ;; Zmienia "23 mins. ago" na "23 min"
-     ((string-match "^\\([0-9]+\\) mins?\\. ago" date)
+
+     ;; Zmienia "23 mins ago" na "23 min"
+     ((string-match "^\\([0-9]+\\) mins? ago" date)
       (format format-string (concat (match-string 1 date) " min")))
+
+     ;; Zmienia "Mon." na "Mon", "Tue." na "Tue" itd.
      (t
       (format format-string date)))))
 
@@ -2066,11 +2073,10 @@ timestamp."
                      (string= (buffer-name) "*Org Note*")))))
 
 (use-package spacious-padding
-  :custom
-  (setq spacious-padding-widths
-      (plist-put spacious-padding-widths :header-line-width 0))
   :config
-  (spacious-padding-mode 1))
+  (setf (plist-get spacious-padding-widths :header-line-width) 0)
+  (spacious-padding-mode 1)
+  (spacious-padding-set-faces))
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
@@ -3629,6 +3635,13 @@ current specifications.  This function also sets
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
 
 (defun my/org-columns--strip-date-brackets (value)
+  "Strip Org timestamp brackets, year, and month from VALUE."
+  (replace-regexp-in-string
+   "[<[]\\(?:[0-9]\\{4\\}-\\)?[0-9]\\{2\\}-\\([0-9]\\{2\\}\\(?: [^]> ]+\\)?\\)[]>]"
+   "\\1"
+   value))
+
+(defun my/org-columns--strip-date-brackets (value)
   "Strip Org timestamp brackets and leading year from VALUE."
   (replace-regexp-in-string
    "[<[]\\([0-9]\\{4\\}-\\)?\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)[]>]"
@@ -3682,26 +3695,99 @@ current specifications.  This function also sets
 (defun my/org-columns--date-prefix-face (date weekday)
   "Face for the \"MM-DD Day\" prefix."
   (cond
-   ((string= date (format-time-string "%m-%d"))
-    '(:weight bold :foreground "gold"))
    ((string= weekday "Sun")
     '(:inherit shadow :foreground "indianred"))
    (t 'shadow)))
 
 (defun my/org-columns--fontify-date-prefix (value)
-  "Dim the \"MM-DD Day \" prefix in VALUE; highlight today and Sundays."
-  (if (string-match
-       (rx bos (group (= 2 digit) "-" (= 2 digit)) " "
-               (group (= 3 (any "A-Za-z"))))
-       value)
-      (let ((v (copy-sequence value)))
-        (add-face-text-property
-         0 (match-end 0)
-         (my/org-columns--date-prefix-face
-          (match-string 1 value) (match-string 2 value))
-         nil v)
-        v)
-    value))
+  "Dim date/week prefix in VALUE; highlight Sundays.
+
+Recognizes day rows like \"19 Sun\" or \"05-19 Sun\",
+and week rows like \"5-20\" or \"3\\4-14\"."
+  (cond
+   ;; Day row: 19 Sun albo 05-19 Sun
+   ((string-match
+     (rx bos
+         (optional (= 2 digit) "-") ; optional month, e.g. 05-
+         (group (= 2 digit))        ; day
+         " "
+         (group (or "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"))
+         (or eos whitespace))
+     value)
+    (let ((v (copy-sequence value)))
+      (add-face-text-property
+       0 (match-end 0)
+       (my/org-columns--date-prefix-face
+        (match-string 1 value)
+        (match-string 2 value))
+       nil v)
+      v))
+
+   ;; Week row: 5-20, 1-1, 3\4-14
+   ((string-match
+     (rx bos
+         (group
+          (** 1 2 digit)
+          (optional "\\" (** 1 2 digit))
+          "-"
+          (** 1 2 digit))
+         (or eos whitespace))
+     value)
+    (let ((v (copy-sequence value)))
+      (add-face-text-property
+       0 (match-end 0)
+       'shadow
+       nil v)
+      v))
+
+   (t
+    value)))
+
+(defun my/org-columns--today-heading-p ()
+  "Return non-nil when current heading contains today's Org date."
+  (save-excursion
+    (when (ignore-errors (org-back-to-heading t) t)
+      (string-match-p
+       (regexp-quote (format-time-string "%Y-%m-%d"))
+       (org-get-heading t t t t)))))
+
+(defun my/org-columns--fontify-today-row (value)
+  "Apply today's row face to VALUE."
+  (let ((v (copy-sequence value)))
+    (add-face-text-property
+     0 (length v)
+     'my/org-columns-today-row
+     t v)
+    v))
+
+(defface my/org-columns-today-row
+  '((((background dark))
+     :background "#242a33"
+     :extend t)
+    (((background light))
+     :background "#dcecff"
+     :extend t))
+  "Face for today's row in Org columns.")
+
+(defun my/org-columns-highlight-today-row ()
+  "Highlight today's whole row in Org columns."
+  (interactive)
+  (remove-overlays (point-min) (point-max)
+                   'my/org-columns-today-row t)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward org-heading-regexp nil t)
+      (when (my/org-columns--today-heading-p)
+        (let ((ov (make-overlay (line-beginning-position)
+                                (line-beginning-position 2))))
+          (overlay-put ov 'my/org-columns-today-row t)
+          (overlay-put ov 'face 'my/org-columns-today-row)
+          ;; Very high priority, above hl-line / org-column overlays.
+          (overlay-put ov 'priority 100000))))))
+
+(advice-add 'org-columns :after
+            (lambda (&rest _)
+              (my/org-columns-highlight-today-row)))
 
 (defun my/org-columns-display (column-title value)
   "Format VALUE for display in Org column COLUMN-TITLE."
@@ -3718,7 +3804,7 @@ current specifications.  This function also sets
             (concat
              (my/org-columns--item-outline-indent)
              (if date-row?
-                 (if (my/org-columns--heading-has-logbook-p)
+                 (if (my/org-columns--has-entry-text-p)
                      (my/org-columns--logbook-icon)
                    "  ")
                "")
@@ -3738,21 +3824,34 @@ current specifications.  This function also sets
 (set-face-attribute 'org-column-title nil
 		    :inherit 'default)
 
-;;;; icon for heading with LOGBOOK
+;;;; icon for heading text or LOGBOOK
 
 (defun my/org-columns--date-row-p (value)
-  "Return non-nil when VALUE looks like a day row, e.g. 05-15 Fri."
-  (string-match-p "\\`[ \t]*[0-9]\\{2\\}-[0-9]\\{2\\}\\b" value))
+  "Return non-nil when VALUE looks like a day row, e.g. 15 Fri."
+  (string-match-p
+   (rx bos
+       (= 2 digit)
+       " "
+       (or "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
+       (or eos whitespace))
+   value))
 
-(defun my/org-columns--heading-has-logbook-p ()
-  "Return non-nil if current Org heading has a direct LOGBOOK drawer."
+(defun my/org-columns--has-entry-text-p ()
+  "Return non-nil when current Org heading has text after metadata.
+
+Skips planning lines and PROPERTIES drawer, but does not skip normal
+content below the heading."
   (save-excursion
-    (org-back-to-heading t)
-    (let ((end (save-excursion
-                 (outline-next-heading)
-                 (point))))
-      (forward-line 1)
-      (re-search-forward "^[ \t]*:LOGBOOK:[ \t]*$" end t))))
+    (when (ignore-errors (org-back-to-heading t) t)
+      (let ((end (save-excursion
+                   (or (outline-next-heading)
+                       (goto-char (point-max)))
+                   (point))))
+        ;; Skip SCHEDULED/DEADLINE/CLOSED and :PROPERTIES:.
+        (org-end-of-meta-data)
+
+        ;; Is there anything non-blank before the next heading?
+        (re-search-forward "[^[:space:]\n]" end t)))))
 
 (defun my/org-columns--logbook-icon ()
   "Return a small LOGBOOK indicator for Org columns."
