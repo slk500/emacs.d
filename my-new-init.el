@@ -464,8 +464,6 @@ installed."
 
 (use-package all-the-icons)
 
-
-
 (defun my/org-agenda-replace-scheduled-deadline-symbols ()
   "Replace SCHEDULED and DEADLINE in agenda with icons."
   (save-excursion
@@ -3158,6 +3156,8 @@ from elsewhere."
 
 ;;; elisp
 
+(add-hook 'emacs-lisp-mode-hook #'prettify-symbols-mode)
+
 (show-paren-mode 1)
 
 (defun endless/locally-disable-show-paren ()
@@ -3673,6 +3673,12 @@ current specifications.  This function also sets
    ((string-match-p (rx bos "[" (or "X" (one-or-more digit)) "]") original)
     (propertize value 'face 'org-todo))))
 
+(defun my/org-columns--item-outline-indent ()
+  "Return indentation based on current Org heading level."
+  (if (org-at-heading-p)
+      (make-string (1- (org-current-level)) ?\s)
+    ""))
+
 (defun my/org-columns--date-prefix-face (date weekday)
   "Face for the \"MM-DD Day\" prefix."
   (cond
@@ -3702,10 +3708,22 @@ current specifications.  This function also sets
   (let* ((date? (string= column-title "date"))
          (stripped (my/org-columns--strip-link-brackets
                     (if date? (my/org-columns--strip-date-brackets value) value)))
+         (date-row? (and date? (my/org-columns--date-row-p stripped)))
          (v (or (my/org-columns--fontify-progress stripped)
                 (my/org-columns--fontify-checkbox stripped value)
                 (if date? stripped (propertize stripped 'face 'shadow)))))
-    (if date? (my/org-columns--fontify-date-prefix v) v)))
+    (when date?
+      (setq v (my/org-columns--fontify-date-prefix v))
+      (setq v
+            (concat
+             (my/org-columns--item-outline-indent)
+             (if date-row?
+                 (if (my/org-columns--heading-has-logbook-p)
+                     (my/org-columns--logbook-icon)
+                   "  ")
+               "")
+             v)))
+    v))
 
 (setq org-columns-modify-value-for-display-function #'my/org-columns-display)
 
@@ -3719,3 +3737,30 @@ current specifications.  This function also sets
 
 (set-face-attribute 'org-column-title nil
 		    :inherit 'default)
+
+;;;; icon for heading with LOGBOOK
+
+(defun my/org-columns--date-row-p (value)
+  "Return non-nil when VALUE looks like a day row, e.g. 05-15 Fri."
+  (string-match-p "\\`[ \t]*[0-9]\\{2\\}-[0-9]\\{2\\}\\b" value))
+
+(defun my/org-columns--heading-has-logbook-p ()
+  "Return non-nil if current Org heading has a direct LOGBOOK drawer."
+  (save-excursion
+    (org-back-to-heading t)
+    (let ((end (save-excursion
+                 (outline-next-heading)
+                 (point))))
+      (forward-line 1)
+      (re-search-forward "^[ \t]*:LOGBOOK:[ \t]*$" end t))))
+
+(defun my/org-columns--logbook-icon ()
+  "Return a small LOGBOOK indicator for Org columns."
+  (if (fboundp 'all-the-icons-faicon)
+      (concat
+       (all-the-icons-faicon "history"
+                             :height 0.7
+                             :v-adjust -0.05
+                             :face 'shadow)
+       " ")
+    (propertize "↺ " 'face 'shadow)))
