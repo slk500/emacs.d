@@ -952,19 +952,24 @@ The DWIM behaviour of this command is as follows:
 
 ;;; ledger
 
-(add-to-list 'auto-mode-alist '("ledger\\.dat\\'" . ledger-mode))
+(use-package ledger-mode
+  :mode ("ledger\\.dat\\'" . ledger-mode)
 
-(advice-add 'ledger-xact-find-slot :override
-  (lambda (date) (goto-char (point-min))))
+  :bind (:map ledger-mode-map
+              ("C-c C-c" . ledger-post-fill)
+              ("C-c b"   . my/ledger-bal))
 
-(use-package ledger-mode)
+  :config
+  ;; Zawsze wstawiaj nową transakcję na początku pliku.
+  (advice-add 'ledger-xact-find-slot
+              :override
+              (lambda (_date)
+                (goto-char (point-min))))
 
-(defun my/ledger-bal ()
-  (interactive)
-  (ledger-report "bal" nil))
-
-(with-eval-after-load 'ledger-mode
-  (define-key ledger-mode-map (kbd "C-c b") #'my/ledger-bal))
+  (defun my/ledger-bal ()
+    "Show Ledger balance report."
+    (interactive)
+    (ledger-report "bal" nil)))
 
 ;;; clock
 
@@ -1681,15 +1686,38 @@ reuse it's window, otherwise create new one."
     ;; Łączymy ikony w jeden format
     (format format-string (concat i-attach ))))
 
+
+(with-eval-after-load 'notmuch-tag
+  (defun my-notmuch-tag-with-icon (icon _tag)
+    "Dodaj ICON przed TAG."
+    icon)
+
+  (defun my-notmuch-tag-emacs (tag)
+    (my-notmuch-tag-with-icon
+     (all-the-icons-fileicon "elisp"
+                             :height 0.85
+                             :v-adjust -0.05
+                             :face 'all-the-icons-purple)
+     tag))
+
+  (defun my-notmuch-tag-org (tag)
+    (my-notmuch-tag-with-icon
+     (all-the-icons-fileicon "org"
+                             :height 0.85
+                             :v-adjust -0.05
+                             :face 'all-the-icons-lgreen)
+     tag)))
+
+
 (setq notmuch-tag-formats
-      '(("emacs" (nerd-icons-sucicon "nf-custom-emacs" :face '(:foreground "#9a7ecc")))
-        ("emacs-org" (nerd-icons-sucicon "nf-custom-orgmode" :face '(:foreground "#98be65")))
-        ("emacs-devel" (nerd-icons-mdicon "nf-md-code_tags" :face '(:foreground "#51afef")))
-        ;; Ukrywamy tagi techniczne, bo mają ikony po lewej
+      '(;; Ukrywamy tagi techniczne, bo mają ikony po lewej
         ("unread" "")
         ("attachment" "")
         ("signed" "")
-        ("inbox" "")))
+        ("inbox" "")
+	("emacs-org" (my-notmuch-tag-org tag))
+        ("org"       (my-notmuch-tag-org tag))
+        ("emacs"     (my-notmuch-tag-emacs tag))))
 
 
 (setq notmuch-search-result-format
@@ -2039,8 +2067,8 @@ timestamp."
                      (string= (buffer-name) "*Org Note*")))))
 
 ;; problems with displaying
-;; (use-package spacious-padding)
-;; (spacious-padding-mode)
+(use-package spacious-padding)
+(spacious-padding-mode)
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
