@@ -1665,80 +1665,63 @@ reuse it's window, otherwise create new one."
      ;; Zmienia "Today 14:15" na samo "14:15"
      ((string-match "^Today \\(.*\\)" date)
       (format format-string (match-string 1 date)))
-
       ;; Zmienia "23 mins. ago" na "23 min"
      ((string-match "^\\([0-9]+\\) mins?\\. ago" date)
       (format format-string (concat (match-string 1 date) " min")))
-
-     ;; Dla innych dat (np. starszych) zostawia oryginalny format Notmuch
      (t
       (format format-string date)))))
 
 (defun my-notmuch-status-icons (format-string result)
-  "Sprawdza ukryte tagi wiadomości i generuje ikony w jednej wyrównanej kolumnie."
   (let ((tags (plist-get result :tags))
-        ;; Spacje (zamiast pustego ciągu) zapewnią, że kolumny będą idealnie równe w pionie
         (i-attach " "))
-
-    ;; Przypisujemy odpowiednie znaki, gdy dany tag istnieje
     (when (member "attachment" tags) (setq i-attach "📎"))
-
-    ;; Łączymy ikony w jeden format
     (format format-string (concat i-attach ))))
 
+ (defun my-notmuch-tag-icon (icon-fn icon-name face)
+  "Zwróć ikonę ICON-NAME z ICON-FN i FACE dla tagów Notmuch."
+  (funcall icon-fn icon-name
+           :height 0.85
+           :v-adjust -0.05
+           :face face))
 
-(with-eval-after-load 'notmuch-tag
-  (defun my-notmuch-tag-with-icon (icon _tag)
-    "Dodaj ICON przed TAG."
-    icon)
-
-  (defun my-notmuch-tag-emacs (tag)
-    (my-notmuch-tag-with-icon
-     (all-the-icons-fileicon "elisp"
-                             :height 0.85
-                             :v-adjust -0.05
-                             :face 'all-the-icons-purple)
-     tag))
-
-  (defun my-notmuch-tag-org (tag)
-    (my-notmuch-tag-with-icon
-     (all-the-icons-fileicon "org"
-                             :height 0.85
-                             :v-adjust -0.05
-                             :face 'all-the-icons-lgreen)
-     tag)))
-
+(defun my-notmuch-tags-column (format-string result)
+  "Tagi Notmuch jako stała kolumna."
+  (let* ((tags (plist-get result :tags))
+         (tag-string (notmuch-tag-format-tags tags tags))
+         (width 10)
+         (tag-string
+          (truncate-string-to-width tag-string width 0 ?\s "…")))
+    (format format-string tag-string)))
 
 (setq notmuch-tag-formats
-      '(;; Ukrywamy tagi techniczne, bo mają ikony po lewej
-        ("unread" "")
+      `(("unread"     "")
         ("attachment" "")
-        ("signed" "")
-        ("inbox" "")
-	("emacs-org" (my-notmuch-tag-org tag))
-        ("org"       (my-notmuch-tag-org tag))
-        ("emacs"     (my-notmuch-tag-emacs tag))))
-
+        ("signed"     "")
+	("flagged" "")
+        ("inbox"      "")
+        ("replied"    (my-notmuch-tag-icon #'all-the-icons-faicon
+                                           "reply"
+                                           'all-the-icons-blue))
+        ("sent"       (my-notmuch-tag-icon #'all-the-icons-faicon
+                                           "paper-plane"
+                                           'all-the-icons-lblue))
+        ("emacs-org"  (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                           "org"
+                                           'all-the-icons-lgreen))
+        ,@(mapcar
+           (lambda (tag)
+             `(,tag (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                         "elisp"
+                                         'all-the-icons-purple)))
+           '("emacs" "emacs-devel"))))
 
 (setq notmuch-search-result-format
-      '(
-        ;; 1. Skrócona data (wymaga mniej miejsca, rezerwujemy 10 znaków)
-        (my-notmuch-short-date . "%12s ")
-
-        ;; 2. Nasze nowe ikony statusu (rezerwujemy 4 znaki)
+      '((my-notmuch-short-date . "%12s ")
         (my-notmuch-status-icons . "%-4s ")
-
-        ;; 3. Ilość wiadomości w wątku
+	(my-notmuch-tags-column . "%-8s ")
         ("count" . "%-5s ")
-
-        ;; 4. Autor wiadomości
         ("authors" . "%-20s ")
-
-        ;; 5. Temat (zajmuje pozostałą przestrzeń)
-        ("subject" . "%s ")
-
-        ;; 6. Tagi na samym końcu linii (np. nazwy list mailingowych)
-        ("tags" . "(%s)")))
+	("subject" . "%-90.90s ")))
 
 (defun my/notmuch-open-public-inbox-link (url &rest _)
   "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
