@@ -1197,16 +1197,13 @@ Stole from aweshell"
 
 (use-package doom-themes
   :config
-  (load-theme 'doom-ayu-dark :no-confirm-loading))
-
-(setq doom-themes-enable-bold t
-      doom-themes-enable-italic t)
-
-;; Enable flashing mode-line on errors
-(doom-themes-visual-bell-config)
-
-;; Corrects (and improves) org-mode's native fontification.
-(doom-themes-org-config)
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-ayu-dark :no-confirm-loading)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 
 ;;; toggle-fill-paragraph
