@@ -1695,11 +1695,49 @@ reuse it's window, otherwise create new one."
        (t
         (format format-string date)))))
 
-  (defun my-notmuch-status-icons (format-string result)
-    (let ((tags (plist-get result :tags))
-          (i-attach " "))
-      (when (member "attachment" tags) (setq i-attach "📎"))
-      (format format-string (concat i-attach))))
+  (defun my-notmuch-icons-column (format-string result)
+    "Return fixed-width status/tag icons for a Notmuch search row."
+    (let* ((tags (plist-get result :tags))
+           (icons
+            (concat
+             (my-notmuch-icon-slot
+              (when (member "attachment" tags) "📎")
+              14)
+             (my-notmuch-icon-slot
+              (cond
+               ((member "emacs-org" tags)
+                (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                     "org"
+                                     'all-the-icons-lgreen))
+               ((seq-some (lambda (tag)
+                            (member tag tags))
+                          '("emacs" "emacs-devel"))
+                (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                     "elisp"
+                                     'my-notmuch-elisp-icon)))
+              16)
+             (my-notmuch-icon-slot
+              (when (member "replied" tags)
+                (my-notmuch-tag-icon #'all-the-icons-faicon
+                                     "reply"
+                                     'all-the-icons-blue))
+              18)
+             (my-notmuch-icon-slot
+              (when (member "sent" tags)
+                (my-notmuch-tag-icon #'all-the-icons-faicon
+                                     "paper-plane"
+                                     'all-the-icons-lblue))
+              20))))
+      (format format-string
+              (concat icons
+                      (propertize " " 'display '(space :align-to 29))))))
+
+  (defun my-notmuch-icon-slot (icon column)
+    "Return ICON aligned to absolute COLUMN, or an empty string."
+    (if icon
+        (concat (propertize " " 'display `(space :align-to ,column))
+                icon)
+      ""))
 
   (defun my-notmuch-tag-icon (icon-fn icon-name face)
     "Zwróć ikonę ICON-NAME z ICON-FN i FACE dla tagów Notmuch."
@@ -1708,14 +1746,9 @@ reuse it's window, otherwise create new one."
              :v-adjust -0.05
              :face face))
 
-  (defun my-notmuch-tags-column (format-string result)
-    "Tagi Notmuch jako stała kolumna."
-    (let* ((tags (plist-get result :tags))
-           (tag-string (notmuch-tag-format-tags tags tags))
-           (width 10)
-           (tag-string
-            (truncate-string-to-width tag-string width 0 ?\s "…")))
-      (format format-string tag-string)))
+  (defface my-notmuch-elisp-icon
+    '((t :foreground "MediumPurple1"))
+    "Face for Emacs Lisp icons in Notmuch search rows.")
 
   (defun my/notmuch-open-public-inbox-link (url &rest _)
     "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
@@ -1837,12 +1870,11 @@ reuse it's window, otherwise create new one."
              (lambda (tag)
                `(,tag (my-notmuch-tag-icon #'all-the-icons-fileicon
                                            "elisp"
-                                           'all-the-icons-purple)))
+                                           'my-notmuch-elisp-icon)))
              '("emacs" "emacs-devel")))
         notmuch-search-result-format
         '((my-notmuch-short-date . "%12s ")
-          (my-notmuch-status-icons . "%-4s ")
-          (my-notmuch-tags-column . "%-8s ")
+          (my-notmuch-icons-column . "%s")
           ("count" . "%-5s ")
           ("authors" . "%-20s ")
           ("subject" . "%-90.90s "))
