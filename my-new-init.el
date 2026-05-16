@@ -1690,6 +1690,7 @@ reuse it's window, otherwise create new one."
        :command (list notmuch-command "new")
        :sentinel (lambda (proc event)
                    (when (string= event "finished\n")
+                     (run-hooks 'notmuch-after-tag-change-hook)
                      (notmuch-refresh-all-buffers)
                      (message "notmuch: nowe wiadomości"))))))
 
@@ -1733,7 +1734,6 @@ reuse it's window, otherwise create new one."
           :description description)))))
 
   (defvar my/notmuch-hide-content-types '("text/x-patch" "text/x-diff"))
-  (defvar my/notmuch-never-show-tags '("deleted" "spam"))
 
   (defun my/notmuch-hide-content (args)
     (cl-destructuring-bind (msg part depth . hide) args
@@ -1742,129 +1742,6 @@ reuse it's window, otherwise create new one."
                      (_ (seq-some (lambda (type) (notmuch-match-content-type mime-type type))
                                   my/notmuch-hide-content-types)))
                 t (car hide)))))
-
-  (defun my/notmuch-hidden-message-p (msg)
-    "Return non-nil when MSG should never be displayed."
-    (or (plist-get msg :excluded)
-        (seq-some (lambda (tag)
-                    (member tag (plist-get msg :tags)))
-                  my/notmuch-never-show-tags)))
-
-  (defun my/notmuch-thread-has-hidden-tags-p (result)
-    "Return non-nil when RESULT's thread includes hidden tags."
-    (seq-some (lambda (tag)
-                (member tag (plist-get result :tags)))
-              my/notmuch-never-show-tags))
-
-  (defun my/notmuch-visible-count (format-string result)
-    "Format count without counting hidden-message-only tails."
-    (let* ((matched (plist-get result :matched))
-           (total (if (or (plist-get result :my/notmuch-has-hidden-tags)
-                          (my/notmuch-thread-has-hidden-tags-p result))
-                      matched
-                    (plist-get result :total))))
-      (format format-string (format "[%s/%s]" matched total))))
-
-  (defun my/notmuch-filter-search-result-args (args)
-    "Filter hidden aggregate tags from `notmuch-search-show-result' ARGS."
-    (let* ((result (car args))
-           (filtered-result (copy-sequence result)))
-      (setq filtered-result
-            (plist-put filtered-result
-                       :my/notmuch-has-hidden-tags
-                       (my/notmuch-thread-has-hidden-tags-p result)))
-      (cons (plist-put filtered-result
-                       :tags (seq-difference (plist-get result :tags)
-                                             my/notmuch-never-show-tags
-                                             #'string=))
-            (cdr args))))
-
-  (defun my/notmuch-filter-tree (tree)
-    "Return TREE as a list of visible trees, promoting visible replies."
-    (let* ((msg (car tree))
-           (replies (cadr tree))
-           (visible-replies (my/notmuch-filter-thread replies)))
-      (cond
-       ((and msg (my/notmuch-hidden-message-p msg))
-        visible-replies)
-       ((or msg visible-replies)
-        (list (list msg visible-replies)))
-       (t nil))))
-
-  (defun my/notmuch-filter-thread (thread)
-    "Remove messages that should never be displayed from THREAD."
-    (apply #'append (mapcar #'my/notmuch-filter-tree thread)))
-
-  (defun my/notmuch-filter-forest (forest)
-    "Remove messages that should never be displayed from FOREST."
-    (seq-remove #'null (mapcar #'my/notmuch-filter-thread forest)))
-
-  (defun my/notmuch-filter-show-forest-args (args)
-    "Filter hidden messages from `notmuch-show-insert-forest' ARGS."
-    (list (my/notmuch-filter-forest (car args))))
-
-  (defun my/notmuch-filter-tree-thread-args (args)
-    "Filter hidden messages from `notmuch-tree-insert-forest-thread' ARGS."
-    (list (my/notmuch-filter-thread (car args))))
-
-  (defun my/notmuch-search-result-pos (thread)
-    "Return position of THREAD in the current Notmuch search buffer."
-    (let ((pos nil))
-      (save-excursion
-        (goto-char (point-min))
-        (while (and (not pos) (not (eobp)))
-          (let ((result (notmuch-search-get-result)))
-            (when (and result
-                       (string= (plist-get result :thread) thread))
-              (setq pos (point))))
-          (forward-line 1)))
-      pos))
-
-  (defun my/notmuch-bare-thread-id (query)
-    "Return bare thread id from a Notmuch thread QUERY."
-    (when (string-match "\\`thread:\\(.+\\)\\'" query)
-      (match-string 1 query)))
-
-  (defun my/notmuch-show-visible-read-query ()
-    "Return the query for visible messages that should be marked read."
-    (if (string-match-p "\\`thread:" notmuch-show-thread-id)
-        notmuch-show-thread-id
-      (notmuch-show-get-query)))
-
-  (defun my/notmuch-parent-search-mark-thread-read (&optional unread)
-    "Remove unread highlighting from this thread in its parent search buffer."
-    (when (and (not unread)
-               (bound-and-true-p notmuch-show-parent-buffer)
-               (buffer-live-p notmuch-show-parent-buffer))
-      (when-let ((thread (my/notmuch-bare-thread-id notmuch-show-thread-id)))
-        (let ((parent notmuch-show-parent-buffer))
-          (with-current-buffer parent
-            (when (eq major-mode 'notmuch-search-mode)
-              (when-let* ((pos (my/notmuch-search-result-pos thread))
-                          (result (notmuch-search-get-result pos)))
-                (notmuch-search-update-result
-                 (plist-put (copy-sequence result)
-                            :tags (remove "unread" (plist-get result :tags)))
-                 pos))))))))
-
-  (defvar-local my/notmuch-show-marked-visible-thread-read nil)
-
-  (defun my/notmuch-show-mark-visible-thread-read (_start _end)
-    "Mark all non-hidden messages in the current thread as read."
-    (unless my/notmuch-show-marked-visible-thread-read
-      (setq my/notmuch-show-marked-visible-thread-read t)
-      (when notmuch-show-mark-read-tags
-        (notmuch-tag
-         (format "(%s) and tag:unread and not tag:deleted and not tag:spam"
-                 (my/notmuch-show-visible-read-query))
-         notmuch-show-mark-read-tags
-         t)
-        (notmuch-show-mapc
-         (lambda ()
-           (let ((tags (notmuch-show-get-tags)))
-             (when (member "unread" tags)
-               (notmuch-show-set-tags (remove "unread" tags)))))))
-      (my/notmuch-parent-search-mark-thread-read)))
 
   (defun capture-mail()
     "Capture mail to org mode."
@@ -1885,7 +1762,6 @@ reuse it's window, otherwise create new one."
                    (concat "↦ " (notmuch-tree-clean-address to))
                  author))
        'face face)))
-
   :bind
   (:map global-map
 	("C-c m" . notmuch-hello)
@@ -1899,7 +1775,6 @@ reuse it's window, otherwise create new one."
   :init
   (setq-default notmuch-search-oldest-first nil)
   (setq notmuch-show-logo nil
-        notmuch-show-mark-read-function #'my/notmuch-show-mark-visible-thread-read
         notmuch-fcc-dirs "sent +sent -unread"
         notmuch-tag-formats
         `(("unread"     "")
@@ -1925,7 +1800,7 @@ reuse it's window, otherwise create new one."
         notmuch-search-result-format
         '((my-notmuch-short-date . "%12s ")
           (my-notmuch-icons-column . "%s")
-          (my/notmuch-visible-count . "%-5s ")
+          ("count" . "%-5s ")
           ("authors" . "%-20s ")
           ("subject" . "%-90.90s "))
         browse-url-handlers
@@ -1935,23 +1810,23 @@ reuse it's window, otherwise create new one."
           ("\\`https?://yhetil\\.org/\\(emacs\\|orgmode\\)/" . my/notmuch-open-public-inbox-link))
         display-time-mail-string ""
         notmuch-saved-searches
-        '((:name "inbox" :query "tag:inbox and not tag:deleted and not tag:spam" :key
+        '((:name "inbox" :query "tag:inbox" :key
                  "i")
-          (:name "todo" :query "tag:todo and not tag:deleted and not tag:spam" :key
+          (:name "todo" :query "tag:todo" :key
                  "t")
-          (:name "emacs" :query "tag:emacs and not tag:deleted and not tag:spam" :key
+          (:name "emacs" :query "tag:emacs" :key
                  "e")
-          (:name "emacs-org" :query "tag:emacs-org and not tag:deleted and not tag:spam" :key
+          (:name "emacs-org" :query "tag:emacs-org" :key
                  "o")
-          (:name "flagged" :query "tag:flagged and not tag:deleted and not tag:spam" :key
+          (:name "flagged" :query "tag:flagged" :key
                  "f")
           (:name "sent" :query "tag:sent" :key
                  "s")
           (:name "drafts" :query "tag:draft" :key
                  "d")
-          (:name "work" :query "tag:work and not tag:deleted and not tag:spam" :key
+          (:name "work" :query "tag:work" :key
                  "w")
-          (:name "all mail (last year)" :query "date:1Y.. and not tag:deleted and not tag:spam" :key "a"))
+          (:name "all mail (last year)" :query "date:1Y.." :key "a"))
         notmuch-unthreaded-result-format
         '(("date" . "%12s  ")
           (my/notmuch-unthreaded-show-recipient-if-sent . "%-20.20s")
@@ -1966,14 +1841,7 @@ reuse it's window, otherwise create new one."
 	      (lambda (&optional beg end)
 		"Mark thread as spam"
 		(interactive (notmuch-interactive-region))
-		(notmuch-search-tag (list "+deleted" "-inbox" "-unread") beg end)))
-
-  (advice-add 'notmuch-show-insert-forest
-              :filter-args #'my/notmuch-filter-show-forest-args)
-  (advice-add 'notmuch-tree-insert-forest-thread
-              :filter-args #'my/notmuch-filter-tree-thread-args)
-  (advice-add 'notmuch-search-show-result
-              :filter-args #'my/notmuch-filter-search-result-args)
+		(notmuch-search-tag (list "+deleted" "-inbox") beg end)))
 
   (define-key notmuch-show-mode-map "b"
 	      (lambda (&optional address)
