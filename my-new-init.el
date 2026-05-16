@@ -3686,10 +3686,11 @@ current specifications.  This function also sets
     (propertize value 'face 'org-todo))))
 
 (defun my/org-columns--item-outline-indent ()
-  "Return indentation based on current Org heading level."
-  (if (org-at-heading-p)
-      (make-string (1- (org-current-level)) ?\s)
-    ""))
+  "Return indentation for current Org heading, respecting `org-odd-levels-only'."
+  (save-excursion
+    (when (ignore-errors (org-back-to-heading t) t)
+      (make-string (* 2 (1- (org-reduced-level (org-current-level))))
+                   ?\s))))
 
 (defun my/org-columns--date-prefix-face (date weekday)
   "Face for the \"MM-DD Day\" prefix."
@@ -3826,9 +3827,13 @@ and week rows like \"5-20\" or \"3\\4-14\"."
 ;;;; icon for heading text or LOGBOOK
 
 (defun my/org-columns--date-row-p (value)
-  "Return non-nil when VALUE looks like a day row, e.g. 15 Fri."
+  "Return non-nil when VALUE looks like a day row.
+
+Accept both \"19 Sun\" and \"05-19 Sun\" forms."
   (string-match-p
    (rx bos
+       (* blank)
+       (optional (= 2 digit) "-")
        (= 2 digit)
        " "
        (or "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
@@ -3838,19 +3843,43 @@ and week rows like \"5-20\" or \"3\\4-14\"."
 (defun my/org-columns--has-entry-text-p ()
   "Return non-nil when current Org heading has text after metadata.
 
-Skips planning lines and PROPERTIES drawer, but does not skip normal
-content below the heading."
+Skips planning lines, empty lines and PROPERTIES drawer, but counts
+LOGBOOK and normal body text."
   (save-excursion
-    (when (ignore-errors (org-back-to-heading t) t)
-      (let ((end (save-excursion
-                   (or (outline-next-heading)
-                       (goto-char (point-max)))
-                   (point))))
-        ;; Skip SCHEDULED/DEADLINE/CLOSED and :PROPERTIES:.
-        (org-end-of-meta-data)
+    (org-with-wide-buffer
+      (when (ignore-errors (org-back-to-heading t) t)
+        (let ((end (save-excursion
+                     (or (outline-next-heading)
+                         (goto-char (point-max)))
+                     (point))))
+          (forward-line 1)
 
-        ;; Is there anything non-blank before the next heading?
-        (re-search-forward "[^[:space:]\n]" end t)))))
+          ;; Skip empty lines, planning lines and PROPERTIES drawer only.
+          (catch 'done
+            (while (< (point) end)
+              (cond
+               ;; Empty line.
+               ((looking-at-p "^[ \t]*$")
+                (forward-line 1))
+
+               ;; SCHEDULED / DEADLINE / CLOSED.
+               ((and (boundp 'org-planning-line-re)
+                     (looking-at-p org-planning-line-re))
+                (forward-line 1))
+
+               ;; PROPERTIES drawer only.
+               ((looking-at-p "^[ \t]*:PROPERTIES:[ \t]*$")
+                (if (re-search-forward "^[ \t]*:END:[ \t]*$" end t)
+                    (forward-line 1)
+                  (goto-char end)))
+
+               ;; Stop skipping.
+               (t
+                (throw 'done nil)))))
+
+          ;; Anything non-blank before next heading counts.
+          (re-search-forward "[^[:space:]\n]" end t))))))
+
 
 (defun my/org-columns--logbook-icon ()
   "Return a small LOGBOOK indicator for Org columns."
