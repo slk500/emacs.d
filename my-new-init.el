@@ -1,7 +1,5 @@
 ;;; ...  -*- lexical-binding: t -*-
 
-(setq org-ellipsis " ")
-
 ;;; dump-jump
 
 (defun slava/find-function-at-point ()
