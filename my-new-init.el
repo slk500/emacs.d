@@ -974,13 +974,13 @@ The DWIM behaviour of this command is as follows:
 
 ;;; clock
 
-(use-package org-mru-clock)
-(setq org-mru-clock-files #'org-agenda-files)
-
-(defun my/org-mru-clock-format (s)
-  (replace-regexp-in-string " ([^()]+)$" "" s))
-
-(setq org-mru-clock-format-function #'my/org-mru-clock-format)
+(use-package org-mru-clock
+  :preface
+  (defun my/org-mru-clock-format (s)
+    (replace-regexp-in-string " ([^()]+)$" "" s))
+  :config
+  (setq org-mru-clock-files #'org-agenda-files
+        org-mru-clock-format-function #'my/org-mru-clock-format))
 
 (defun my-org-clock-mode-line-both (&rest _)
   "Show in mode line: task name | current session time | today's total time."
