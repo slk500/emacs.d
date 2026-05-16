@@ -2288,7 +2288,6 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 	      ("C-v" . org-paste-special))
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
-  (add-hook 'org-mode-hook 'org-indent-mode)
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
   (use-package org-contrib)
   (setq org-M-RET-may-split-line '((default . nil)) ;; don't split line, just create the new heading
