@@ -1677,103 +1677,134 @@ reuse it's window, otherwise create new one."
 ;; (advice-add 'notmuch-show-insert-headerline
 ;;             :filter-args #'notmuch-show/format-date)
 
-(defun my-notmuch-short-date (format-string result)
-  "Skraca format daty dla wyników Notmuch, zostawiając samą godzinę dla dzisiejszych."
-  (let* ((date (plist-get result :date_relative))
-         (date (replace-regexp-in-string "\\." "" date)))
-    (cond
-     ;; Zmienia "Today 14:15" na samo "14:15"
-     ((string-match "^Today \\(.*\\)" date)
-      (format format-string (match-string 1 date)))
-
-     ;; Zmienia "23 mins ago" na "23 min"
-     ((string-match "^\\([0-9]+\\) mins? ago" date)
-      (format format-string (concat (match-string 1 date) " min")))
-
-     ;; Zmienia "Mon." na "Mon", "Tue." na "Tue" itd.
-     (t
-      (format format-string date)))))
-
-(defun my-notmuch-status-icons (format-string result)
-  (let ((tags (plist-get result :tags))
-        (i-attach " "))
-    (when (member "attachment" tags) (setq i-attach "📎"))
-    (format format-string (concat i-attach ))))
-
- (defun my-notmuch-tag-icon (icon-fn icon-name face)
-  "Zwróć ikonę ICON-NAME z ICON-FN i FACE dla tagów Notmuch."
-  (funcall icon-fn icon-name
-           :height 0.85
-           :v-adjust -0.05
-           :face face))
-
-(defun my-notmuch-tags-column (format-string result)
-  "Tagi Notmuch jako stała kolumna."
-  (let* ((tags (plist-get result :tags))
-         (tag-string (notmuch-tag-format-tags tags tags))
-         (width 10)
-         (tag-string
-          (truncate-string-to-width tag-string width 0 ?\s "…")))
-    (format format-string tag-string)))
-
-(setq notmuch-tag-formats
-      `(("unread"     "")
-        ("attachment" "")
-        ("signed"     "")
-	("flagged" "")
-        ("inbox"      "")
-        ("replied"    (my-notmuch-tag-icon #'all-the-icons-faicon
-                                           "reply"
-                                           'all-the-icons-blue))
-        ("sent"       (my-notmuch-tag-icon #'all-the-icons-faicon
-                                           "paper-plane"
-                                           'all-the-icons-lblue))
-        ("emacs-org"  (my-notmuch-tag-icon #'all-the-icons-fileicon
-                                           "org"
-                                           'all-the-icons-lgreen))
-        ,@(mapcar
-           (lambda (tag)
-             `(,tag (my-notmuch-tag-icon #'all-the-icons-fileicon
-                                         "elisp"
-                                         'all-the-icons-purple)))
-           '("emacs" "emacs-devel"))))
-
-(setq notmuch-search-result-format
-      '((my-notmuch-short-date . "%12s ")
-        (my-notmuch-status-icons . "%-4s ")
-	(my-notmuch-tags-column . "%-8s ")
-        ("count" . "%-5s ")
-        ("authors" . "%-20s ")
-	("subject" . "%-90.90s ")))
-
-(defun my/notmuch-open-public-inbox-link (url &rest _)
-  "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
-  (if (string-match "/\\([^/]+@[^/]+\\)/?\\(?:#.*\\)?$" url)
-      (notmuch-show (concat "id:" (match-string 1 url)))
-    (browse-url-default-browser url)))
-
-(setq browse-url-handlers
-      '(("\\`https?://list\\.orgmode\\.org/" . my/notmuch-open-public-inbox-link)
-        ("\\`https?://lists\\.gnu\\.org/archive/html/\\(emacs-orgmode\\|help-gnu-emacs\\|emacs-devel\\|bug-gnu-emacs\\)/"
-         . my/notmuch-open-public-inbox-link)
-        ("\\`https?://yhetil\\.org/\\(emacs\\|orgmode\\)/" . my/notmuch-open-public-inbox-link)))
-
-(setq display-time-mail-string "") ;; remove "Mail" in mode line
-
-(defun my/notmuch-poll-async ()
-  (interactive)
-  (let ((buf (get-buffer-create " *notmuch-poll*")))
-    (make-process
-     :name "notmuch-poll"
-     :buffer buf
-     :command (list notmuch-command "new")
-     :sentinel (lambda (proc event)
-                 (when (string= event "finished\n")
-                   (run-hooks 'notmuch-after-tag-change-hook)
-                   (notmuch-refresh-all-buffers)
-                   (message "notmuch: nowe wiadomości"))))))
-
 (use-package notmuch
+  :preface
+  (defun my-notmuch-short-date (format-string result)
+    "Skraca format daty dla wyników Notmuch, zostawiając samą godzinę dla dzisiejszych."
+    (let* ((date (plist-get result :date_relative))
+           (date (replace-regexp-in-string "\\." "" date)))
+      (cond
+       ;; Zmienia "Today 14:15" na samo "14:15"
+       ((string-match "^Today \\(.*\\)" date)
+        (format format-string (match-string 1 date)))
+
+       ;; Zmienia "23 mins ago" na "23 min"
+       ((string-match "^\\([0-9]+\\) mins? ago" date)
+        (format format-string (concat (match-string 1 date) " min")))
+
+       ;; Zmienia "Mon." na "Mon", "Tue." na "Tue" itd.
+       (t
+        (format format-string date)))))
+
+  (defun my-notmuch-status-icons (format-string result)
+    (let ((tags (plist-get result :tags))
+          (i-attach " "))
+      (when (member "attachment" tags) (setq i-attach "📎"))
+      (format format-string (concat i-attach))))
+
+  (defun my-notmuch-tag-icon (icon-fn icon-name face)
+    "Zwróć ikonę ICON-NAME z ICON-FN i FACE dla tagów Notmuch."
+    (funcall icon-fn icon-name
+             :height 0.85
+             :v-adjust -0.05
+             :face face))
+
+  (defun my-notmuch-tags-column (format-string result)
+    "Tagi Notmuch jako stała kolumna."
+    (let* ((tags (plist-get result :tags))
+           (tag-string (notmuch-tag-format-tags tags tags))
+           (width 10)
+           (tag-string
+            (truncate-string-to-width tag-string width 0 ?\s "…")))
+      (format format-string tag-string)))
+
+  (defun my/notmuch-open-public-inbox-link (url &rest _)
+    "Otwórz link z public-inbox w notmuch zamiast w przeglądarce."
+    (if (string-match "/\\([^/]+@[^/]+\\)/?\\(?:#.*\\)?$" url)
+        (notmuch-show (concat "id:" (match-string 1 url)))
+      (browse-url-default-browser url)))
+
+  (defun my/notmuch-poll-async ()
+    (interactive)
+    (let ((buf (get-buffer-create " *notmuch-poll*")))
+      (make-process
+       :name "notmuch-poll"
+       :buffer buf
+       :command (list notmuch-command "new")
+       :sentinel (lambda (proc event)
+                   (when (string= event "finished\n")
+                     (run-hooks 'notmuch-after-tag-change-hook)
+                     (notmuch-refresh-all-buffers)
+                     (message "notmuch: nowe wiadomości"))))))
+
+  (defun notmuch-show-jump-to-latest ()
+    "Jump to the message in the current thread with the latest timestamp."
+    (let ((timestamp 0)
+          latest)
+      (notmuch-show-mapc
+       (lambda () (let ((ts (notmuch-show-get-prop :timestamp)))
+                    (when (> ts timestamp)
+                      (setq timestamp ts
+                            latest (point))))))
+      (if latest
+          (goto-char latest)
+        (error "Cannot find latest message."))))
+
+  (defun org-notmuch-open (id)
+    "Visit the notmuch message or thread with id ID."
+    (notmuch-show id))
+
+  (defun org-notmuch-store-link ()
+    "Store a link to a notmuch mail message."
+    (pcase major-mode
+      ('notmuch-show-mode
+       ;; Store link to the current message
+       (let* ((id (notmuch-show-get-message-id))
+              (link (concat "notmuch:" id))
+              (description (format "Mail: %s" (notmuch-show-get-subject))))
+         (org-store-link-props
+          :type "notmuch"
+          :link link
+          :description description)))
+      ('notmuch-search-mode
+       ;; Store link to the thread on the current line
+       (let* ((id (notmuch-search-find-thread-id))
+              (link (concat "notmuch:" id))
+              (description (format "Mail: %s" (notmuch-search-find-subject))))
+         (org-store-link-props
+          :type "notmuch"
+          :link link
+          :description description)))))
+
+  (defvar my/notmuch-hide-content-types '("text/x-patch" "text/x-diff"))
+
+  (defun my/notmuch-hide-content (args)
+    (cl-destructuring-bind (msg part depth . hide) args
+      (list msg part depth
+            (if-let ((mime-type (notmuch-show-mime-type part))
+                     (_ (seq-some (lambda (type) (notmuch-match-content-type mime-type type))
+                                  my/notmuch-hide-content-types)))
+                t (car hide)))))
+
+  (defun capture-mail()
+    "Capture mail to org mode."
+    (interactive)
+    (org-store-link nil)
+    (org-capture nil "r"))
+
+  (defun my/notmuch-unthreaded-show-recipient-if-sent (format-string result)
+    (let* ((headers (plist-get result :headers))
+           (to (plist-get headers :To))
+           (author (plist-get headers :From))
+           (face (if (plist-get result :match)
+                     'notmuch-tree-match-author-face
+                   'notmuch-tree-no-match-author-face)))
+      (propertize
+       (format format-string
+               (if (string-match "slawomir.grochowski@gmail.com" author)
+                   (concat "↦ " (notmuch-tree-clean-address to))
+                 author))
+       'face face)))
   :bind
   (:map global-map
 	("C-c m" . notmuch-hello)
@@ -1786,7 +1817,69 @@ reuse it's window, otherwise create new one."
 	("G" . my/notmuch-poll-async))
   :init
   (setq-default notmuch-search-oldest-first nil)
-  (setq notmuch-show-logo nil)
+  (setq notmuch-show-logo nil
+        notmuch-fcc-dirs "sent +sent -unread"
+        notmuch-tag-formats
+        `(("unread"     "")
+          ("attachment" "")
+          ("signed"     "")
+          ("flagged" "")
+          ("inbox"      "")
+          ("replied"    (my-notmuch-tag-icon #'all-the-icons-faicon
+                                             "reply"
+                                             'all-the-icons-blue))
+          ("sent"       (my-notmuch-tag-icon #'all-the-icons-faicon
+                                             "paper-plane"
+                                             'all-the-icons-lblue))
+          ("emacs-org"  (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                             "org"
+                                             'all-the-icons-lgreen))
+          ,@(mapcar
+             (lambda (tag)
+               `(,tag (my-notmuch-tag-icon #'all-the-icons-fileicon
+                                           "elisp"
+                                           'all-the-icons-purple)))
+             '("emacs" "emacs-devel")))
+        notmuch-search-result-format
+        '((my-notmuch-short-date . "%12s ")
+          (my-notmuch-status-icons . "%-4s ")
+          (my-notmuch-tags-column . "%-8s ")
+          ("count" . "%-5s ")
+          ("authors" . "%-20s ")
+          ("subject" . "%-90.90s "))
+        browse-url-handlers
+        '(("\\`https?://list\\.orgmode\\.org/" . my/notmuch-open-public-inbox-link)
+          ("\\`https?://lists\\.gnu\\.org/archive/html/\\(emacs-orgmode\\|help-gnu-emacs\\|emacs-devel\\|bug-gnu-emacs\\)/"
+           . my/notmuch-open-public-inbox-link)
+          ("\\`https?://yhetil\\.org/\\(emacs\\|orgmode\\)/" . my/notmuch-open-public-inbox-link))
+        display-time-mail-string ""
+        notmuch-saved-searches
+        '((:name "inbox" :query "tag:inbox" :key
+                 "i")
+          (:name "todo" :query "tag:todo" :key
+                 "t")
+          (:name "emacs" :query "tag:emacs" :key
+                 "e")
+          (:name "emacs-org" :query "tag:emacs-org" :key
+                 "o")
+          (:name "flagged" :query "tag:flagged" :key
+                 "f")
+          (:name "sent" :query "tag:sent" :key
+                 "s")
+          (:name "drafts" :query "tag:draft" :key
+                 "d")
+          (:name "work" :query "tag:work" :key
+                 "w")
+          (:name "all mail (last year)" :query "date:1Y.." :key "a"))
+        notmuch-unthreaded-result-format
+        '(("date" . "%12s  ")
+          (my/notmuch-unthreaded-show-recipient-if-sent . "%-20.20s")
+          ((("subject" . "%s"))
+           . " %-54s ")
+          ("tags" . "(%s)")))
+  (org-link-set-parameters "notmuch"
+			   :follow 'org-notmuch-open
+			   :store 'org-notmuch-store-link)
   :config
   (keymap-set notmuch-search-mode-map "<delete>"
 	      (lambda (&optional beg end)
@@ -1799,28 +1892,9 @@ reuse it's window, otherwise create new one."
 		"Bounce the current message."
 		(interactive "sBounce To: ")
 		(notmuch-show-view-raw-message)
-		(message-resend address))))
+		(message-resend address)))
 
-(setq notmuch-fcc-dirs "sent +sent -unread")
-
- (setq notmuch-saved-searches
-   '((:name "inbox" :query "tag:inbox" :key
-	    "i")
-     (:name "todo" :query "tag:todo" :key
-	    "t")
-     (:name "emacs" :query "tag:emacs" :key
-	    "e")
-     (:name "emacs-org" :query "tag:emacs-org" :key
-	    "o")
-     (:name "flagged" :query "tag:flagged" :key
-	    "f")
-     (:name "sent" :query "tag:sent" :key
-	    "s")
-     (:name "drafts" :query "tag:draft" :key
-	    "d")
-     (:name "work" :query "tag:work" :key
-	    "w")
-     (:name "all mail (last year)" :query "date:1Y.." :key "a")))
+  (advice-add 'notmuch-show-insert-bodypart :filter-args 'my/notmuch-hide-content))
 
 (setq message-send-mail-function 'smtpmail-send-it
       send-mail-function 'smtpmail-send-it
@@ -1841,56 +1915,6 @@ reuse it's window, otherwise create new one."
       auth-source-debug t)
 (setq auth-source-do-cache nil)
 
-;;;; jump to latest
-
-(defun notmuch-show-jump-to-latest ()
-  "Jump to the message in the current thread with the latest
-timestamp."
-  (let ((timestamp 0)
-	    latest)
-    (notmuch-show-mapc
-     (lambda () (let ((ts (notmuch-show-get-prop :timestamp)))
-		      (when (> ts timestamp)
-			(setq timestamp ts
-			      latest (point))))))
-    (if latest
-	    (goto-char latest)
-      (error "Cannot find latest message."))))
-
-;;;; store link
-;; (org-add-link-type "notmuch" 'org-notmuch-open)
-;; (add-hook 'org-store-link-functions 'org-notmuch-store-link)
-
-(org-link-set-parameters "notmuch"
-			 :follow 'org-notmuch-open
-			 :store 'org-notmuch-store-link)
-
-(defun org-notmuch-open (id)
-  "Visit the notmuch message or thread with id ID."
-  (notmuch-show id))
-
-(defun org-notmuch-store-link ()
-  "Store a link to a notmuch mail message."
-  (pcase major-mode
-    ('notmuch-show-mode
-     ;; Store link to the current message
-     (let* ((id (notmuch-show-get-message-id))
-	    (link (concat "notmuch:" id))
-	    (description (format "Mail: %s" (notmuch-show-get-subject))))
-       (org-store-link-props
-	:type "notmuch"
-	:link link
-	:description description)))
-    ('notmuch-search-mode
-     ;; Store link to the thread on the current line
-     (let* ((id (notmuch-search-find-thread-id))
-	    (link (concat "notmuch:" id))
-	    (description (format "Mail: %s" (notmuch-search-find-subject))))
-       (org-store-link-props
-	:type "notmuch"
-	:link link
-	:description description)))))
-
 ;;;; date display
 
 ;; (defun notmuch-show/format-date (&rest args)
@@ -1906,54 +1930,9 @@ timestamp."
 
 ;; (advice-add #'notmuch-show-insert-headerline :filter-args #'notmuch-show/format-date)
 
-;;;; hide patches
-
-  (advice-add 'notmuch-show-insert-bodypart :filter-args 'my/notmuch-hide-content)
-
-  (defvar my/notmuch-hide-content-types '("text/x-patch" "text/x-diff"))
-
-  (defun my/notmuch-hide-content (args)
-    (cl-destructuring-bind (msg part depth . hide) args
-      (list msg part depth
-            (if-let ((mime-type (notmuch-show-mime-type part))
-                     (_ (seq-some (lambda (type) (notmuch-match-content-type mime-type type))
-                                  my/notmuch-hide-content-types)))
-                t (car hide)))))
-
-;;;; org-capture
-
-(defun capture-mail()
-  "Capture mail to org mode."
-  (interactive)
-  (org-store-link nil)
-  (org-capture nil "r"))
-
 ;;;; using org-mode in composing an email
 
 (use-package org-mime)
-
-;;;; see the recipient address instead of your address when listing sent messages
-
-(defun my/notmuch-unthreaded-show-recipient-if-sent (format-string result)
-(let* ((headers (plist-get result :headers))
-       (to (plist-get headers :To))
-       (author (plist-get headers :From))
-       (face (if (plist-get result :match)
-                 'notmuch-tree-match-author-face
-               'notmuch-tree-no-match-author-face)))
-  (propertize
-   (format format-string
-           (if (string-match "slawomir.grochowski@gmail.com" author)
-               (concat "↦ " (notmuch-tree-clean-address to))
-             author))
-   'face face)))
-
-(setq notmuch-unthreaded-result-format
-      '(("date" . "%12s  ")
-        (my/notmuch-unthreaded-show-recipient-if-sent . "%-20.20s")
-        ((("subject" . "%s"))
-         . " %-54s ")
-        ("tags" . "(%s)")))
 
 ;;;; avoid forgetting the subject
 
