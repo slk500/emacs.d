@@ -1249,46 +1249,46 @@ Stole from aweshell"
 
 (use-package gptel
   :defer t ;; because .auth should be decrypt first (gptel-api-key-from-auth-source)
+  :preface
+  (defun my/gptel-fast-reply ()
+    "Automatyzuje gptel-send: pyta o instrukcję, wysyła bieżący bufor do *scratch*."
+    (interactive)
+    (let* ((user-instruction (read-string "Instrukcja (np. 'odpisz krótko'): "))
+           (target-buffer (get-buffer-create "*scratch*")))
+      ;; Ustawiamy parametry tymczasowo dla tego jednego wywołania
+      (let ((gptel-buffer target-buffer)           ;; Gdzie ma trafić odpowiedź
+            (gptel--system-message user-instruction)) ;; Twoja instrukcja (zamiast 'd')
+        (gptel-send)
+        (message "Wysyłam do *scratch* z instrukcją: %s" user-instruction)
+        ;; Opcjonalnie: od razu przełącz na scratch, żeby widzieć jak pisze
+        (display-buffer target-buffer))))
+
+  (defun my/gptel-ultra-reply ()
+    "Wysyła maila do GPT z predefiniowanym System Message i kontekstem do *scratch*."
+    (interactive)
+    (let* ((moj-system-prompt "Jesteś moim asystentem. Odpowiadaj zwięźle, profesjonalnie, po angielsku. Unikaj lania wody.")
+           (instrukcja-dla-maila (read-string "Szybki hint (np. 'odmów grzecznie'): "))
+           (target-buffer (get-buffer-create "*scratch*")))
+
+      (let ((gptel--system-message moj-system-prompt) ;; Stała rola AI
+            (gptel-buffer target-buffer))             ;; Cel: scratch
+
+        ;; Wysyłamy wiadomość.
+        ;; Jako treść idzie to, co masz w buforze + Twoja szybka instrukcja na początku.
+        (gptel-send (concat instrukcja-dla-maila "\n\n--- TREŚĆ MAILA ---\n"))
+
+        (message "GPT pracuje w *scratch*...")
+        (display-buffer target-buffer))))
   :hook (gptel-mode . visual-line-mode)
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-model 'deepseek-v4-flash
 	gptel-backend (gptel-make-deepseek "DeepSeek"
-			:stream t
-			:key #'gptel-api-key-from-auth-source))
+				:stream t
+				:key #'gptel-api-key-from-auth-source))
   (gptel-make-openai "ChatGPT"
     :key #'gptel-api-key-from-auth-source
     :models '(gpt-4o gpt-4o-mini)))
-
-(defun my/gptel-fast-reply ()
-  "Automatyzuje gptel-send: pyta o instrukcję, wysyła bieżący bufor do *scratch*."
-  (interactive)
-  (let* ((user-instruction (read-string "Instrukcja (np. 'odpisz krótko'): "))
-         (target-buffer (get-buffer-create "*scratch*")))
-    ;; Ustawiamy parametry tymczasowo dla tego jednego wywołania
-    (let ((gptel-buffer target-buffer)           ;; Gdzie ma trafić odpowiedź
-          (gptel--system-message user-instruction)) ;; Twoja instrukcja (zamiast 'd')
-      (gptel-send)
-      (message "Wysyłam do *scratch* z instrukcją: %s" user-instruction)
-      ;; Opcjonalnie: od razu przełącz na scratch, żeby widzieć jak pisze
-      (display-buffer target-buffer))))
-
-(defun my/gptel-ultra-reply ()
-  "Wysyła maila do GPT z predefiniowanym System Message i kontekstem do *scratch*."
-  (interactive)
-  (let* ((moj-system-prompt "Jesteś moim asystentem. Odpowiadaj zwięźle, profesjonalnie, po angielsku. Unikaj lania wody.")
-         (instrukcja-dla-maila (read-string "Szybki hint (np. 'odmów grzecznie'): "))
-         (target-buffer (get-buffer-create "*scratch*")))
-
-    (let ((gptel--system-message moj-system-prompt) ;; Stała rola AI
-          (gptel-buffer target-buffer))             ;; Cel: scratch
-
-      ;; Wysyłamy wiadomość.
-      ;; Jako treść idzie to, co masz w buforze + Twoja szybka instrukcja na początku.
-      (gptel-send (concat instrukcja-dla-maila "\n\n--- TREŚĆ MAILA ---\n"))
-
-      (message "GPT pracuje w *scratch*...")
-      (display-buffer target-buffer))))
 
 ;;; tetris
 
