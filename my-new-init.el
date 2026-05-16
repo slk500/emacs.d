@@ -1555,8 +1555,9 @@ reuse it's window, otherwise create new one."
 
 ;;;; langtool
 
-(use-package langtool)
-(setq langtool-language-tool-jar "~/apps/LanguageTool-6.4/languagetool-commandline.jar")
+(use-package langtool
+  :config
+  (setq langtool-language-tool-jar "~/apps/LanguageTool-6.4/languagetool-commandline.jar"))
 
 ;;; moves the point to the newly created window after splitting
 
