@@ -578,9 +578,9 @@ days from start up to start+N-1, displayed in reverse (newest first)."
 
 (use-package nerd-icons)
 
-(use-package wttrin)
-
-(setq wttrin-default-locations '("Warsaw, PL"))
+(use-package wttrin
+  :config
+  (setq wttrin-default-locations '("Warsaw, PL")))
 
 ;;; kill all buffers
 
