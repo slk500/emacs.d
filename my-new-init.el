@@ -2618,9 +2618,9 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 (use-package jinx
   :straight (:host github :repo "minad/jinx")
   :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages)))
-
-(setq jinx-languages "pl_PL en_US")
+         ("C-M-$" . jinx-languages))
+  :config
+  (setq jinx-languages "pl_PL en_US"))
 
 ;;; skip system buffers when cycling
 
