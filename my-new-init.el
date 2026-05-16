@@ -2300,7 +2300,6 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 	org-fold-core-style 'overlays
 	org-hide-emphasis-markers t
 	org-log-done 'time
-	org-log-reschudle 'time
 	org-log-redeadline 'time
 	org-log-into-drawer t
 	org-use-fast-todo-selection 'expert ;; todo selection appear in the smaller via minibuffer
@@ -2334,43 +2333,19 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 
 ;;;; org-note
 
-;; remove Insert note for this entry.
-;; Znalazłem funkcje ale jest ona wpisana na sztywno
-;; więc musze skopiować całą funkcję i zmienić to jedno miejsce
+(defun my/org-log-note-remove-finish-hint (&rest _)
+  "Remove Org's extra finish/cancel hint from the log note buffer."
+  (when (string= (buffer-name) "*Org Note*")
+    (save-excursion
+      (goto-char (point-min))
+      (when (looking-at-p "# Insert note for ")
+        (forward-line 1)
+        (when (looking-at-p "# Finish with C-c C-c, or cancel with C-c C-k\\.")
+          (delete-region (line-beginning-position)
+                         (line-beginning-position 2)))))))
 
-(defun org-add-log-note (&optional _purpose)
-  "Pop up a window for taking a note, and add this note later."
-  (when (and (equal org-log-note-this-command this-command)
-             (= org-log-note-recursion-depth (recursion-depth)))
-    (remove-hook 'post-command-hook 'org-add-log-note)
-    (setq org-log-setup nil)
-    (setq org-log-note-window-configuration (current-window-configuration))
-    (move-marker org-log-note-return-to (point))
-    (pop-to-buffer (marker-buffer org-log-note-marker) '(org-display-buffer-full-frame))
-    (goto-char org-log-note-marker)
-    (pop-to-buffer "*Org Note*" '(org-display-buffer-split))
-    (erase-buffer)
-    (if (memq org-log-note-how '(time state))
-        (org-store-log-note)
-      (let ((org-inhibit-startup t)) (org-mode))
-      (insert (format "# Insert note for %s.\n\n"
-                      (cl-case org-log-note-purpose
-                        (clock-out "stopped clock")
-                        (done  "closed todo item")
-                        (reschedule "rescheduling")
-                        (delschedule "no longer scheduled")
-                        (redeadline "changing deadline")
-                        (deldeadline "removing deadline")
-                        (refile "refiling")
-                        (note "this entry")
-                        (state
-                         (format "state change from \"%s\" to \"%s\""
-                                 (or org-log-note-previous-state "")
-                                 (or org-log-note-state "")))
-                        (t (error "This should not happen")))))
-      (when org-log-note-extra (insert org-log-note-extra))
-      (setq-local org-finish-function 'org-store-log-note)
-      (run-hooks 'org-log-buffer-setup-hook))))
+(with-eval-after-load 'org
+  (advice-add 'org-add-log-note :after #'my/org-log-note-remove-finish-hint))
 
 
 ;;;; org-tidy
