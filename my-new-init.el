@@ -75,9 +75,10 @@ Działa w dowolnym buforze, nie tylko w trybach programistycznych."
 
 (use-package major-mode-hydra
   :bind
-  ("M-SPC" . major-mode-hydra))
+  ("C-C SPC" . major-mode-hydra))
 
-(major-mode-hydra-define emacs-lisp-mode nil
+(major-mode-hydra-define emacs-lisp-mode
+  (:quit-key "q")
   ("Eval"
    (("b" eval-buffer "buffer")
     ("e" eval-defun "defun")
@@ -572,12 +573,12 @@ The DWIM behaviour of this command is as follows:
 
 (use-package backward-forward
   :demand t
-  :config
-  (backward-forward-mode t)
   :bind
   (:map backward-forward-mode-map
-   ("S-<left>" . backward-forward-previous-location)
-   ("S-<right>" . backward-forward-next-location)))
+   ("C-c <left>" . backward-forward-previous-location)
+   ("C-c <right>" . backward-forward-next-location))
+  :config
+  (backward-forward-mode t))
 
 (setq shift-select-mode nil)
 
@@ -679,7 +680,8 @@ The DWIM behaviour of this command is as follows:
 
 ;;; regexp
 
-  (use-package visual-regexp)
+(use-package visual-regexp)
+(global-visual-line-mode 1)
 
 ;;; wrap text in parenthesis
 
@@ -1733,6 +1735,18 @@ reuse it's window, otherwise create new one."
           :link link
           :description description)))))
 
+(defun jab/notmuch-search-message-delete (go-next)
+  "Delete message and select GO-NEXT message."
+  (notmuch-search-tag notmuch-message-deleted-tags)
+  (if (eq 'up go-next)
+      (notmuch-search-previous-thread)
+    (notmuch-search-next-thread)))
+
+(defun jab/notmuch-search-message-delete-down ()
+  "Delete a message and select the next message."
+  (interactive)
+  (jab/notmuch-search-message-delete 'down))
+
   (defvar my/notmuch-hide-content-types '("text/x-patch" "text/x-diff"))
 
   (defun my/notmuch-hide-content (args)
@@ -1775,6 +1789,7 @@ reuse it's window, otherwise create new one."
   :init
   (setq-default notmuch-search-oldest-first nil)
   (setq notmuch-show-logo nil
+	notmuch-message-deleted-tags '("+deleted" "-inbox" "-unread")
         notmuch-fcc-dirs "sent +sent -unread"
         notmuch-tag-formats
         `(("unread"     "")
@@ -3107,6 +3122,7 @@ from elsewhere."
 
 (use-package emr)
 (keymap-set emacs-lisp-mode-map "M-RET" 'emr-show-refactor-menu)
+(keymap-set emacs-lisp-mode-map "C-c C-c" 'eval-buffer)
 
 ;;;; others
 
