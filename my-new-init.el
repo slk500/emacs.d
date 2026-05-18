@@ -263,6 +263,25 @@ installed."
 
 ;;; org-clock
 
+  (defun my/org-clock-close-here ()
+    "Close an unfinished CLOCK line at point with the current time."
+    (when (org-at-clock-log-p)
+      (save-excursion
+        (forward-line 0)
+        (when (looking-at
+               (concat "[ \t]*" org-clock-string
+                       " *\\[\\([^]]+\\)\\][ \t]*$"))
+          (let* ((start (org-time-string-to-time (match-string 1)))
+                 (now   (current-time))
+                 (sec   (floor (float-time (time-subtract now start))))
+                 (h     (/ sec 3600))
+                 (m     (/ (mod sec 3600) 60)))
+            (goto-char (line-end-position))
+            (insert "--"
+                    (format-time-string (org-time-stamp-format t t) now)
+                    (format " =>  %d:%02d" h m)))
+          t))))
+
 ;; (defun my-org-clock-in-if-active ()
 ;;   "Resume the active (hanging) clock on the heading it belongs to."
 ;;   (interactive)
@@ -681,7 +700,6 @@ The DWIM behaviour of this command is as follows:
 ;;; regexp
 
 (use-package visual-regexp)
-(global-visual-line-mode 1)
 
 ;;; wrap text in parenthesis
 
@@ -1125,6 +1143,8 @@ Stole from aweshell"
 
 (use-package doom-themes
   :config
+  (setcdr (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+          '(:inherit 'gnus-group-mail-1-empty :weight 'normal))
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
   (load-theme 'doom-ayu-dark :no-confirm-loading)
@@ -2172,6 +2192,7 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
          (org-at-heading-p))
     (let ((org-log-done (if arg 'note org-log-done)))
       (org-todo "DONE")))
+   ((my/org-clock-close-here))
    (t
     (call-interactively 'org-ctrl-c-ctrl-c))))
 
@@ -2212,15 +2233,7 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 
 (define-key org-mode-map (kbd "*") (my/org-make-toggle ?*))
 
-(advice-add 'set-face-attribute :around
-            (lambda (orig face &rest args)
-              (condition-case nil
-                  (apply orig face args)
-                (error (when (string-match-p "gnus-group-news" (symbol-name face))
-                         nil)))))
-
 (setq org-refile-use-outline-path 'file)
-
 (setq org-refile-targets
   '((nil :maxlevel . 3) ;; file from which org-refile is invoke
     ("~/aamystuff/life/todos.org.gpg" :level . 1)))
