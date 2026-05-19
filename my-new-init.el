@@ -3761,6 +3761,20 @@ and week rows like \"5-20\" or \"3\\4-14\"."
             (lambda (&rest _)
               (my/org-columns-highlight-today-row)))
 
+(defun my/org-columns--column-width (title)
+  "Return display width for column TITLE from current compiled format."
+  (cl-some (lambda (col)
+             (and (string= (nth 1 col) title) (nth 2 col)))
+           (bound-and-true-p org-columns-current-fmt-compiled)))
+
+(defun my/org-columns--center (value width)
+  "Pad VALUE with spaces so it is centered within WIDTH columns."
+  (let* ((len (string-width value))
+         (pad (max 0 (- width len)))
+         (left (/ pad 2))
+         (right (- pad left)))
+    (concat (make-string left ?\s) value (make-string right ?\s))))
+
 (defun my/org-columns-display (column-title value)
   "Format VALUE for display in Org column COLUMN-TITLE."
   (let* ((date? (string= column-title "date"))
@@ -3781,9 +3795,40 @@ and week rows like \"5-20\" or \"3\\4-14\"."
                    "  ")
                "")
              v)))
-    v))
+    (if (or date? (string= column-title "emotion"))
+        v
+      (let ((width (my/org-columns--column-width column-title)))
+        (if width (my/org-columns--center v width) v)))))
 
 (setq org-columns-modify-value-for-display-function #'my/org-columns-display)
+
+(defun my/org-columns--display-here-title ()
+  "Like `org-columns--display-here-title' but centers titles.
+Skips centering for `date' and `emotion' columns."
+  (let ((title "")
+        (linum-offset (org-line-number-display-width 'columns))
+        (i 0))
+    (dolist (column org-columns-current-fmt-compiled)
+      (pcase column
+        (`(,property ,name . ,_)
+         (let* ((width (aref org-columns-current-maxwidths i))
+                (label (or name property))
+                (centered? (not (member label '("date" "emotion"))))
+                (cell (if centered?
+                          (my/org-columns--center label width)
+                        (format (format "%%-%d.%ds" width width) label))))
+           (setq title (concat title cell " | ")))))
+      (cl-incf i))
+    (setq-local org-previous-header-line-format header-line-format)
+    (setq org-columns-full-header-line-format
+          (concat
+           (org-add-props " " nil 'display `(space :align-to ,linum-offset))
+           (org-add-props (substring title 0 -1) nil 'face 'org-column-title)))
+    (setq org-columns-previous-hscroll -1)
+    (add-hook 'post-command-hook #'org-columns-hscroll-title nil 'local)))
+
+(advice-add 'org-columns--display-here-title :override
+            #'my/org-columns--display-here-title)
 
 (defun my/org-columns-toggle-or-columns-quit ()
   "Quit column view."
