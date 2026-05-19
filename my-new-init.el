@@ -3451,6 +3451,40 @@ Traktuje dobę jako okrąg, więc poprawnie uśrednia czasy przecinające półn
 (with-eval-after-load 'org-colview (add-to-list 'org-columns-summary-types
 						'("mean-clock" . my/org-columns--summary-mean-time-clock)))
 
+(defun my/org-columns--summary-mean-time-clock-robust (values _printf)
+  "Średnia czasów HH:MM odporna na outliery metodą MAD.
+MAD = Median Absolute Deviation: odrzuca wartości, dla których
+\\=|x - mediana\\=| > 3 * MAD, a następnie liczy zwykłą średnią
+arytmetyczną z pozostałych.  Zakłada czasy nie przecinające
+północy (np. godzina pobudki)."
+  (let* ((mins
+          (delq nil
+                (mapcar (lambda (v)
+                          (when (string-match
+                                 "\\`\\s-*\\([0-9]+\\):\\([0-9]+\\)\\s-*\\'" v)
+                            (+ (* 60 (string-to-number (match-string 1 v)))
+                               (string-to-number (match-string 2 v)))))
+                        values)))
+         (n (length mins)))
+    (if (zerop n)
+        ""
+      (let* ((sorted (sort (copy-sequence mins) #'<))
+             (median (nth (/ n 2) sorted))
+             (devs (sort (mapcar (lambda (x) (abs (- x median))) mins) #'<))
+             (mad (nth (/ n 2) devs))
+             (threshold (* 3 mad))
+             (kept (if (zerop mad)
+                       mins
+                     (cl-remove-if (lambda (x) (> (abs (- x median)) threshold))
+                                   mins)))
+             (k (length kept))
+             (avg (round (/ (apply #'+ kept) (float k)))))
+        (format "%2d:%02d" (/ avg 60) (% avg 60))))))
+
+(with-eval-after-load 'org-colview
+  (add-to-list 'org-columns-summary-types
+               '("mean-clock-robust" . my/org-columns--summary-mean-time-clock-robust)))
+
 (defun my/string-in-brackets-to-number (string)
   "Convert a string in the format '[X]' to an integer."
   (let* ((trimmed-string (replace-regexp-in-string "\\[\\|\\]" "" string)) ; Remove brackets
