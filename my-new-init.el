@@ -1534,6 +1534,7 @@ reuse it's window, otherwise create new one."
 
 (use-package magit
 :config
+(setq magit-diff-refine-hunk 'all)
 (setq magit-branch-read-upstream-first 'fallback
       magit-log-section-commit-count 50)
 (dolist (m (list magit-diff-mode-map
@@ -1541,18 +1542,13 @@ reuse it's window, otherwise create new one."
                  magit-hunk-section-map
                  magit-unstaged-section-map
                  magit-staged-section-map))
-  (define-key m (kbd "C-c") 'cua-copy-region))
+  (define-key m (kbd "C-c") 'magit-copy-section-value))
   ;; 1. Usuwanie brancha pod Delete (gdy kursor jest na branchu)
   (define-key magit-branch-section-map (kbd "<delete>") 'magit-delete-thing)
-
-  ;; 2. Magit-discard pod Delete (dla plików, hunków i sekcji)
-  ;; Dodajemy to do map, w których klawisz "k" zazwyczaj wywołuje discard
   (dolist (m (list magit-file-section-map
                    magit-hunk-section-map
                    magit-unstaged-section-map))
     (define-key m (kbd "<delete>") 'magit-discard))
-
-  ;; Opcjonalnie: jeśli chcesz, aby Delete działał też w widoku Diffa
   (define-key magit-diff-mode-map (kbd "<delete>") 'magit-discard)
 :bind
 (("C-x g" . magit-status)))
@@ -3631,9 +3627,11 @@ current specifications.  This function also sets
       (make-string (* 2 (1- (org-reduced-level (org-current-level))))
                    ?\s))))
 
-(defun my/org-columns--date-prefix-face (date weekday)
+(defun my/org-columns--date-prefix-face (_date weekday)
   "Face for the \"MM-DD Day\" prefix."
   (cond
+   ((my/org-columns--today-heading-p)
+    '(:weight bold :foreground "gold"))
    ((string= weekday "Sun")
     '(:inherit shadow :foreground "indianred"))
    (t 'shadow)))
@@ -3647,8 +3645,9 @@ and week rows like \"5-20\" or \"3\\4-14\"."
    ;; Day row: 19 Sun albo 05-19 Sun
    ((string-match
      (rx bos
-         (optional (= 2 digit) "-") ; optional month, e.g. 05-
-         (group (= 2 digit))        ; day
+         (group                     ; full date: "19" or "05-19"
+          (optional (= 2 digit) "-")
+          (= 2 digit))
          " "
          (group (or "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"))
          (or eos whitespace))
