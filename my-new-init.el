@@ -407,6 +407,21 @@ installed."
             (add-hook 'eldoc-documentation-functions
                       #'my/org-task-time-eldoc nil t)))
 
+(defun my/org-fill-paragraph-after-yank (&rest _)
+  "Run `org-fill-paragraph' on the yanked region when in `org-mode'."
+  (when (and (derived-mode-p 'org-mode)
+             (mark t))
+    (save-excursion
+      (let ((beg (region-beginning))
+            (end (region-end)))
+        (goto-char beg)
+        (while (< (point) end)
+          (org-fill-paragraph)
+          (forward-paragraph))))))
+
+(advice-add 'yank :after #'my/org-fill-paragraph-after-yank)
+(advice-add 'yank-pop :after #'my/org-fill-paragraph-after-yank)
+
 
 ;;; icons
 
