@@ -1552,6 +1552,23 @@ reuse it's window, otherwise create new one."
 (setq magit-diff-refine-hunk 'all)
 (setq magit-branch-read-upstream-first 'fallback
       magit-log-section-commit-count 50)
+(defun my/magit-auto-checkout-when-deleting-current-branch
+    (orig-fun prompt chars &optional inhibit-keyboard-quit)
+  "Choose checkout target when deleting the currently checked out branch."
+  (if (and (stringp prompt)
+           (string-prefix-p "Branch " prompt)
+           (string-match-p " is checked out\\.  " prompt)
+           (string-match-p "\\[c\\]heckout .* & delete" prompt)
+           (memq ?c chars))
+      ?c
+    (funcall orig-fun prompt chars inhibit-keyboard-quit)))
+(advice-remove
+ 'read-char-choice
+ #'my/magit-auto-checkout-when-deleting-current-branch)
+(advice-add
+ 'read-char-choice
+ :around
+ #'my/magit-auto-checkout-when-deleting-current-branch)
 (dolist (m (list magit-diff-mode-map
                  magit-file-section-map
                  magit-hunk-section-map
