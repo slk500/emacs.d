@@ -2524,13 +2524,13 @@ the same tree node, and the headline of the tree node in the Org-mode file."
 	   (format "EMACSs (%s)" (org-agenda-count "elo")))))
 	("g" "Get Things Done (GTD)"
 	 ((agenda "" ((org-agenda-todo-keyword-format "")))
-	  (tags-todo "-book-video-emacs/TODO"
+	  (tags-todo "-book-video/TODO"
            ((org-agenda-overriding-header
              (format "TODOs (%s)" (org-agenda-count "bar")))
 	    (org-agenda-todo-keyword-format "")
             (org-agenda-prefix-format
              "%?-12t% s %(my/org-days-to-deadline) ")))
-	  (tags-todo "-emacs/WAITING"
+	  (todo "WAITING"
 		((org-agenda-overriding-header
 		  (format "WAITINGs (%s)" (org-agenda-count "foo")))))))))
 
@@ -3365,6 +3365,19 @@ from elsewhere."
 	'font-lock-face 'calendar-iso-week-face))
 
 ;;; colview
+
+
+;; Mierzenie czasu uruchamiania org-columns
+(defun my-measure-org-columns-time (orig-fun &rest args)
+  "Mierzy czas wykonania funkcji `org-columns`."
+  (let ((start-time (current-time))
+        (result (apply orig-fun args)))
+    (message "Uruchomienie org-columns zajęło %.3f sekund(y)."
+             (float-time (time-since start-time)))
+    result))
+
+(advice-add 'org-columns :around #'my-measure-org-columns-time)
+
 
 ; (setq org-columns-default-format-for-agenda )
 
