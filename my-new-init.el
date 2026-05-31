@@ -1873,29 +1873,21 @@ reuse it's window, otherwise create new one."
           ("\\`https?://yhetil\\.org/\\(emacs\\|orgmode\\)/" . my/notmuch-open-public-inbox-link))
         display-time-mail-string ""
         notmuch-saved-searches
-        '((:name "inbox" :query "tag:inbox" :key
-                 "i")
-          (:name "todo" :query "tag:todo" :key
-                 "t")
-          (:name "emacs" :query "tag:emacs" :key
-                 "e")
-          (:name "emacs-org" :query "tag:emacs-org" :key
-                 "o")
-          (:name "flagged" :query "tag:flagged" :key
-                 "f")
-          (:name "sent" :query "tag:sent" :key
-                 "s")
-          (:name "drafts" :query "tag:draft" :key
-                 "d")
-          (:name "work" :query "tag:work" :key
-                 "w")
+        '((:name "inbox" :query "tag:inbox" :key "i")
+          (:name "todo" :query "tag:todo" :key "t")
+          (:name "emacs" :query "tag:emacs" :key "e")
+          (:name "emacs-org" :query "tag:emacs-org" :key "o")
+          (:name "flagged" :query "tag:flagged" :key "f")
+          (:name "sent" :query "tag:sent" :key "s")
+          (:name "drafts" :query "tag:draft" :key "d")
+          (:name "work" :query "tag:work" :key "w")
           (:name "all mail (last year)" :query "date:1Y.." :key "a"))
         notmuch-unthreaded-result-format
         '(("date" . "%12s  ")
           (my/notmuch-unthreaded-show-recipient-if-sent . "%-20.20s")
-          ((("subject" . "%s"))
-           . " %-54s ")
+          ((("subject" . "%s")) . " %-54s ")
           ("tags" . "(%s)")))
+
   (org-link-set-parameters "notmuch"
 			   :follow 'org-notmuch-open
 			   :store 'org-notmuch-store-link)
@@ -1905,6 +1897,8 @@ reuse it's window, otherwise create new one."
 		"Mark thread as spam"
 		(interactive (notmuch-interactive-region))
 		(notmuch-search-tag (list "+deleted" "-inbox") beg end)))
+
+  (define-key notmuch-common-keymap "=" #'notmuch-search-add-tag)
 
   (define-key notmuch-show-mode-map "b"
 	      (lambda (&optional address)
@@ -2433,19 +2427,13 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   (org-agenda-todo "DONE")
   (org-agenda-redo-all))
 
-(define-key org-agenda-mode-map (kbd "C-c C-c") 'sacha/org-agenda-done)
+(define-key org-agenda-mode-map (kbd "c") 'sacha/org-agenda-done)
 
-;; org mode - prevent future repetitive entries from showing up in agenda view
-;; https://emacs.stackexchange.com/questions/12609/org-mode-prevent-future-repetitive-entries-from-showing-up-in-agenda-view
-;; natomiast nie znalazłem ustawienia które nie wyświetlało by entries from the past
-;; ale może rozsądniej jest po prostu zaczynać agenda view od tego dnia co jest teraz czyli tak
-;; jakbym nacisnąc 'D' na danym aktualnie dniu - chociaż chciałbym jednak zobaczyć też jakie są taski na następne dni
-;; Bo teraz jest tak, że pokazuje się cały tydzień czyli jeśli jest niedziela to widzę wszystkie dni od poniedziałku do niedzieli
-;; raczej powinno to się samo przesuwąć żeby zawsze widział parę dni do przodu, a dopiero czekam na poniedziałek i nagle przewracasz stronę
-;; a tam masa tasków o których nie byłeś do końca świadomy.
-(defun my-gtd ()  
+(defun my-gtd ()
   (interactive)
-  (org-agenda nil "g"))
+  (if (eq major-mode 'org-agenda-mode)
+      (org-agenda-quit)
+    (org-agenda nil "g")))
 
 (defun my-org-agenda-a ()
   (interactive)
