@@ -930,6 +930,7 @@ The DWIM behaviour of this command is as follows:
   (defun my/ledger-bal ()
     "Show Ledger balance report."
     (interactive)
+    (save-buffer)
     (ledger-report "bal" nil)))
 
 ;;; clock
