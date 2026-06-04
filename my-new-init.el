@@ -1829,6 +1829,36 @@ reuse it's window, otherwise create new one."
                    (concat "↦ " (notmuch-tree-clean-address to))
                  author))
        'face face)))
+
+  (defun my/notmuch-address-capf ()
+    "Complete Notmuch addresses in message recipient headers."
+    (when (and notmuch-address-command
+               (let ((mail-abbrev-mode-regexp
+                      notmuch-address-completion-headers-regexp))
+                 (mail-abbrev-in-expansion-header-p)))
+      (let ((beg (save-excursion
+                   (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+                   (goto-char (match-end 0))
+                   (point)))
+            (end (point)))
+        (list beg end
+              (completion-table-dynamic #'notmuch-address-options)
+              :exclusive t
+              :category 'notmuch-address
+              :exit-function
+              (lambda (candidate status)
+                (when (memq status '(finished sole exact))
+                  (push candidate notmuch-address-history)
+                  (run-hook-with-args
+                   'notmuch-address-post-completion-functions
+                   candidate)))))))
+
+  (defun my/notmuch-message-completion-setup ()
+    "Prefer Notmuch address completion in compose headers."
+    (setq-local completion-at-point-functions
+                (cons #'my/notmuch-address-capf
+                      (remove #'my/notmuch-address-capf
+                              completion-at-point-functions))))
   :bind
   (:map global-map
 	("C-c m" . notmuch-hello)
@@ -1911,6 +1941,9 @@ reuse it's window, otherwise create new one."
 		(interactive "sBounce To: ")
 		(notmuch-show-view-raw-message)
 		(message-resend address)))
+
+  (add-hook 'notmuch-message-mode-hook
+            #'my/notmuch-message-completion-setup)
 
   (advice-add 'notmuch-show-insert-bodypart :filter-args 'my/notmuch-hide-content))
 
