@@ -610,7 +610,11 @@ The DWIM behaviour of this command is as follows:
   :bind
   (:map backward-forward-mode-map
    ("C-c <left>" . backward-forward-previous-location)
-   ("C-c <right>" . backward-forward-next-location))
+   ("C-c <right>" . backward-forward-next-location)
+   :repeat-map my/backward-forward-repeat-map
+   :repeat-docstring "Repeat backward-forward navigation."
+   ("<left>" . backward-forward-previous-location)
+   ("<right>" . backward-forward-next-location))
   :config
   (backward-forward-mode t))
 
