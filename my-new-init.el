@@ -845,14 +845,14 @@ The DWIM behaviour of this command is as follows:
   (setq erc-prompt-for-nickserv-password nil)
 
   (setq erc-autojoin-channels-alist
-	'(("irc.libera.chat" "#emacs" "#systemcrafters")))
+	'(("irc.libera.chat" "#emacs" "#org-mode")))
 
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
   (setq rcirc-default-nick "slk500")
   (setq rcirc-server-alist '((
 				   "irc.libera.chat"
-				   :channels ("#emacs")
+				   :channels ("#emacs" "#org-mode")
 				   :port 6697
 				   :encryption tls)))
 
@@ -2688,7 +2688,7 @@ from elsewhere."
       eval-expression-print-level 50
       eval-expression-print-length 1000)
 
-(setq edebug-initial-mode 'run)
+(setq edebug-initial-mode 'step)
 
 ;;;; eros
 ; https://xenodium.com/inline-previous-result-and-why-you-should-edebug/
@@ -3946,3 +3946,102 @@ LOGBOOK and normal body text."
                              :face 'shadow)
        " ")
     (propertize "↺ " 'face 'shadow)))
+
+ (defun my/org-columns-profile (&optional global deep)
+    "Profile `org-columns' in current Org buffer and show results in a buffer.
+  With prefix argument GLOBAL, call `org-columns' globally.
+  With DEEP non-nil from Lisp, also profile lower-level Org helpers."
+    (interactive "P")
+    (require 'benchmark)
+    (require 'elp)
+    (require 'org)
+    (require 'org-colview)
+    (let* ((source-buffer (current-buffer))
+           (functions
+            '(org-columns
+              org-columns-remove-overlays
+              org-columns--prepare-rows
+              org-columns-get-format
+              org-columns-goto-top-level
+              org-columns-compute-all
+              org-columns--compute-clock-summaries
+              org-columns--compute-spec
+              org-columns--collect-rows
+              org-columns--collect-values
+              org-columns--collect-entry-values
+              org-columns--special-property-p
+              org-columns--local-property-value
+              org-columns--entry-element
+              org-columns--displayed-value
+              org-columns--set-widths
+              org-columns--display-rows
+              org-columns--display-line
+              org-columns--make-row
+              org-columns--make-cell-overlay
+              org-columns--new-overlay
+              org-columns--overlay-text
+              org-columns--hide-rest-of-line
+              org-columns--display-header-line
+              org-scan-tags
+              org-entry-get
+              org-entry-get-with-inheritance
+              org--property-local-values
+              org-entry-properties
+              org-get-tags
+              org-get-category))
+           (deep-functions
+            '(org-element-at-point
+              org-element-lineage
+              org-element-property
+              org-element-cache-map
+              org-get-property-block
+              org-property-inherit-p))
+           (elp-sort-by-function 'elp-sort-by-total-time)
+           (elp-reset-after-results nil)
+           (elp-use-standard-output nil)
+           (start-buffer (buffer-name))
+           (start-point (point))
+           elapsed profile-error)
+      (unless (derived-mode-p 'org-mode)
+        (user-error "Current buffer is not in Org mode"))
+      (elp-restore-all)
+      (unwind-protect
+          (progn
+            (dolist (fn (append functions (and deep deep-functions)))
+              (when (and (fboundp fn) (elp-profilable-p fn))
+                (ignore-errors (elp-instrument-function fn))))
+            (elp-set-master 'org-columns)
+            (elp-reset-all)
+            (setq elapsed
+                  (benchmark-elapse
+                    (with-current-buffer source-buffer
+                      (condition-case err
+                          (org-columns global)
+                        (error (setq profile-error err))))))
+            (let* ((report-buffer (get-buffer-create "*org-columns profile*"))
+                   (elp-buffer (generate-new-buffer " *org-columns elp*"))
+                   (elp-results-buffer (buffer-name elp-buffer)))
+              (unwind-protect
+                  (progn
+                    (elp-results)
+                    (with-current-buffer report-buffer
+                      (let ((inhibit-read-only t)
+                            (buffer-read-only nil))
+                        (erase-buffer)
+                        (insert (format "Buffer: %s\n" start-buffer))
+                        (insert (format "Point: %d\n" start-point))
+                        (insert (format "Global: %S\n" global))
+                        (insert (format "Wall time for org-columns: %.6fs\n" elapsed))
+                        (when profile-error
+                          (insert (format "Error: %S\n" profile-error)))
+                        (insert "\nELP results are inclusive and add overhead.\n")
+                        (insert "Sorted by total elapsed time.\n\n")
+                        (insert
+                         (with-current-buffer elp-buffer
+                           (buffer-substring-no-properties
+                            (point-min) (point-max))))
+                        (goto-char (point-min))))
+                    (display-buffer report-buffer))
+                (when (buffer-live-p elp-buffer)
+                  (kill-buffer elp-buffer)))))
+        (elp-restore-all))))
