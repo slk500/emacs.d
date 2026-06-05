@@ -121,121 +121,6 @@ Działa w dowolnym buforze, nie tylko w trybach programistycznych."
    (("D" toggle-debug-on-error "debug on error" :toggle (default-value 'debug-on-error))
     ("X" toggle-debug-on-quit "debug on quit" :toggle (default-value 'debug-on-quit)))))
 
-;;; org columns - hydra
-
-;; https://github.com/jerrypnz/major-mode-hydra.el#pretty-hydra
-
-
-
-(defun my/org-columns-hint ()
-  (interactive)
-  (let ((help-quick-sections my/org-columns-help-sections)
-        (help-quick-use-map  org-columns-map))
-    (help-quick-toggle)))
-
-  (with-eval-after-load 'org-colview
-    (org-defkey org-columns-map "?" #'my/org-columns-hint))
-
-(require 'cl-lib)
-
-(defvar my/org-columns-groups
-  '(("Change value"
-     ("n / S-←" . "prev value")
-     ("p / S-→" . "next value")
-     ("0..9"    . "set value")
-     ("e"       . "edit value")
-     ("a"       . "edit allowed")
-     ("s"       . "edit attrs"))
-    ("Move col/row"
-     ("M-← / M-→" . "col ←/→")
-     ("M-↑ / M-↓" . "row ↑/↓")
-     ("S-M-→"     . "new col")
-     ("S-M-←"     . "delete col"))
-    ("Width / Toggle"
-     ("<"       . "narrow")
-     (">"       . "widen")
-     ("C-c C-c" . "toggle/quit"))
-    ("Misc"
-     ("c"       . "content view")
-     ("o"       . "overview")
-     ("v"       . "show value")
-     ("r / g"   . "refresh")
-     ("C-c C-t" . "TODO")
-     ("C-c C-o" . "open link")
-     ("q"       . "quit")))
-  "Grupy bindingów dla popupu org-columns.")
-
-(defun my/wk--width (s)
-  (string-width (substring-no-properties s)))
-
-(defun my/wk--pad (s width)
-  (concat s (make-string (max 0 (- width (my/wk--width s))) ?\s)))
-
-(defun my/wk--render-column (group)
-  (let* ((header (car group))
-         (entries (cdr group))
-         (key-w (if entries
-                    (apply #'max (mapcar (lambda (e) (my/wk--width (car e)))
-                                         entries))
-                  0))
-         (sep " : "))
-    (cons
-     (propertize header 'face 'font-lock-keyword-face)
-     (mapcar (lambda (e)
-               (concat
-                (propertize (my/wk--pad (car e) key-w)
-                            'face 'font-lock-constant-face)
-                (propertize sep 'face 'font-lock-comment-face)
-                (cdr e)))
-             entries))))
-
-(defun my/wk-build-hint (groups)
-  (let* ((cols   (mapcar #'my/wk--render-column groups))
-         (widths (mapcar (lambda (col)
-                           (apply #'max (mapcar #'my/wk--width col)))
-                         cols))
-         (rows   (apply #'max (mapcar #'length cols)))
-         (gap    "    "))
-    (mapconcat
-     (lambda (i)
-       (mapconcat #'identity
-                  (cl-mapcar (lambda (col w)
-                               (my/wk--pad (or (nth i col) "") w))
-                             cols widths)
-                  gap))
-     (number-sequence 0 (1- rows))
-     "\n")))
-
-(defvar my/org-columns-hint-visible nil
-  "Czy popup org-columns jest aktualnie pokazany.")
-
-;;;###autoload
-(defun my/org-columns-hint-show ()
-  "Pokaż popup z bindingami org-columns."
-  (interactive)
-  (lv-message "%s" (my/wk-build-hint my/org-columns-groups))
-  (setq my/org-columns-hint-visible t))
-
-;;;###autoload
-(defun my/org-columns-hint-hide ()
-  "Schowaj popup org-columns."
-  (interactive)
-  (lv-delete-window)
-  (setq my/org-columns-hint-visible nil))
-
-;;;###autoload
-(defun my/org-columns-hint-toggle ()
-  "Przełącz popup org-columns."
-  (interactive)
-  (require 'hydra)
-  (require 'lv)
-  (if my/org-columns-hint-visible
-      (my/org-columns-hint-hide)
-    (my/org-columns-hint-show)))
-
-(with-eval-after-load 'org-colview
-  (org-defkey org-columns-map "?" #'my/org-columns-hint-toggle))
-
 ;;; md to org
 
 (defun my/markdown-to-org-region (start end)
@@ -1447,59 +1332,32 @@ reuse it's window, otherwise create new one."
 
 ;;; which-key
 
-(defun my/org-columns-show-which-key ()
-  "Pokaż sticky popup which-key z bindingami org-columns-map."
-  (interactive)
-  (require 'which-key)
-  (setq which-key-persistent-popup t)
-  (which-key--create-buffer-and-show nil org-columns-map))
+(use-package keymap-popup
+  :straight (:type git :host nil
+                   :repo "https://codeberg.org/thanosapollo/emacs-keymap-popup.git")
+  :commands (keymap-popup))
 
-(defun my/org-columns-hide-which-key (&rest _)
-  "Schowaj popup which-key i wyłącz tryb persistent."
-  (setq which-key-persistent-popup nil)
-  (which-key--hide-popup-ignore-command))
+(keymap-popup-annotate dired-mode-map
+    :popup-key "h"
+    :group "Navigate"
+    dired-next-line "Next"
+    dired-previous-line "Previous"
+    :group "Mark"
+    dired-mark "Mark"
+    dired-unmark "Unmark")
 
+(keymap-popup-define my-commands-map
+  "My commands."
+  :group "Edit"
+  "c" ("Comment" comment-dwim)
+  "r" ("Rename" rename-file)
+  :group "View"
+  "g" ("Refresh" revert-buffer)
+  "q" ("Quit" quit-window))
 
+(keymap-popup my-commands-map)
 
 (which-key-mode 1)
-(setq which-key-sort-order 'which-key-description-order)
-
-(defvar my-keypad-map (make-sparse-keymap))
-
-;; Pojedyncze klawisze, nie sekwencje!
-(define-key my-keypad-map (kbd "e") 'save-buffers-kill-terminal)
-(define-key my-keypad-map (kbd "f") 'find-file)
-(define-key my-keypad-map (kbd "k") 'kill-buffer)
-(define-key my-keypad-map (kbd "b") 'list-buffers)
-(define-key my-keypad-map (kbd "0") 'delete-window)
-(define-key my-keypad-map (kbd "o") 'other-window)
-
-(which-key-add-keymap-based-replacements my-keypad-map
-  "e" "File › exit"
-  "f" "File › find"
-  "k" "Buffer › kill"
-  "b" "Buffer › list"
-  "0" "Window › close"
-  "o" "Window › other")
-
-(defvar my-keypad-visible nil)
-
-(defun my-toggle-keypad ()
-  (interactive)
-  (cond
-   (my-keypad-visible
-    (setq which-key-persistent-popup nil
-          which-key-sort-order 'which-key-key-order  ; przywróć domyślne
-          my-keypad-visible nil)
-    (which-key--hide-popup))
-   (t
-    (setq which-key-persistent-popup t
-          which-key-sort-order 'which-key-description-order  ; grupuje po opisie
-          which-key-max-display-columns 3  ; tyle grup ile masz
-          my-keypad-visible t)
-    (which-key-show-keymap 'my-keypad-map))))
-
-(global-set-key (kbd "<f7>") 'my-toggle-keypad)
 
 ;;; text language
 ;;;; translate
