@@ -1,5 +1,138 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+;;; electric-sentence
+
+(use-package electric-sentence
+  :straight (:host github :repo "mmarshall540/electric-sentence"))
+
+;;; waiting to be merge - delete after merge
+
+(defun org-store-log-note ()
+  "Finish taking a log note, and insert it to where it belongs."
+  (let ((txt (prog1 (buffer-string)
+	       (kill-buffer)))
+	(note (cdr (assq org-log-note-purpose org-log-note-headings)))
+	lines)
+    (while (string-match "\\`# .*\n[ \t\n]*" txt)
+      (setq txt (replace-match "" t t txt)))
+    (when (string-match "\\s-+\\'" txt)
+      (setq txt (replace-match "" t t txt)))
+    (setq lines (and (not (equal "" txt)) (org-split-string txt "\n")))
+    (when (org-string-nw-p note)
+      (setq note
+	    (org-replace-escapes
+	     note
+	     (list (cons "%u" (user-login-name))
+		   (cons "%U" user-full-name)
+		   (cons "%t" (format-time-string
+			       (org-time-stamp-format 'long 'inactive)
+			       org-log-note-effective-time))
+		   (cons "%T" (format-time-string
+			       (org-time-stamp-format 'long nil)
+			       org-log-note-effective-time))
+		   (cons "%d" (format-time-string
+			       (org-time-stamp-format nil 'inactive)
+			       org-log-note-effective-time))
+		   (cons "%D" (format-time-string
+			       (org-time-stamp-format nil nil)
+			       org-log-note-effective-time))
+		   (cons "%s" (cond
+			       ((not org-log-note-state) "")
+			       ((string-match-p org-ts-regexp
+						org-log-note-state)
+				(format "\"[%s]\""
+					(substring org-log-note-state 1 -1)))
+			       (t (format "\"%s\"" org-log-note-state))))
+		   (cons "%S"
+			 (cond
+			  ((not org-log-note-previous-state) "")
+			  ((string-match-p org-ts-regexp
+					   org-log-note-previous-state)
+			   (format "\"[%s]\""
+				   (substring
+				    org-log-note-previous-state 1 -1)))
+			  (t (format "\"%s\""
+				     org-log-note-previous-state)))))))
+      (when lines (setq note (concat note " \\\\")))
+      (push note lines))
+    (when (and lines (not org-note-abort))
+      (with-current-buffer (marker-buffer org-log-note-marker)
+        (org-no-read-only
+         (org-fold-core-ignore-modifications
+	  (org-with-wide-buffer
+	   ;; Find location for the new note.
+	   (goto-char org-log-note-marker)
+	   (set-marker org-log-note-marker nil)
+	   ;; Note associated to a clock is to be located right after
+	   ;; the clock.  Do not move point.
+	   (unless (eq org-log-note-purpose 'clock-out)
+	     (goto-char (org-log-beginning t)))
+	   ;; Make sure point is at the beginning of an empty line.
+	   (cond ((not (bolp)) (let ((inhibit-read-only t)) (insert-and-inherit "\n")))
+	         ((looking-at "[ \t]*\\S-") (save-excursion (insert-and-inherit "\n"))))
+	   ;; In an existing list, add a new item at the top level.
+	   ;; Otherwise, indent line like a regular one.
+	   (let ((itemp (org-in-item-p)))
+	     (if itemp
+	         (indent-line-to
+		  (let ((struct (save-excursion
+				  (goto-char itemp) (org-list-struct))))
+		    (org-list-get-ind (org-list-get-top-point struct) struct)))
+	       (org-indent-line)))
+	   (insert-and-inherit (org-list-bullet-string "-") (pop lines))
+	   ;; Use buffer-position arithmetic instead of
+	   ;; `org-list-item-body-column' to avoid `current-column'
+	   ;; counting visual widths of `display' overlays (e.g.,
+	   ;; column view) on the line.
+	   (let ((ind (save-excursion
+		        (goto-char (line-beginning-position))
+		        (looking-at "[ \t]*\\(\\S-+\\)")
+		        (+ (- (match-end 1) (line-beginning-position))
+		           (if (and org-list-two-spaces-after-bullet-regexp
+				    (string-match-p
+				     org-list-two-spaces-after-bullet-regexp
+				     (match-string 1)))
+			       2
+			     1)))))
+	     (dolist (line lines)
+	       (insert-and-inherit "\n")
+               (unless (string-empty-p line)
+	         (indent-line-to ind)
+	         (insert-and-inherit line))))
+           (run-hooks 'org-after-note-stored-hook)
+	   (message "Note stored")
+	   (org-back-to-heading t)))))))
+  ;; Don't add undo information when called from `org-agenda-todo'.
+  (set-window-configuration org-log-note-window-configuration)
+  (with-current-buffer (marker-buffer org-log-note-return-to)
+    (goto-char org-log-note-return-to))
+  (move-marker org-log-note-return-to nil)
+  (when org-log-post-message (message "%s" org-log-post-message)))
+
+(defun org-skip-over-state-notes ()
+  "Skip past the list of log notes in an entry.
+The point is assumed to be on a list of notes, each matching a format
+configured in `org-log-note-headings'.  The function moves point to the
+first list item that is not a log note or to the end of the list if all
+the items are log notes."
+  (when (ignore-errors (goto-char (org-in-item-p)))
+    (let* ((struct (org-list-struct))
+	   (prevs (org-list-prevs-alist struct))
+	   (regexp
+	    (concat "[ \t]*- +"
+		    "\\(?:"
+		    (mapconcat #'org--log-note-format-regexp
+			       (delq nil
+				     (mapcar (lambda (entry)
+					       (let ((format (cdr entry)))
+						 (and (stringp format) (not (string-empty-p format)) format)))
+					     org-log-note-headings))
+			       "\\|")
+		    "\\)")))
+      (while (looking-at-p regexp)
+	(goto-char (or (org-list-get-next-item (point) struct prevs)
+		       (org-list-get-item-end (point) struct)))))))
+
 ;;; dump-jump
 
 (defun slava/find-function-at-point ()
@@ -652,7 +785,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; indent
 
-(setq electric-indent-mode nil)
+(electric-indent-mode -1)
 (keymap-global-set "C-<tab>" #'indent-rigidly)
 
 ;;; babel
@@ -1785,6 +1918,10 @@ reuse it's window, otherwise create new one."
 			   :follow 'org-notmuch-open
 			   :store 'org-notmuch-store-link)
   :config
+  (setq notmuch-hello-sections
+        (remove #'notmuch-hello-insert-recent-searches
+                notmuch-hello-sections))
+
   (keymap-set notmuch-search-mode-map "<delete>"
 	      (lambda (&optional beg end)
 		"Mark thread as spam"
@@ -2166,7 +2303,8 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 
 (use-package org
   :bind (:map org-mode-map
-	      ("C-v" . org-paste-special))
+	      ("C-v" . org-paste-special)
+	      ("RET" . org-return-and-maybe-indent))
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
   (add-hook 'org-log-buffer-setup-hook #'auto-fill-mode)
@@ -3720,7 +3858,7 @@ and week rows like \"5-20\" or \"3\\4-14\"."
              (my/org-columns--item-outline-indent)
              (if date-row?
                  (if (my/org-columns--has-entry-text-p)
-                     (my/org-columns--logbook-icon)
+		     (propertize "> " 'face 'shadow)
                    "  ")
                "")
              v)))
@@ -3836,7 +3974,7 @@ LOGBOOK and normal body text."
                              :v-adjust -0.05
                              :face 'shadow)
        " ")
-    (propertize "↺ " 'face 'shadow)))
+    (propertize "> " 'face 'shadow)))
 
  (defun my/org-columns-profile (&optional global deep)
     "Profile `org-columns' in current Org buffer and show results in a buffer.
