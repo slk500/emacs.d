@@ -2775,14 +2775,14 @@ from elsewhere."
 
 ;;; pulsar
 
-  ;; (use-package pulsar
-  ;;   :config
-  ;;   (setq pulsar-pulse t
-  ;; 	  pulsar-delay 0.1
-  ;; 	  pulsar-iterations 10
-  ;; 	  pulsar-face 'pulsar-cyan
-  ;; 	  pulsar-highlight-face 'pulsar-cyan))
-
+  (use-package pulsar
+    :config
+    (setq pulsar-pulse t
+	  pulsar-delay 0.1
+	  pulsar-iterations 10
+	  pulsar-face 'pulsar-cyan
+	  pulsar-highlight-face 'pulsar-cyan)
+    (pulsar-global-mode 1))
 
 ;;; crux
 
