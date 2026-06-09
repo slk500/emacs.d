@@ -184,7 +184,9 @@
 	 dired-subtree php-mode ivy-rich which-key counsel
 	 conunsel swiper org-plus-contrib use-package))
  '(pulsar-pulse-functions
-   '(smartscan-symbol-go-forward smartscan-symbol-go-backward
+   '(slava/find-function-at-point
+				 smartscan-symbol-go-forward
+				 smartscan-symbol-go-backward
 				 recenter-top-bottom
 				 move-to-window-line-top-bottom
 				 reposition-window
