@@ -185,6 +185,8 @@
 	 conunsel swiper org-plus-contrib use-package))
  '(pulsar-pulse-functions
    '(slava/find-function-at-point
+				 backward-forward-previous-location
+				 backward-forward-next-location
 				 smartscan-symbol-go-forward
 				 smartscan-symbol-go-backward
 				 recenter-top-bottom
