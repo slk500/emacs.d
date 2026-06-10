@@ -2526,6 +2526,34 @@ the same tree node, and the headline of the tree node in the Org-mode file."
                (dead-str dead-str)
                (t ""))))))
 
+(defun my/org-agenda-date-sort-key (entry)
+  "Return a sort key for scheduled and deadline dates in agenda ENTRY."
+  (let* ((marker (or (get-text-property 0 'org-marker entry)
+                     (get-text-property 0 'org-hd-marker entry)))
+         (scheduled (and marker (org-entry-get marker "SCHEDULED")))
+         (deadline (and marker (org-entry-get marker "DEADLINE")))
+         (scheduled-day (and scheduled
+                             (org-time-string-to-absolute scheduled)))
+         (deadline-day (and deadline
+                            (org-time-string-to-absolute deadline)))
+         (today (org-today)))
+    (cond
+     ((or (equal scheduled-day today) (equal deadline-day today))
+      (list 0 today))
+     (deadline-day (list 1 deadline-day))
+     (scheduled-day (list 2 scheduled-day))
+     (t (list 3 0)))))
+
+(defun my/org-agenda-compare-dates (a b)
+  "Compare agenda entries A and B by deadline and scheduled date."
+  (let ((a-key (my/org-agenda-date-sort-key a))
+        (b-key (my/org-agenda-date-sort-key b)))
+    (cond
+     ((< (car a-key) (car b-key)) -1)
+     ((> (car a-key) (car b-key)) 1)
+     ((< (cadr a-key) (cadr b-key)) -1)
+     ((> (cadr a-key) (cadr b-key)) 1))))
+
 (setq org-agenda-custom-commands
       '(("a" "default" agenda "" ((org-scheduled-past-days 1)
 				  (org-deadline-past-days 1)
@@ -2550,6 +2578,9 @@ the same tree node, and the headline of the tree node in the Org-mode file."
            ((org-agenda-overriding-header
              (format "TODOs (%s)" (org-agenda-count "bar")))
 	    (org-agenda-todo-keyword-format "")
+            (org-agenda-cmp-user-defined #'my/org-agenda-compare-dates)
+            (org-agenda-sorting-strategy
+             '(user-defined-up todo-state-up priority-down))
             (org-agenda-prefix-format
              "%?-12t% s %(my/org-days-to-deadline) ")))
 	  (todo "WAITING"
