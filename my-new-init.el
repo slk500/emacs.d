@@ -2812,7 +2812,9 @@ from elsewhere."
 	  pulsar-delay 0.1
 	  pulsar-iterations 10
 	  pulsar-face 'pulsar-cyan
-	  pulsar-highlight-face 'pulsar-cyan)
+	  pulsar-highlight-face 'pulsar-cyan
+	  pulsar-region-face 'pulsar-cyan
+	  pulsar-region-change-face 'pulsar-cyan)
     (pulsar-global-mode 1))
 
 ;;; crux
