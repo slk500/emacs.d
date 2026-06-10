@@ -2970,7 +2970,7 @@ from elsewhere."
 	   ;; M-s bindings in `search-map'
 	   ("M-s d" . consult-find)
 	   ("M-s D" . consult-locate)
-	   ("M-s g" . consult-grep)
+	   ("M-f" . consult-grep)
 	   ("M-s G" . consult-git-grep)
 	   ("M-s r" . consult-ripgrep)
 	   ("C-f" . consult-line)
