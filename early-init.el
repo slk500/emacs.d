@@ -12,11 +12,13 @@
 (setq tab-always-indent 'complete)
 
 (cua-mode t)
-
+(define-key cua--cua-keys-keymap (kbd "M-v") nil)
 (define-key cua-global-keymap [C-return] nil)
+
 (global-unset-key (kbd "C-x C-s"))
 (global-unset-key (kbd "C-x C-z"))
 (global-unset-key (kbd "C-x C-n"))
+(global-unset-key (kbd "M-v"))
 ;(global-unset-key (kbd "C-x h")) ;=> mark whole buffer, easy to make mistake with C-h
 (bind-key* "C-w" 'kill-current-buffer)
 (global-set-key (kbd "C-x f") 'find-file)
