@@ -1544,11 +1544,44 @@ reuse it's window, otherwise create new one."
 ;;Symbolic link to Git-controlled source file; follow link?
 (setq vc-follow-symlinks t)
 
+(setq magit-list-refs-sortby "-committerdate")
+
+(defun my/magit-branch-dates ()
+  "Return local branches and relative commit dates, newest first."
+  (require 'magit)
+  (mapcar (lambda (line)
+            (let ((parts (split-string line "\0")))
+              (cons (car parts) (cadr parts))))
+          (magit-git-lines
+           "for-each-ref"
+           "--sort=-committerdate"
+           "--format=%(refname:short)%00%(committerdate:relative)"
+           "refs/heads/")))
+
+(defun my/magit-checkout-with-date (branch)
+  "Check out BRANCH, annotating candidates with latest commit dates."
+  (interactive
+   (let* ((alist (my/magit-branch-dates))
+          (annot (lambda (cand)
+                   (when-let* ((d (cdr (assoc cand alist))))
+                     (concat "  " (propertize d 'face 'magit-dimmed)))))
+          (table (lambda (string pred action)
+                   (if (eq action 'metadata)
+                       `(metadata
+                         (annotation-function . ,annot)
+                         (display-sort-function . identity))
+                     (complete-with-action action alist string pred)))))
+     (list (completing-read "Checkout: " table nil t))))
+  (magit-checkout branch))
+
 (use-package magit
 :config
 (setq magit-diff-refine-hunk 'all)
 (setq magit-branch-read-upstream-first 'fallback
       magit-log-section-commit-count 50)
+(transient-remove-suffix 'magit-branch "l")
+(transient-append-suffix 'magit-branch "b"
+  '("l" "local branch with date" my/magit-checkout-with-date))
 (defun my/magit-auto-checkout-when-deleting-current-branch
     (orig-fun prompt chars &optional inhibit-keyboard-quit)
   "Choose checkout target when deleting the currently checked out branch."

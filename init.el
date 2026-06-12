@@ -173,7 +173,7 @@
      (multi-category marginalia-annotate-multi-category
 		     builtin none)))
  '(marginalia-mode t)
- '(org-ellipsis " ")
+ '(org-ellipsis "")
  '(org-fold-catch-invisible-edits 'error)
  '(org-safe-remote-resources
    '("\\`https://fniessen\\.github\\.io/org-html-themes/org/theme-readtheorg\\.setup\\'"
