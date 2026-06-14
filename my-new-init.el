@@ -137,14 +137,14 @@ the items are log notes."
 ;;; dump-jump
 
 (defun slava/find-function-at-point ()
-  "Skocz do definicji funkcji/zmiennej, której nazwa jest pod kursorem.
-Działa w dowolnym buforze, nie tylko w trybach programistycznych."
+  "Jump to the definition of the function or variable at point.
+If the symbol has no Emacs definition, look up the word in the dictionary."
   (interactive)
   (let ((sym (symbol-at-point)))
     (cond
      ((and sym (fboundp sym)) (find-function sym))
      ((and sym (boundp sym))  (find-variable sym))
-     (t (call-interactively #'find-function)))))
+     (t (call-interactively #'dictionary-lookup-definition)))))
 
 (global-set-key (kbd "M-.") #'slava/find-function-at-point)
 
@@ -1761,6 +1761,11 @@ reuse it's window, otherwise create new one."
         (notmuch-show (concat "id:" (match-string 1 url)))
       (browse-url-default-browser url)))
 
+  (defun my/notmuch-stash-org-list-link ()
+    "Copy a link to the current message in the Org mailing list archive."
+    (interactive)
+    (notmuch-show-stash-mlarchive-link "Org"))
+
   (defun my/notmuch-poll-async ()
     (interactive)
     (let ((buf (get-buffer-create " *notmuch-poll*")))
@@ -1812,6 +1817,14 @@ reuse it's window, otherwise create new one."
           :type "notmuch"
           :link link
           :description description)))))
+
+  (defun my/notmuch-show-insert-tree-without-deleted (orig-fun tree depth)
+    "Insert TREE with ORIG-FUN, omitting messages tagged as deleted."
+    (let ((msg (car tree))
+          (replies (cadr tree)))
+      (if (and msg (member "deleted" (plist-get msg :tags)))
+          (notmuch-show-insert-thread replies depth)
+        (funcall orig-fun tree depth))))
 
 (defun jab/notmuch-search-message-delete (go-next)
   "Delete message and select GO-NEXT message."
@@ -1952,6 +1965,14 @@ reuse it's window, otherwise create new one."
 			   :follow 'org-notmuch-open
 			   :store 'org-notmuch-store-link)
   :config
+  (add-to-list 'notmuch-show-stash-mlarchive-link-alist
+               '("Org" . "https://list.orgmode.org/"))
+  (keymap-set notmuch-show-stash-map "o"
+              #'my/notmuch-stash-org-list-link)
+
+  (advice-add #'notmuch-show-insert-tree :around
+              #'my/notmuch-show-insert-tree-without-deleted)
+
   (setq notmuch-hello-sections
         (remove #'notmuch-hello-insert-recent-searches
                 notmuch-hello-sections))
@@ -2354,7 +2375,6 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 	org-hide-emphasis-markers t
 	org-log-done 'time
 	org-log-redeadline 'time
-	org-log-into-drawer t
 	org-use-fast-todo-selection 'expert ;; todo selection appear in the smaller via minibuffer
 	org-special-ctrl-a/e t ;; ctrl a move to begining of heading not line, w lispie powinień na koniec wyrażenie bo
 	                       ;; jak jest komentarz to idzie na koniec komentarza
