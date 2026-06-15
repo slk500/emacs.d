@@ -25,6 +25,34 @@
 (global-set-key (kbd "C-f") 'isearch-forward)
 (global-set-key (kbd "C-s") 'save-buffer)
 (bind-key* "M-o" 'other-window) ;; overwrite M-o in html mode
+
+(defun my/next-line-or-window-down (arg)
+  "Move down ARG lines, or select the window below at buffer end."
+  (interactive "^p")
+  (setq this-command 'next-line)
+  (condition-case nil
+      (next-line arg arg)
+    (end-of-buffer
+     (let ((window (window-in-direction 'below)))
+       (if window
+           (select-window window)
+         (signal 'end-of-buffer nil))))))
+
+(defun my/previous-line-or-window-up (arg)
+  "Move up ARG lines, or select the window above at buffer beginning."
+  (interactive "^p")
+  (setq this-command 'previous-line)
+  (condition-case nil
+      (previous-line arg arg)
+    (beginning-of-buffer
+     (let ((window (window-in-direction 'above)))
+       (if window
+           (select-window window)
+         (signal 'beginning-of-buffer nil))))))
+
+(keymap-global-set "<down>" #'my/next-line-or-window-down)
+(keymap-global-set "<up>" #'my/previous-line-or-window-up)
+
 (global-set-key (kbd "C-<delete>") 'org-kill-line)
 (global-set-key (kbd "<f7>") 'visual-fill-column-mode)
 (global-set-key (kbd "<f8>") 'visual-line-mode)
