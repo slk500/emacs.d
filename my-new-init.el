@@ -1826,6 +1826,18 @@ reuse it's window, otherwise create new one."
           (notmuch-show-insert-thread replies depth)
         (funcall orig-fun tree depth))))
 
+  (defun my/notmuch-search-exclude-from-totals
+      (orig-fun name buffer sentinel &rest args)
+    "Run Notmuch search with excluded messages removed from thread totals."
+    (when (string= name "notmuch-search")
+      (setq args
+            (mapcar (lambda (arg)
+                      (if (equal arg "--exclude=true")
+                          "--exclude=all"
+                        arg))
+                    args)))
+    (apply orig-fun name buffer sentinel args))
+
   (defun my/notmuch-tree-use-default-options (orig-fun &rest args)
     "Use configured defaults for optional ARGS omitted by callers."
     (let ((argument-count (length args)))
@@ -1997,6 +2009,9 @@ reuse it's window, otherwise create new one."
 
   (advice-add #'notmuch-show-insert-tree :around
               #'my/notmuch-show-insert-tree-without-deleted)
+
+  (advice-add #'notmuch-start-notmuch :around
+              #'my/notmuch-search-exclude-from-totals)
 
   (advice-add #'notmuch-tree :around
               #'my/notmuch-tree-use-default-options)
