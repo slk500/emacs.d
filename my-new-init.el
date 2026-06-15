@@ -2456,6 +2456,11 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 
 (use-package org-modern)
 
+;;;; clocktable
+
+(setq org-clocktable-defaults
+      '(:maxlevel 6 :scope agenda :link t :hidefiles t :tags t :header ""))
+
 ;;;; org-autolist
 
 ;; https://github.com/slk500/org-autolist
