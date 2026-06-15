@@ -1826,6 +1826,31 @@ reuse it's window, otherwise create new one."
           (notmuch-show-insert-thread replies depth)
         (funcall orig-fun tree depth))))
 
+  (defun my/notmuch-tree-use-default-options (orig-fun &rest args)
+    "Use configured defaults for optional ARGS omitted by callers."
+    (let ((argument-count (length args)))
+      (when (< argument-count 9)
+        (setq args
+              (append args
+                      (make-list (max 0 (- 7 argument-count)) nil)
+                      (when (< argument-count 8)
+                        (list (default-value
+                               'notmuch-search-oldest-first)))
+                      (list (default-value
+                             'notmuch-search-hide-excluded)))))
+      (apply orig-fun args)))
+
+  (defun my/notmuch-tree-insert-tree-without-deleted
+      (orig-fun tree depth tree-status first last)
+    "Insert TREE with ORIG-FUN, omitting deleted messages when excluded."
+    (let ((msg (car tree))
+          (replies (cadr tree)))
+      (if (and notmuch-search-hide-excluded
+               msg
+               (member "deleted" (plist-get msg :tags)))
+          (notmuch-tree-insert-thread replies depth tree-status)
+        (funcall orig-fun tree depth tree-status first last))))
+
 (defun jab/notmuch-search-message-delete (go-next)
   "Delete message and select GO-NEXT message."
   (notmuch-search-tag notmuch-message-deleted-tags)
@@ -1972,6 +1997,12 @@ reuse it's window, otherwise create new one."
 
   (advice-add #'notmuch-show-insert-tree :around
               #'my/notmuch-show-insert-tree-without-deleted)
+
+  (advice-add #'notmuch-tree :around
+              #'my/notmuch-tree-use-default-options)
+
+  (advice-add #'notmuch-tree-insert-tree :around
+              #'my/notmuch-tree-insert-tree-without-deleted)
 
   (setq notmuch-hello-sections
         (remove #'notmuch-hello-insert-recent-searches
