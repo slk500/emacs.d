@@ -1863,6 +1863,16 @@ reuse it's window, otherwise create new one."
           (notmuch-tree-insert-thread replies depth tree-status)
         (funcall orig-fun tree depth tree-status first last))))
 
+  (defun my/notmuch-delete-current-message ()
+    "Mark the current Notmuch message as deleted."
+    (interactive)
+    (pcase major-mode
+      ('notmuch-show-mode
+       (apply #'notmuch-show-tag-message notmuch-message-deleted-tags))
+      ('notmuch-tree-mode
+       (notmuch-tree-tag notmuch-message-deleted-tags))
+      (_ (user-error "No Notmuch message at point"))))
+
 (defun jab/notmuch-search-message-delete (go-next)
   "Delete message and select GO-NEXT message."
   (notmuch-search-tag notmuch-message-deleted-tags)
@@ -1941,7 +1951,10 @@ reuse it's window, otherwise create new one."
 	("C-s" . notmuch-draft-save)
 	:map notmuch-show-mode-map
 	("r" . notmuch-show-reply)
+	("<delete>" . my/notmuch-delete-current-message)
 	("t" . capture-mail)
+	:map notmuch-tree-mode-map
+	("<delete>" . my/notmuch-delete-current-message)
 	:map notmuch-common-keymap
 	("G" . my/notmuch-poll-async))
   :init
