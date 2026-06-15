@@ -3277,6 +3277,14 @@ from elsewhere."
 	(split-height-threshold 0))
     (display-buffer-pop-up-window buffer alist)))
 
+(defun my/org-add-note-source-buffer-p (buffer action)
+  "Return non-nil when BUFFER is the source displayed by `org-add-note'."
+  (and (eq this-command 'org-add-note)
+       (equal action '(org-display-buffer-full-frame))
+       (with-current-buffer buffer
+         (derived-mode-p 'org-mode))))
+
+
 (add-to-list 'display-buffer-alist
 	     '("\\*cider-repl\\*" my-display-buffer-pop-up-same-width-window))
 
@@ -3287,6 +3295,10 @@ from elsewhere."
 	     '("\\*Org Note\\*" (display-buffer-reuse-window
 				 display-buffer-below-selected)
 	       (window-height . 0.3)))
+
+(add-to-list 'display-buffer-alist
+	     '(my/org-add-note-source-buffer-p
+	       (display-buffer-reuse-window)))
 
 ;;; dictionary
 
