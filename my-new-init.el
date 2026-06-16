@@ -730,6 +730,10 @@ The DWIM behaviour of this command is as follows:
 ;;; long lines, truncate, wrap
 
   (setq-default truncate-lines t)
+  (setq standard-display-table
+        (or standard-display-table (make-display-table)))
+  (set-display-table-slot standard-display-table 'truncation ?\s)
+  (set-display-table-slot standard-display-table 'wrap ?\s)
 
 ;;; sudo
 
@@ -2210,7 +2214,7 @@ reuse it's window, otherwise create new one."
                     :background "#3a3a5a"   ; hover background color
                     :foreground nil)
 
-(add-hook 'emacs-startup-hook (lambda () (set-fringe-mode 1)) t)
+(add-hook 'emacs-startup-hook (lambda () (set-fringe-mode 0)) t)
 
 (use-package golden-ratio
   :init (golden-ratio-mode))
