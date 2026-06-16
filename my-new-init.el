@@ -1678,8 +1678,35 @@ reuse it's window, otherwise create new one."
           (substitute-in-file-name (match-string 1))))
       (user-error "No MML filename found here"))))
 
+(defun my/strip-common-leading-whitespace (string)
+  "Remove common leading horizontal whitespace from STRING."
+  (let ((margin nil))
+    (dolist (line (split-string string "\n"))
+      (unless (string-match-p "\\`[ \t]*\\'" line)
+        (let ((indent (if (string-match "\\`[ \t]*" line)
+                          (match-end 0)
+                        0)))
+          (setq margin (if margin (min margin indent) indent)))))
+    (if (and margin (> margin 0))
+        (mapconcat
+         (lambda (line)
+           (let* ((indent (if (string-match "\\`[ \t]*" line)
+                              (match-end 0)
+                            0))
+                  (remove-count (min margin indent)))
+             (substring line remove-count)))
+         (split-string string "\n")
+         "\n")
+      string)))
+
+(defun my/message-strip-yank-margin-setup ()
+  "Strip copied terminal margins from yanked text in mail buffers."
+  (add-hook 'yank-transform-functions
+            #'my/strip-common-leading-whitespace nil t))
+
 (with-eval-after-load 'message
-  (define-key message-mode-map (kbd "C-c C-o") #'my-mml-view-part-file))
+  (define-key message-mode-map (kbd "C-c C-o") #'my-mml-view-part-file)
+  (add-hook 'message-mode-hook #'my/message-strip-yank-margin-setup))
 
 
 ;; https://myaccount.google.com/apppasswords
