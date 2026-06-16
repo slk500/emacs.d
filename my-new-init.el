@@ -1411,6 +1411,23 @@ Accepts any arguments to be compatible with advice-add."
 
 ;;; help
 
+(defvar-keymap help-apropos-map
+  :doc "Keymap for apropos subcommands."
+  "a"   #'apropos
+  "l"   #'apropos-library
+  "f"   #'apropos-function
+  "x"   #'apropos-command
+  "v"   #'apropos-variable
+  "V"   #'apropos-local-variable
+  "u"   #'apropos-user-option
+  "d"   #'apropos-documentation
+  "C-f" #'customize-apropos-faces
+  "g"   #'customize-apropos-groups
+  "o"   #'customize-apropos-options
+  "c"   #'customize-apropos
+  "i"   #'info-apropos)
+(keymap-set help-map "a" help-apropos-map)
+
 (use-package elisp-demos
   :straight (:host github :repo "xuchunyang/elisp-demos")
   :config
@@ -3309,6 +3326,7 @@ from elsewhere."
 
 (setq dictionary-server "localhost")
 (keymap-global-set "M-#" #'dictionary-lookup-definition)
+(global-dictionary-tooltip-mode)
 
 ;;; elisp
 
