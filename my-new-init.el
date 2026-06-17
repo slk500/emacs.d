@@ -1,5 +1,23 @@
 ;;; ...  -*- lexical-binding: t -*-
 
+
+  (with-eval-after-load 'ol
+    (defun org-link-create-headline-link-for-table (headline)
+      "Convert HEADLINE into a link for a clocktable.
+  The link and the description will not contain contiguous
+  white spaces, statistics cookies or pipe chars."
+      (let* ((file-name (buffer-file-name))
+             (description (org-link-normalize-string
+                           (org-link-display-format headline)
+                           (list 'statistics-cookies 'pipe-chars)))
+             (link (if file-name
+                       (format "file:%s::%s"
+                               file-name
+                               (org-link-heading-search-string headline t))
+                     (org-link-heading-search-string headline t))))
+        (org-link-make-string link description))))
+
+
 ;;; electric-sentence
 
 (use-package electric-sentence
@@ -282,6 +300,25 @@ installed."
 
 ;;; org-clock
 
+;; Idle case:
+
+  (let* ((mins 37)
+         (last-valid (time-subtract (current-time) (seconds-to-time (* mins 60))))
+         (org-clock-resolving-clocks-due-to-idleness t))
+    (org-clock-resolve
+     (cons org-clock-marker org-clock-start-time)
+     (lambda (_) (format "Clocked in & idle for %d mins" mins))
+     last-valid))
+
+;;  Open/dangling case:
+
+  (let* ((mins 37)
+         (last-valid (time-subtract (current-time) (seconds-to-time (* mins 60)))))
+    (org-clock-resolve
+     (cons org-clock-marker org-clock-start-time)
+     (lambda (_) (format "Dangling clock started %d mins ago" mins))
+     last-valid))
+
   (defun my/org-clock-close-here ()
     "Close an unfinished CLOCK line at point with the current time."
     (when (org-at-clock-log-p)
@@ -340,6 +377,101 @@ installed."
       org-clock-sound t               ; dźwięk przy powrocie (opcjonalnie)
       org-clock-persist t             ; zachowaj clock między sesjami
       org-clock-persist-query-resume nil) ; nie pytaj o wznowienie
+
+(with-eval-after-load 'org-clock
+  (defvar my/org-clock-resolve--last-valid nil)
+
+  (defun my/org-clock-resolve--minutes ()
+    "Return unresolved clock minutes for the current resolver prompt."
+    (floor (/ (float-time (time-since my/org-clock-resolve--last-valid)) 60)))
+
+  (defun my/org-clock-resolve--since ()
+    "Return the start time string for the current resolver prompt."
+    (format-time-string "%H:%M" my/org-clock-resolve--last-valid))
+
+  (defun my/org-clock-resolve--splash ()
+    "Return experimental Org clock resolver splash text."
+    (let* ((mins (my/org-clock-resolve--minutes))
+           (since (my/org-clock-resolve--since))
+           (idle-p org-clock-resolving-clocks-due-to-idleness)
+           (title (if idle-p "Resolve Idle Clock" "Resolve Open Clock"))
+           (context
+            (if idle-p
+                (format "Org detected %d minutes away from the keyboard, since %s."
+                        mins since)
+              (format "Org found an open clock started at %s, %d minutes ago."
+                      since mins)))
+           (ignore-text
+            (if idle-p
+                (format "Ignore, keep all %d minutes" mins)
+              "Ignore, leave clock open")))
+      (format "%s
+
+%s
+
+Choose what should count as clocked time:
+
+  Lowercase keeps the clock running.
+  Uppercase stops the clock.
+
+  i/q  %s
+  s/S  Skip, keep 0 minutes
+  k/K  Keep only the first N minutes
+  t/T  Time when you went away
+  g/G  Got back N minutes ago
+
+Other actions:
+  C    Cancel this clock
+  j/J  Jump to the clock for manual edits
+"
+              title context ignore-text)))
+
+  (defun my/org-clock-resolve--expert-prompt ()
+    "Return experimental Org clock resolver minibuffer prompt."
+    (let ((mins (my/org-clock-resolve--minutes))
+          (since (my/org-clock-resolve--since)))
+      (format
+       "%s since %s (%d mins), keep [i/q ignore, s/S skip, k/K keep N, t/T time away, g/G got back N min ago, C cancel, j/J jump]? "
+       (if org-clock-resolving-clocks-due-to-idleness
+           "Clocked in & away"
+         "Open clock")
+       since mins)))
+
+  (defun my/org-clock-resolve--replace-splash (args)
+    "Replace Org clock resolver splash text in ARGS."
+    (let ((text (car args)))
+      (if (and my/org-clock-resolve--last-valid
+               (stringp text)
+               (string-prefix-p "Select a Clock Resolution Command:" text))
+          (cons (my/org-clock-resolve--splash) (cdr args))
+        args)))
+
+  (defun my/org-clock-resolve--replace-read-char-prompt (args)
+    "Replace Org clock resolver read-char prompt in ARGS."
+    (let ((prompt (car args)))
+      (if (and my/org-clock-resolve--last-valid
+               (stringp prompt)
+               (string-suffix-p " [jkKtTgGSscCiq]? " prompt))
+          (cons (my/org-clock-resolve--expert-prompt) (cdr args))
+        args)))
+
+  (defun my/org-clock-resolve-readable-advice
+      (orig clock &optional prompt-fn last-valid fail-quietly)
+    "Show experimental wording around ORIG for Org clock resolution."
+    (let ((my/org-clock-resolve--last-valid (or last-valid (cdr clock))))
+      (advice-add 'princ :filter-args #'my/org-clock-resolve--replace-splash)
+      (advice-add 'read-char-exclusive
+                  :filter-args #'my/org-clock-resolve--replace-read-char-prompt)
+      (unwind-protect
+          (funcall orig clock prompt-fn last-valid fail-quietly)
+        (advice-remove 'read-char-exclusive
+                       #'my/org-clock-resolve--replace-read-char-prompt)
+        (advice-remove 'princ #'my/org-clock-resolve--replace-splash))))
+
+  (unless (advice-member-p #'my/org-clock-resolve-readable-advice
+                           'org-clock-resolve)
+    (advice-add 'org-clock-resolve
+                :around #'my/org-clock-resolve-readable-advice)))
 
 ;;; sort
 
