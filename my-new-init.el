@@ -300,25 +300,6 @@ installed."
 
 ;;; org-clock
 
-;; Idle case:
-
-  (let* ((mins 37)
-         (last-valid (time-subtract (current-time) (seconds-to-time (* mins 60))))
-         (org-clock-resolving-clocks-due-to-idleness t))
-    (org-clock-resolve
-     (cons org-clock-marker org-clock-start-time)
-     (lambda (_) (format "Clocked in & idle for %d mins" mins))
-     last-valid))
-
-;;  Open/dangling case:
-
-  (let* ((mins 37)
-         (last-valid (time-subtract (current-time) (seconds-to-time (* mins 60)))))
-    (org-clock-resolve
-     (cons org-clock-marker org-clock-start-time)
-     (lambda (_) (format "Dangling clock started %d mins ago" mins))
-     last-valid))
-
   (defun my/org-clock-close-here ()
     "Close an unfinished CLOCK line at point with the current time."
     (when (org-at-clock-log-p)
