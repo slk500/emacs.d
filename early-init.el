@@ -13,6 +13,7 @@
 (setq completion-styles '(substring))
 (setq tab-always-indent 'complete)
 
+(setq cua-prefix-override-inhibit-delay 0)
 (cua-mode t)
 (define-key cua--cua-keys-keymap (kbd "M-v") nil)
 (define-key cua-global-keymap [C-return] nil)
