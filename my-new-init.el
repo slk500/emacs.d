@@ -1831,6 +1831,23 @@ reuse it's window, otherwise create new one."
          "\n")
       string)))
 
+(defun my/org-paste-clean-and-indent (&optional arg)
+  "Paste in Org, stripping copied margins and indenting plain text.
+Keep Org's special paste behavior for tables and subtrees."
+  (interactive "P")
+  (cond
+   ((org-at-table-p)
+    (org-table-paste-rectangle))
+   ((org-kill-is-subtree-p (current-kill 0))
+    (org-paste-subtree arg))
+   (t
+    (let ((beg (point))
+          (yank-transform-functions
+           (cons #'my/strip-common-leading-whitespace
+                 yank-transform-functions)))
+      (call-interactively #'yank)
+      (org-indent-region beg (point))))))
+
 (defun my/message-strip-yank-margin-setup ()
   "Strip copied terminal margins from yanked text in mail buffers."
   (add-hook 'yank-transform-functions
@@ -2609,7 +2626,7 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
 
 (use-package org
   :bind (:map org-mode-map
-	      ("C-v" . org-paste-special)
+	      ("C-v" . my/org-paste-clean-and-indent)
 	      ("RET" . org-return-and-maybe-indent))
   :config
   (setq-default org-fold-catch-invisible-edits 'error) ;; dosent work with hungry delete!!!!
