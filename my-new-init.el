@@ -2373,7 +2373,17 @@ reuse it's window, otherwise create new one."
                     :background "#3a3a5a"   ; hover background color
                     :foreground nil)
 
-(add-hook 'emacs-startup-hook (lambda () (set-fringe-mode 0)) t)
+(defun my/disable-fringes (&optional frame)
+  "Disable fringes in FRAME, or in all frames when FRAME is nil."
+  (let ((parameters '((left-fringe . 0)
+                      (right-fringe . 0))))
+    (if frame
+        (modify-frame-parameters frame parameters)
+      (modify-all-frames-parameters parameters))))
+
+(add-hook 'emacs-startup-hook #'my/disable-fringes t)
+(add-hook 'after-make-frame-functions #'my/disable-fringes t)
+(add-hook 'server-after-make-frame-hook #'my/disable-fringes t)
 
 (use-package golden-ratio
   :init (golden-ratio-mode))
@@ -2394,8 +2404,10 @@ reuse it's window, otherwise create new one."
 (use-package spacious-padding
   :config
   (setf (plist-get spacious-padding-widths :header-line-width) 0)
+  (setf (plist-get spacious-padding-widths :fringe-width) 0)
   (spacious-padding-mode 1)
-  (spacious-padding-set-faces))
+  (spacious-padding-set-faces)
+  (my/disable-fringes))
 
 (setq-default
  cursor-in-non-selected-windows nil) ; Hide the cursor in inactive windows
