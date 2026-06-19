@@ -7,6 +7,8 @@
 (setq straight-check-for-modifications nil)
 (setq load-prefer-newer t)
 
+(set-face-attribute 'default nil :background "#0d1017")
+
 ;; completion
 (setq completion-styles '(substring))
 (setq tab-always-indent 'complete)

@@ -211,6 +211,7 @@
 				 org-previous-visible-heading
 				 org-forward-heading-same-level
 				 org-backward-heading-same-level
+				 org-agenda-goto
 				 outline-backward-same-level
 				 outline-forward-same-level
 				 outline-next-visible-heading
