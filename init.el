@@ -218,7 +218,8 @@
 				 outline-previous-visible-heading
 				 outline-up-heading
 				 xref-pulse-momentarily
-				 pop-global-mark))
+				 pop-global-mark
+				 magit-diff-visit-file))
  '(safe-local-variable-values
    '((etags-regen-ignores "test/manual/etags/")
      (etags-regen-regexp-alist
