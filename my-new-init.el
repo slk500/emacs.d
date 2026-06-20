@@ -4001,10 +4001,10 @@ current specifications.  This function also sets
 	(total 0))
     (dolist (b check-boxes)
       (cond
-       ( (string-prefix-p "[X]" b)
+       ((string-prefix-p "[X]" b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
-       ((or (string-prefix-p "[→]" b) (equal b "[/]")) nil)
+       ((or (string-prefix-p "[→]" b) (string-prefix-p "---" b) (equal b "[/]")) nil)
        ((string-match (rx "[" (one-or-more digit) "]") b)
 	(setq completed (+ completed 1))
 	(setq total (+ total 1)))
