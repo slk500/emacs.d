@@ -2838,6 +2838,10 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
   "Org match string used for book agenda entries.")
 
+(defvar my/org-video-agenda-match
+  "video"
+  "Org match string used for video agenda entries.")
+
 (defun my/org-book-agenda-files ()
   "Return Org agenda files plus Org files containing book entries."
   (delete-dups
@@ -2853,6 +2857,15 @@ the same tree node, and the headline of the tree node in the Org-mode file."
     (consult-org-agenda my/org-book-agenda-match)))
 
 (keymap-global-set "C-c B" #'my/consult-org-books)
+
+(defun my/consult-org-videos ()
+  "Jump to an entry tagged video with `consult-org-agenda'."
+  (interactive)
+  (require 'consult-org)
+  (let ((org-agenda-files (my/org-book-agenda-files)))
+    (consult-org-agenda my/org-video-agenda-match)))
+
+(keymap-global-set "C-c V" #'my/consult-org-videos)
 
 (setq org-agenda-custom-commands
       `(("a" "default" agenda "" ((org-scheduled-past-days 1)
