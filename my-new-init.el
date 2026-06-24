@@ -18,6 +18,10 @@
         (org-link-make-string link description))))
 
 
+;;; osm
+
+ (use-package osm)
+
 ;;; electric-sentence
 
 (use-package electric-sentence
@@ -627,7 +631,7 @@ days from start up to start+N-1, displayed in reverse (newest first)."
     (dotimes (i 7)
       (push (time-add start-time (days-to-time i)) days))
     (dolist (day days)
-      (insert (format "*** [%s]\n"
+      (insert (format "**** [%s]\n"
                       (format-time-string "%Y-%m-%d %a" day))))))
 
 (defun my/end-of-line-or-defun ()
@@ -2827,15 +2831,38 @@ the same tree node, and the headline of the tree node in the Org-mode file."
      ((< (cadr a-key) (cadr b-key)) -1)
      ((> (cadr a-key) (cadr b-key)) 1))))
 
+(defvar my/org-book-directory (expand-file-name "~/aamystuff/mystuff/")
+  "Directory containing Org files with book entries.")
+
+(defvar my/org-book-agenda-match
+  "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
+  "Org match string used for book agenda entries.")
+
+(defun my/org-book-agenda-files ()
+  "Return Org agenda files plus Org files containing book entries."
+  (delete-dups
+   (append org-agenda-files
+           (when (file-directory-p my/org-book-directory)
+             (directory-files-recursively my/org-book-directory "\\.org\\'")))))
+
+(defun my/consult-org-books ()
+  "Jump to a book entry with `consult-org-agenda'."
+  (interactive)
+  (require 'consult-org)
+  (let ((org-agenda-files (my/org-book-agenda-files)))
+    (consult-org-agenda my/org-book-agenda-match)))
+
+(keymap-global-set "C-c B" #'my/consult-org-books)
+
 (setq org-agenda-custom-commands
-      '(("a" "default" agenda "" ((org-scheduled-past-days 1)
+      `(("a" "default" agenda "" ((org-scheduled-past-days 1)
 				  (org-deadline-past-days 1)
 				  (org-habit-scheduled-past-days 10000)
 				  (org-deadline-warning-days 0)))
 	("Z" "org-ql test"
 	 ((org-ql-block '(or (ts-active :on today) (and (habit) (scheduled :to today))))))
-	("b" "List of read books" tags "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
-	 ((org-agenda-files (append org-agenda-files (directory-files-recursively "~/aamystuff/mystuff/" "\\.org$")))
+	("b" "List of read books" tags ,my/org-book-agenda-match
+	 ((org-agenda-files (my/org-book-agenda-files))
 	  (org-agenda-cmp-user-defined (cmp-date-property "CLOSED"))
 	  (org-agenda-sorting-strategy '(user-defined-down todo-state-down priority-down))
 	  (org-agenda-todo-keyword-format "%-2s")
@@ -3707,6 +3734,9 @@ from elsewhere."
 
 ;;; colview
 
+ (with-eval-after-load 'org-colview
+    (keymap-unset org-columns-map "M-f")
+    (keymap-unset org-columns-map "M-b"))
 
 ;; Mierzenie czasu uruchamiania org-columns
 (defun my-measure-org-columns-time (orig-fun &rest args)
@@ -3905,7 +3935,7 @@ północy (np. godzina pobudki)."
     (org-entry-put pom "PUSHUP" "10")))
 
 ;;;; rest
-(setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" ""))
+(setq org-columns-checkbox-allowed-values '("[X]" "[-]" "[ ]" "" "[→]"))
 
 (defun org-columns-switch-columns ()
   (interactive)
