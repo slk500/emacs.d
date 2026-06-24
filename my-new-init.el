@@ -2838,10 +2838,6 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
   "Org match string used for book agenda entries.")
 
-(defvar my/org-video-agenda-match
-  "video"
-  "Org match string used for video agenda entries.")
-
 (defun my/org-book-agenda-files ()
   "Return Org agenda files plus Org files containing book entries."
   (delete-dups
@@ -2863,9 +2859,18 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   (interactive)
   (require 'consult-org)
   (let ((org-agenda-files (my/org-book-agenda-files)))
-    (consult-org-agenda my/org-video-agenda-match)))
+    (consult-org-agenda "video")))
 
 (keymap-global-set "C-c V" #'my/consult-org-videos)
+
+(defun my/consult-org-people ()
+  "Jump to an entry tagged people with `consult-org-agenda'."
+  (interactive)
+  (require 'consult-org)
+  (let ((org-agenda-files `("~/aamystuff/life/people.org.gpg")))
+    (consult-org-agenda "people")))
+
+(keymap-global-set "C-c P" #'my/consult-org-people)
 
 (setq org-agenda-custom-commands
       `(("a" "default" agenda "" ((org-scheduled-past-days 1)
@@ -3749,7 +3754,9 @@ from elsewhere."
 
  (with-eval-after-load 'org-colview
     (keymap-unset org-columns-map "M-f")
-    (keymap-unset org-columns-map "M-b"))
+    (keymap-unset org-columns-map "M-b")
+    (keymap-set org-columns-map "n" 'org-narrow-to-subtree)
+    (keymap-set org-columns-map "w" 'widen))
 
 ;; Mierzenie czasu uruchamiania org-columns
 (defun my-measure-org-columns-time (orig-fun &rest args)
