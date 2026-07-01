@@ -156,6 +156,61 @@ the items are log notes."
 	    (goto-char (or (org-list-get-next-item (point) struct prevs)
 			   (org-list-get-item-end (point) struct))))))))
 
+(with-eval-after-load 'org
+  (defun org-do-emphasis-faces (limit)
+    "Run through the buffer and emphasize strings."
+    (let ((quick-re (format "\\([%s]\\|^\\)\\([~=*/_+]\\)"
+			    (car org-emphasis-regexp-components))))
+      (catch :exit
+	(while (re-search-forward quick-re limit t)
+	  (let* ((marker (match-string 2))
+		 (verbatim? (member marker '("~" "="))))
+	    (when (save-excursion
+		    (goto-char (match-beginning 0))
+		    (and
+		     ;; Do not treat property values like COLUMNS summary
+		     ;; operators as Org emphasis markup.
+		     (not (save-match-data (org-at-property-p)))
+		     ;; Do not match table hlines.
+		     (not (and (equal marker "+")
+			       (org-match-line
+				"[ \t]*\\(|[-+]+|?\\|\\+[-+]+\\+\\)[ \t]*$")))
+		     ;; Do not match headline stars.  Do not consider
+		     ;; stars of a headline as closing marker for bold
+		     ;; markup either.
+		     (not (and (equal marker "*")
+			       (save-excursion
+				 (forward-char)
+				 (skip-chars-backward "*")
+				 (looking-at-p org-outline-regexp-bol))))
+		     ;; Match full emphasis markup regexp.
+		     (looking-at (if verbatim? org-verbatim-re org-emph-re))
+		     ;; Do not span over paragraph boundaries.
+		     (not (string-match-p org-element-paragraph-separate
+					  (match-string 2)))
+		     ;; Do not span over cells in table rows.
+		     (not (and (save-match-data (org-match-line "[ \t]*|"))
+			       (string-match-p "|" (match-string 4))))))
+	      (pcase-let ((`(,_ ,face ,_) (assoc marker org-emphasis-alist))
+			  (m (if org-hide-emphasis-markers 4 2)))
+		(font-lock-prepend-text-property
+		 (match-beginning m) (match-end m) 'face face)
+		(when verbatim?
+		  (org-remove-flyspell-overlays-in
+		   (match-beginning 0) (match-end 0))
+		  (remove-text-properties (match-beginning 2) (match-end 2)
+					  '(display t invisible t intangible t)))
+		(add-text-properties (match-beginning 2) (match-end 2)
+				     '(font-lock-multiline t org-emphasis t))
+		(when (and org-hide-emphasis-markers
+			   (not (org-at-comment-p)))
+		  (add-text-properties (match-end 4) (match-beginning 5)
+				       '(invisible t))
+		  (org-rear-nonsticky-at (match-beginning 5))
+		  (add-text-properties (match-beginning 3) (match-end 3)
+				       '(invisible t)))
+		(throw :exit t)))))))))
+
 ;;; dump-jump
 
 (defun slava/find-function-at-point ()
