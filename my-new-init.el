@@ -1,6 +1,5 @@
 ;;; ...  -*- lexical-binding: t -*-
 
-
   (with-eval-after-load 'ol
     (defun org-link-create-headline-link-for-table (headline)
       "Convert HEADLINE into a link for a clocktable.
@@ -17,6 +16,14 @@
                      (org-link-heading-search-string headline t))))
         (org-link-make-string link description))))
 
+
+;;; system
+
+(keymap-global-set "C-M-l" (lambda ()
+			   (interactive) (shell-command "systemctl suspend")))
+
+(defun restart-system ()
+  (interactive) (shell-command "systemctl reboot"))
 
 ;;; osm
 
@@ -686,7 +693,7 @@ days from start up to start+N-1, displayed in reverse (newest first)."
     (dotimes (i 7)
       (push (time-add start-time (days-to-time i)) days))
     (dolist (day days)
-      (insert (format "**** [%s]\n"
+      (insert (format "***** [%s]\n"
                       (format-time-string "%Y-%m-%d %a" day))))))
 
 (defun my/end-of-line-or-defun ()
@@ -1638,16 +1645,16 @@ reuse it's window, otherwise create new one."
     dired-mark "Mark"
     dired-unmark "Unmark")
 
-(keymap-popup-define my-commands-map
-  "My commands."
-  :group "Edit"
-  "c" ("Comment" comment-dwim)
-  "r" ("Rename" rename-file)
-  :group "View"
-  "g" ("Refresh" revert-buffer)
-  "q" ("Quit" quit-window))
+;; (keymap-popup-define my-commands-map
+;;   "My commands."
+;;   :group "Edit"
+;;   "c" ("Comment" comment-dwim)
+;;   "r" ("Rename" rename-file)
+;;   :group "View"
+;;   "g" ("Refresh" revert-buffer)
+;;   "q" ("Quit" quit-window))
 
-(keymap-popup my-commands-map)
+;; (keymap-popup my-commands-map)
 
 (which-key-mode 1)
 
@@ -2579,8 +2586,18 @@ Z prefiksem C-u ustaw DONE i dodaj notatkę do LOGBOOK."
    (t
     (call-interactively 'org-ctrl-c-ctrl-c))))
 
+(defun my/org-set-tags-command-dwim (&optional arg)
+  "Set tags for the current heading, or change one tag in an active region.
+With prefix ARG, call `org-set-tags-command' unchanged."
+  (interactive "P")
+  (if (and (not arg) (org-region-active-p))
+      (call-interactively #'org-change-tag-in-region)
+    (org-set-tags-command arg)))
+
   (with-eval-after-load 'org
-    (define-key org-mode-map (kbd "C-c C-c") #'my/org-cc-done-or-default))
+    (define-key org-mode-map (kbd "C-c C-c") #'my/org-cc-done-or-default)
+    (define-key org-mode-map [remap org-set-tags-command]
+                #'my/org-set-tags-command-dwim))
 
 (defun my/org-toggle-emphasis (char)
   "Toggle emphasis CHAR wokół regionu. Bez regionu po prostu wstaw CHAR."
@@ -2890,7 +2907,7 @@ the same tree node, and the headline of the tree node in the Org-mode file."
   "Directory containing Org files with book entries.")
 
 (defvar my/org-book-agenda-match
-  "book/DONE|DOING|CANCELED|STUCK|LOOKINGFOR"
+  "book"
   "Org match string used for book agenda entries.")
 
 (defun my/org-book-agenda-files ()
@@ -3564,7 +3581,6 @@ from elsewhere."
 
 (setq dictionary-server "localhost")
 (keymap-global-set "M-#" #'dictionary-lookup-definition)
-(global-dictionary-tooltip-mode)
 
 ;;; elisp
 
@@ -3712,6 +3728,7 @@ from elsewhere."
 ;;; gpg
 
 (setq epg-gpg-home-directory "~/.gnupg")
+(setq epa-pinentry-mode 'loopback)
 
 ;; gpg --gen-key
 ;; -*- mode: org -*- -*- epa-file-encrypt-to: ("slawomir.grochowski@gmail.com") -*-
