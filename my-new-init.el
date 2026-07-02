@@ -4111,13 +4111,6 @@ current specifications.  This function also sets
   (org-defkey org-columns-map [return] #'org-columns-edit-value))
 
 (defun my/org-columns--strip-date-brackets (value)
-  "Strip Org timestamp brackets, year, and month from VALUE."
-  (replace-regexp-in-string
-   "[<[]\\(?:[0-9]\\{4\\}-\\)?[0-9]\\{2\\}-\\([0-9]\\{2\\}\\(?: [^]> ]+\\)?\\)[]>]"
-   "\\1"
-   value))
-
-(defun my/org-columns--strip-date-brackets (value)
   "Strip Org timestamp brackets and leading year from VALUE."
   (replace-regexp-in-string
    "[<[]\\([0-9]\\{4\\}-\\)?\\([0-9]\\{2\\}-[0-9]\\{2\\}\\(?: [^]>]*\\)?\\)[]>]"
@@ -4207,9 +4200,6 @@ and week rows like \"5-20\" or \"3\\4-14\"."
    ((string-match
      (rx bos
          (group
-          (** 1 2 digit)
-          (optional "\\" (** 1 2 digit))
-          "-"
           (** 1 2 digit))
          (or eos whitespace))
      value)
